@@ -45,11 +45,13 @@ LABEL maintainer=enigmampc
 RUN apt-get update \
  && apt-get install -y --no-install-recommends curl \
  && curl -sL https://deb.nodesource.com/setup_10.x | bash - \
- && curl -sL https://dl.yarnpkg.com/debian/pubkey.gpg | apt-key add - \
-RUN apt-get update \
- && install -y --no-install-recommends yarn nodejs \
- && rm -rf /var/lib/apt/lists/*
+ && curl -sL https://dl.yarnpkg.com/debian/pubkey.gpg | apt-key add -
 
+RUN echo "deb https://dl.yarnpkg.com/debian/ stable main" | tee /etc/apt/sources.list.d/yarn.list
+
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends yarn nodejs \
+ && rm -rf /var/lib/apt/lists/*
 ######## Stage 3 - compile p2p
 
 FROM p2p_base as p2p_build

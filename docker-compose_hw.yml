@@ -51,7 +51,7 @@ services:
   contract:
     hostname: contract
     container_name: contract
-    image: enigmampc/contract_hw:latest
+    image: enigmampc/contract:latest
     devices:
       - "/dev/isgx:/dev/isgx"
       - "/dev/mei0:/dev/mei0"
