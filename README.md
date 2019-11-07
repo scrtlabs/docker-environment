@@ -179,7 +179,4 @@ Each image uses the following:
 4. Config folder -- configuration defaults, per environment 
 
 ## TODO
-2. Reorganize folder a little bit
-3. More documentation on environment variables
-4. Add client that can run tests automatically
-5. Logging
+1. More documentation on environment variables
