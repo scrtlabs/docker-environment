@@ -1,0 +1,6 @@
+{"CONTRACT_DISCOVERY_PORT": "8081",
+ "CONTRACT_DISCOVERY_ADDRESS": "localhost",
+ "PRINCIPAL_ADDRESS_PATH":  "/root/.enigma/principal-sign-addr.txt",
+ "CONTRACT_PATH":  "/root/.enigma/",
+ "CONTRACT_FILES":  ["enigmacontract.txt", "enigmatokencontract.txt"],
+ "FAUCET_PORT": 8001}

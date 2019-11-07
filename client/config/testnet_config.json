@@ -1,0 +1,12 @@
+{
+ "CONTRACT_DISCOVERY_PORT": "8081",
+ "CONTRACT_DISCOVERY_ADDRESS": "localhost",
+ "ETH_NODE_ADDRESS": "localhost",
+ "ETH_NODE_PORT": "9545",
+ "CONTRACTS_FOLDER": "/root/enigma-contract/enigma-js/test/contracts/",
+ "ENIGMA_CONTRACT_FILE_NAME": "Enigma.json",
+ "FAUCET_URL": "http://localhost:8001",
+ "MINIMUM_ETHER_BALANCE": "0.001",
+ "WORKER_URL": "http://localhost",
+ "PROXY_PORT": 3346
+}

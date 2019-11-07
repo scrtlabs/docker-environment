@@ -1,0 +1,71 @@
+import os
+import json
+
+from enigma_docker_common.config import Config
+from enigma_docker_common.provider import Provider
+from enigma_docker_common.logger import get_logger
+
+
+logger = get_logger('client-startup')
+
+# required configuration parameters -- these can all be overridden as environment variables
+required = [  # required by provider AND locally
+              'CONTRACT_DISCOVERY_PORT', 'CONTRACT_DISCOVERY_ADDRESS',
+              # defaults in local config file
+              'ETH_NODE_ADDRESS', 'ENIGMA_CONTRACT_FILE_NAME', 'CONTRACTS_FOLDER',
+              'FAUCET_URL', 'MINIMUM_ETHER_BALANCE', 'ETH_NODE_PORT', 'WORKER_URL', 'PROXY_PORT']
+
+# local path to where we save the private key/public key if we generate it locally
+KEY_PAIR_PATH = os.path.dirname(os.path.dirname(__file__))
+
+env_defaults = {'K8S': './config/k8s_config.json',
+                'TESTNET': './config/testnet_config.json',
+                'MAINNET': './config/mainnet_config.json',
+                'COMPOSE': './config/compose_config.json'}
+
+
+def save_to_path(path, file):
+    logger.info(f'Saving file to path: {path}')
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    with open(path, 'wb+') as f:
+        f.write(file)
+
+
+if __name__ == '__main__':
+
+    logger.info('STARTING P2P STARTUP')
+    config = Config(required=required, config_file=env_defaults[os.getenv('ENIGMA_ENV', 'COMPOSE')])
+    provider = Provider(config=config)
+
+    # *** Load parameters from config
+
+    contracts_folder_path = config['CONTRACTS_FOLDER']
+    enigma_abi_filename = config['ENIGMA_CONTRACT_FILE_NAME']
+    eth_node_address = f'{config["ETH_NODE_ADDRESS"]}:{config["ETH_NODE_PORT"]}'
+
+    # Load Enigma.json ABI
+    enigma_contract_abi = provider.enigma_abi
+
+    if config.get('SGX_MODE', 'SW') == 'SW':
+        enigma_abi_filename = 'EnigmaSimulation.json'
+
+    contract_abi_path = contracts_folder_path + enigma_abi_filename
+    save_to_path(contract_abi_path, enigma_contract_abi)
+
+    token_contract_abi = json.loads(provider.enigma_token_abi)
+    token_contract_address = provider.token_contract_address
+
+    eng_contract_addr = provider.enigma_contract_address
+    logger.info(f'Got address {eng_contract_addr} for enigma contract')
+
+    addresses = {'contract': eng_contract_addr,
+                 'token': token_contract_address,
+                 'eth_node': f'http://{eth_node_address}',
+                 'proxy': f'{config["WORKER_URL"]}:{config["PROXY_PORT"]}'}
+
+    save_to_path(contracts_folder_path+'addresses.json', json.dumps(addresses).encode())
+
+    # todo: conditional generate
+    # priv, pub = generate_key()
+    # public_key = pubkey_to_addr(pub.hex())
+

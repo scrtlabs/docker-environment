@@ -1,0 +1,1 @@
+Shared library for all enigma docker images -- will allow smooth changes to all containers (possibly)

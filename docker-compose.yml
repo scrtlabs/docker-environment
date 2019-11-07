@@ -1,0 +1,80 @@
+version: "3"
+
+volumes:
+  esdata01:
+    driver: local
+
+
+networks:
+  backend:
+  frontend:
+    driver: bridge # use the bridge driver
+    ipam:
+      driver: default
+
+services:
+  bootstrap:
+    hostname: bootstrap
+    container_name: bootstrap01
+    image: enigmampc/worker_sw:latest
+    depends_on:
+      - contract
+      - km
+    environment:
+      ENIGMA_ENV: COMPOSE
+      SGX_MODE: SW
+      BOOTSTRAP: "TRUE"
+    expose:
+      - "10300" # libp2p port
+      - "8080"  # what is this?
+    ports:
+      - "3346:3346"
+
+  worker:
+    hostname: worker
+    image: enigmampc/worker_sw_beta:latest
+    depends_on:
+      - contract
+      - km
+    environment:
+      ENIGMA_ENV: COMPOSE
+      SGX_MODE: SW
+      # FORCE_NEW_ETH_ADDR: "true"
+    expose:
+      - "8080" # what is this?
+      - "9229"
+      - "3346"
+      - "10300" # libp2p
+
+  contract:
+    hostname: contract
+    container_name: contract
+    image: enigmampc/contract:latest
+    environment:
+      SGX_MODE: SW
+      ENIGMA_ENV: COMPOSE
+    ports:
+      - "8081:8081" # contract discovery service
+      - "9545:9545" # ethereum node port
+      - "8001:8001" # faucet port
+
+  km:
+    hostname: km
+    container_name: km
+    image: enigmampc/key_management_sw:latest
+    environment:
+      ENIGMA_ENV: COMPOSE
+      SGX_MODE: SW
+    expose:
+      - "3040" # JSON RPC port
+
+  client:
+    hostname: client
+    image: enigmampc/client:latest
+    stdin_open: true
+    tty: true
+    depends_on:
+      - contract
+    environment:
+      ENIGMA_ENV: COMPOSE
+      SGX_MODE: SW
