@@ -56,6 +56,15 @@ WORKDIR /root/enigma-contract/enigma-js
 
 RUN yarn install
 
+COPY cluster-sdk/ /root/enigma-contract/cluster-sdk/
+WORKDIR /root/enigma-contract/cluster-sdk/
+
+RUN npm install
+
+COPY kubeconfig.eastus.json /root/enigma-contract/k8s-deployment/_output/enigma-cluster/kubeconfig/kubeconfig.eastus.json
+COPY worker.yaml /root/enigma-contract/k8s-configuration/deployments/worker/worker.yaml
+WORKDIR /root/enigma-contract/enigma-js
+
 COPY enigma-js/jest.init.js /root/enigma-contract/enigma-js/
 COPY enigma-js/test /root/enigma-contract/enigma-js/test
 COPY enigma-js/Makefile /root/enigma-contract/enigma-js/Makefile
