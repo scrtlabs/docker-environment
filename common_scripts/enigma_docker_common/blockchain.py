@@ -7,23 +7,16 @@ from .logger import get_logger
 logger = get_logger('eng_common.faucet')
 
 
-def request_coins(faucet_url, account: str, currency: str) -> bool:
+def request_coins(faucet_url, account: str, currency: str) -> float:
     """ Issue a requests for coins from faucet"""
-    if currency not in ['ETH', 'ENG']:
-        raise ValueError(f'Requested balance for invalid currency {currency}')
-
-    # faucet currency convert to match the faucet service. todo: change in faucet
-    _cur = {'ETH': 'ether',
-            'ENG': 'eng'}
-
     try:
-        resp = requests.get(f'{faucet_url}/faucet/{_cur}?account={account}', timeout=120)
+        resp = requests.get(f'{faucet_url}/faucet/{currency}?account={account}', timeout=120)
         if resp.status_code == 200:
-            return True
+            return 120.120  # todo: replace with amount
         else:
-            logger.error(f'Failed to get ether from faucet: {resp.status_code}')
-    except requests.exceptions.RequestException:
-        return False
+            raise RuntimeError(f'Failed to get ether from faucet: {resp.status_code}')
+    except requests.exceptions.RequestException as e:
+        raise ConnectionError(f'{e}')
 
 
 def get_balance(faucet_url, account: str, currency: str) -> float:
@@ -33,9 +26,6 @@ def get_balance(faucet_url, account: str, currency: str) -> float:
         :raises ConnectionError - Connecting to faucet failed
         :raises ValueError - Unknown currency
     """
-    if currency not in ['ether', 'eng']:
-        raise ValueError(f'Requested balance for invalid currency {currency}')
-    logger.info(f'Trying to get {currency} balance account: {account}')
     try:
         # todo: move this to global configuration so we can just use ethereum node instead
         resp = requests.get(f'{faucet_url}/faucet/balance/{currency}?account={account}', timeout=120)
@@ -57,8 +47,7 @@ def wait_for_balance(address, currency: str, min_balance: float, timeout: int, b
             time.sleep(backoff)
         else:
             logger.info(f'{currency} approved successfully!')
-            return True
-    return False
+    raise RuntimeError('Balance did not go over minimum in required time')
 
 
 def get_initial_coins(account: str, currency: str, config: dict):
@@ -66,23 +55,24 @@ def get_initial_coins(account: str, currency: str, config: dict):
         logger.critical(f'Tried to get coins for invalid token {currency}')
         exit(-3)
 
+    _cur = {'ETH': 'ether',
+            'ENG': 'eng'}
+    _currency = _cur[currency]
+
     min_balance = {'ETH': float(config['MINIMUM_ETHER_BALANCE']),
                    'ENG': float(config['MINIMUM_ENG_BALANCE'])}
 
-    if min_balance[currency] > float(get_balance(config['FAUCET_URL'], account, currency)):
+    if min_balance[currency] > float(get_balance(config['FAUCET_URL'], account, _currency)):
         logger.info(f'{currency} balance is less than the minimum amount to start the worker')
         if config['ENIGMA_ENV'] == 'MAINNET':
             logger.error(f'Minimum amounts to start are {min_balance["ENG"]} ENG and {min_balance["ETH"]} ETH. '
                          f'Please transfer at least those amounts to the address {account}, wait for confirmation, '
                          f'and relaunch the worker')
         logger.info(f'Trying to get more {currency} for account: {account} from faucet')
-        if not request_coins(config['FAUCET_URL'], account, 'ether'):
-            logger.critical(f'Exiting...')
-            return False
+
+        request_coins(config['FAUCET_URL'], account, _currency)
 
         logger.info(f'Successfully got {currency} from faucet')
 
-        if not wait_for_balance(account, currency, min_balance[currency], int(config['BALANCE_WAIT_TIME']), 60, config):
-            logger.error(f'Not enough {currency} to run the worker, exiting...')
-            return False
-    return True
+        wait_for_balance(account, _currency, min_balance[currency], int(config['BALANCE_WAIT_TIME']), 60, config)
+

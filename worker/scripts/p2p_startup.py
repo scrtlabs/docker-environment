@@ -2,7 +2,7 @@ import os
 import json
 import pathlib
 
-from .p2p_node import P2PNode
+from p2p_node import P2PNode
 
 from enigma_docker_common.config import Config
 from enigma_docker_common.provider import Provider
@@ -82,9 +82,9 @@ if __name__ == '__main__':
 
     if config.get('FORCE_NEW_ETH_ADDR', False):
         logger.info('Generating new Ethereum address')
-        private_key, eth_addr = get_eth_address()
+        private_key, eth_address = get_eth_address()
         save_to_path(privkey_path, private_key, 'w+')
-        save_to_path(pubkey_path, eth_addr, 'w+')
+        save_to_path(pubkey_path, eth_address, 'w+')
     else:  # try to open address from filesystem
         try:
             with open(pubkey_path, 'r') as f:
@@ -96,14 +96,21 @@ if __name__ == '__main__':
 
         except FileNotFoundError:
             logger.info('Ethereum address not found. Generating new address...')
-            private_key, eth_addr = get_eth_address()
+            private_key, eth_address = get_eth_address()
             save_to_path(privkey_path, private_key, 'w+')
-            save_to_path(pubkey_path, eth_addr, 'w+')
+            save_to_path(pubkey_path, eth_address, 'w+')
             logger.info(f'Done! New address is {eth_address}')
             # todo: add a check it was properly saved
 
     #  will not try a faucet if we're in mainnet - also, it should be logged inside
-    if not (get_initial_coins(eth_address, 'ETH', config) and get_initial_coins(eth_address, 'ENG', config)):
+    try:
+        get_initial_coins(eth_address, 'ETH', config)
+        get_initial_coins(eth_address, 'ENG', config)
+    except RuntimeError as e:
+        logger.critical(f'Failed to get enough ETH or ENG to start - {e}')
+        exit(-2)
+    except ConnectionError as e:
+        logger.critical(f'Failed to connect to remote address: {e}')
         exit(-1)
 
     if env in ['COMPOSE', 'TESTNET', 'K8S']:

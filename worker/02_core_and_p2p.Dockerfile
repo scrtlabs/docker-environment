@@ -124,10 +124,9 @@ COPY config/core ./core/config
 COPY config/p2p ./p2p/config
 
 COPY scripts/core_startup.py ./core/
-COPY scripts/p2p_startup.py ./p2p/
-COPY scripts/p2p_node.py ./p2p/
+COPY scripts ./p2p/scripts
 
-RUN chmod +x ./p2p/p2p_startup.py && chmod +x ./core/core_startup.py
+RUN chmod +x ./p2p/scripts/p2p_startup.py && chmod +x ./core/core_startup.py
 
 COPY devops/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
