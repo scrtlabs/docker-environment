@@ -12,7 +12,7 @@ ifeq ($(SGX_MODE), HW)
 else ifeq ($(SGX_MODE), SW)
 	ext := sw
 else
-	$(error SGX_MODE must be either HW or SW)
+$(error SGX_MODE must be either HW or SW)
 endif
 
 clone-all:
