@@ -18,7 +18,7 @@ required = [  # global environment setting
               # defaults in local config file
               'ETH_NODE_ADDRESS', 'ETH_NODE_PORT',
               'CONTRACTS_FOLDER', 'DEFAULT_CONFIG_PATH',
-              'FAUCET_URL', 'STORAGE_CONNECTION_STRING', 'KEYPAIR_FILE_NAME', 'TEMP_CONFIG_PATH']
+              'FAUCET_URL', 'KEYPAIR_FILE_NAME', 'TEMP_CONFIG_PATH']
 
 env_defaults = {'K8S': './config/k8s_config.json',
                 'TESTNET': './config/testnet_config.json',

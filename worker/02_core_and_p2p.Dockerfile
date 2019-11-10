@@ -125,6 +125,7 @@ COPY config/p2p ./p2p/config
 
 COPY scripts/core_startup.py ./core/
 COPY scripts/p2p_startup.py ./p2p/
+COPY scripts/p2p_node.py ./p2p/
 
 RUN chmod +x ./p2p/p2p_startup.py && chmod +x ./core/core_startup.py
 
