@@ -32,7 +32,7 @@ services:
 
   worker:
     hostname: worker
-    image: enigmampc/worker_sw_beta:latest
+    image: enigmampc/worker_sw:latest
     depends_on:
       - contract
       - km
