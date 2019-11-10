@@ -2,3 +2,6 @@ azure-core==1.0.0b4
 azure-common==1.1.23
 azure-storage-blob==12.0.0b4
 requests
+ecdsa
+pycryptodome
+web3
