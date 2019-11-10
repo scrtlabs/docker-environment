@@ -22,7 +22,7 @@ RUN rustup target add wasm32-unknown-unknown && \
 # clone the rust-sgx-sdk baidu sdk
 RUN git clone --depth 1  -b v1.0.9 https://github.com/baidu/rust-sgx-sdk.git  sgx
 
-COPY --from=gitclone_km /enigma-core /root/
+COPY --from=gitclone_core /enigma-core /root/
 
 WORKDIR /root/enigma-principal
 
