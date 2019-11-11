@@ -7,6 +7,8 @@ import pathlib
 from enigma_docker_common.config import Config
 from enigma_docker_common.provider import Provider
 from enigma_docker_common.logger import get_logger
+from enigma_docker_common.crypto import open_eth_keystore
+from enigma_docker_common.blockchain import get_initial_coins
 
 logger = get_logger('key_management.startup')
 
@@ -24,6 +26,8 @@ env_defaults = {'K8S': './config/k8s_config.json',
                 'TESTNET': './config/testnet_config.json',
                 'MAINNET': './config/mainnet_config.json',
                 'COMPOSE': './config/compose_config.json'}
+
+env = os.getenv('ENIGMA_ENV', 'COMPOSE')
 
 
 def generate_config_file(app_config: dict, default_config_path: str, config_file_path: str) -> None:
@@ -66,9 +70,8 @@ def map_log_level_to_exec_flags(loglevel: str) -> str:
 
 if __name__ == '__main__':
     # parse arguments
-    logger.info('STARTING KEY MANAGEMENT STARTUP.....')
-
-    env = os.getenv('ENIGMA_ENV', 'COMPOSE')
+    logger.info('STARTING KEY MANAGEMENT.....')
+    logger.info(f'Enviroment: {env}')
 
     config = Config(required=required, config_file=env_defaults[env])
     provider = Provider(config=config)
@@ -104,10 +107,23 @@ if __name__ == '__main__':
         logger.critical(f'Public key file doesn\'t exist -- initializing must have failed')
         exit(-1)
 
-    CONFIG_FILE_PATH = '/tmp/config.json'
+    keystore_dir = config['KEYSTORE_DIRECTORY'] or pathlib.Path.home()
+    private, eth_address = open_eth_keystore(keystore_dir, config, create=True)
 
     # set the URL of the ethereum node we're going to use -- this will be picked up by the application config
     config['URL'] = f'http://{config["ETH_NODE_ADDRESS"]}:{config["ETH_NODE_PORT"]}'
+
+    try:
+        get_initial_coins(eth_address, 'ETH', config)
+        get_initial_coins(eth_address, 'ENG', config)
+    except RuntimeError as e:
+        logger.critical(f'Failed to get enough ETH or ENG to start - {e}')
+        exit(-2)
+    except ConnectionError as e:
+        logger.critical(f'Failed to connect to remote address: {e}')
+        exit(-1)
+
+
 
     logger.info(f'Waiting for enigma-contract @ '
                 f'http://{config["CONTRACT_DISCOVERY_ADDRESS"]}:{config["CONTRACT_DISCOVERY_PORT"]} for enigma contract')
@@ -140,4 +156,4 @@ if __name__ == '__main__':
 
     debug_trace_flags = map_log_level_to_exec_flags(config.get('LOG_LEVEL', 'INFO'))
 
-    subprocess.call([f'{executable}', f'{debug_trace_flags}', f'--principal-config', f'{CONFIG_FILE_PATH}'])
+    subprocess.call([f'{executable}', f'{debug_trace_flags}', f'--principal-config', f'{config["TEMP_CONFIG_PATH"]}'])

@@ -36,29 +36,31 @@ class EnigmaTokenContract:
                                                                      'nonce': nonce})
 
     @staticmethod
-    def _sign(raw_tx, key) -> dict:
+    def _sign(raw_tx, key: bytes) -> dict:
         from web3.auto import w3 as auto_w3
         # stupid_w3.eth.defaultAccount = public_key
-        return auto_w3.eth.account.sign_transaction(raw_tx, private_key=bytes.fromhex(key[2:]))
+        return auto_w3.eth.account.sign_transaction(raw_tx, private_key=key)
 
     def send_and_wait(self, signed_tx):
         self.w3.eth.sendRawTransaction(signed_tx.rawTransaction)
         tx_receipt = self.w3.eth.waitForTransactionReceipt(signed_tx.hash)
         return tx_receipt
 
-    def approve(self, approver: str, to: str, amount, key: str):
+    def approve(self, approver: str, to: str, amount, key: bytes):
         """
         Builds, signs, and sends approve command for {amount} ENG from {approver} to {to}
 
         :param amount amount to approve in fragments of ENG
         :param approver
         :param to
-        :param key: [OPTIONAL] private key as hex string with '0x'
+        :param key: [OPTIONAL] private key in bytes
         """
         raw_tx = self.approve_build_transaction(approver, to, amount)
         signed_tx = self._sign(raw_tx, key)
         self.send_and_wait(signed_tx)
 
     def check_allowance(self, approver, to):
+        approver = self.w3.toChecksumAddress(approver)
+        to = self.w3.toChecksumAddress(to)
         val = self.erc20.functions.allowance(to, approver).call()
         return val

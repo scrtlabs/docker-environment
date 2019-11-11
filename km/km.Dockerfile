@@ -36,15 +36,14 @@ FROM enigmampc/core-base:latest as pybuild
 
 WORKDIR /root
 
-# this is here first don't run it again unless we actually change the requirements
-COPY scripts/requirements.txt ./
-
 RUN apt-get update \
  && apt-get install -y --no-install-recommends \
     python3-setuptools \
     gcc \
     python3.6-dev \
  && rm -rf /var/lib/apt/lists/*
+
+COPY scripts/requirements.txt ./
 
 RUN pip3 install wheel
 

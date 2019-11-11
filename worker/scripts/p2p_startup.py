@@ -7,7 +7,7 @@ from p2p_node import P2PNode
 from enigma_docker_common.config import Config
 from enigma_docker_common.provider import Provider
 from enigma_docker_common.logger import get_logger
-from enigma_docker_common.crypto import get_eth_address
+from enigma_docker_common.crypto import get_eth_address, open_eth_keystore
 from enigma_docker_common.blockchain import get_initial_coins
 from enigma_docker_common.enigma import EnigmaTokenContract
 
@@ -64,7 +64,6 @@ if __name__ == '__main__':
         bootstrap_id = ''
 
     deposit_amount = int(config['DEPOSIT_AMOUNT'])
-    eth_key_path = config['ETH_KEY_PATH']
 
     # Load Enigma.json ABI
     save_to_path(enigma_abi_path, provider.enigma_abi)
@@ -72,35 +71,10 @@ if __name__ == '__main__':
     eng_contract_addr = provider.enigma_contract_address
     logger.info(f'Got address {eng_contract_addr} for enigma contract')
 
-    PRIV_KEY_FILENAME = "id_rsa"
-    PUB_KEY_FILENAME = "id_rsa.pub"
-
-    pubkey_path = f'{eth_key_path}{PUB_KEY_FILENAME}'
-    privkey_path = f'{eth_key_path}{PRIV_KEY_FILENAME}'
-
     login_and_deposit = False
 
-    if config.get('FORCE_NEW_ETH_ADDR', False):
-        logger.info('Generating new Ethereum address')
-        private_key, eth_address = get_eth_address()
-        save_to_path(privkey_path, private_key, 'w+')
-        save_to_path(pubkey_path, eth_address, 'w+')
-    else:  # try to open address from filesystem
-        try:
-            with open(pubkey_path, 'r') as f:
-                eth_address = f.read()
-            with open(privkey_path, 'r') as f:
-                private_key = f.read()
-
-            logger.info(f'Loaded key from local filesystem, ethereum address: {eth_address}')
-
-        except FileNotFoundError:
-            logger.info('Ethereum address not found. Generating new address...')
-            private_key, eth_address = get_eth_address()
-            save_to_path(privkey_path, private_key, 'w+')
-            save_to_path(pubkey_path, eth_address, 'w+')
-            logger.info(f'Done! New address is {eth_address}')
-            # todo: add a check it was properly saved
+    keystore_dir = config['ETH_KEY_PATH'] or pathlib.Path.home()
+    private_key, eth_address = open_eth_keystore(keystore_dir, config, create=True)
 
     #  will not try a faucet if we're in mainnet - also, it should be logged inside
     try:
@@ -126,7 +100,7 @@ if __name__ == '__main__':
         erc20_contract.approve(eth_address,
                                provider.enigma_contract_address,
                                deposit_amount,
-                               private_key=bytes.fromhex(private_key[2:]))
+                               key=bytes.fromhex(private_key[2:]))
 
         val = erc20_contract.check_allowance(eth_address, provider.enigma_contract_address)
         logger.info(f'Current allowance for {provider.enigma_contract_address}, from {eth_address}: {val} ENG')

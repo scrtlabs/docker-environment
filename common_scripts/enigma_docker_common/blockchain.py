@@ -47,17 +47,17 @@ def wait_for_balance(address, currency: str, min_balance: float, timeout: int, b
             time.sleep(backoff)
         else:
             logger.info(f'{currency} approved successfully!')
+            return
     raise RuntimeError('Balance did not go over minimum in required time')
 
 
 def get_initial_coins(account: str, currency: str, config: dict):
-    if currency not in ['ETH', 'ENG']:
-        logger.critical(f'Tried to get coins for invalid token {currency}')
-        exit(-3)
 
-    _cur = {'ETH': 'ether',
-            'ENG': 'eng'}
-    _currency = _cur[currency]
+    try:
+        _currency = {'ETH': 'ether',
+                     'ENG': 'eng'}[currency]
+    except KeyError:
+        raise ValueError(f'Tried to get coins for invalid token {currency}')
 
     min_balance = {'ETH': float(config['MINIMUM_ETHER_BALANCE']),
                    'ENG': float(config['MINIMUM_ENG_BALANCE'])}
