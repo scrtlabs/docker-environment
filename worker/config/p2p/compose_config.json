@@ -8,7 +8,7 @@
  "CONTRACTS_FOLDER": "/root/p2p/contracts/",
  "KEY_MANAGEMENT_ADDRESS": "http://km:3040",
  "FAUCET_URL": "http://contract:8001",
- "MINIMUM_ETHER_BALANCE": "0.001",
+ "MINIMUM_ETHER_BALANCE": "0.1",
  "MINIMUM_ENG_BALANCE": "10",
  "DEPOSIT_AMOUNT": 10,
  "BOOTSTRAP_ADDRESS": "/dnsaddr/bootstrap/tcp/10300/ipfs/QmcrQZ6RJdpYuGvZqD5QEHAv6qX4BrQLJLQPQUrTrzdcgm",

@@ -2,6 +2,8 @@ import os
 import pathlib
 from typing import Tuple
 
+from web3.auto import w3 as auto_w3
+
 from .logger import get_logger
 
 from Crypto.Hash import keccak
@@ -56,6 +58,7 @@ def open_eth_keystore(path: str, config: dict, create: bool = True):
 
     if config.get('FORCE_NEW_ETH_ADDR', False):
         private_key, eth_address = get_eth_address()
+        eth_address = auto_w3.toChecksumAddress(eth_address)
         save_to_path(privkey_path, private_key, 'w+')
         save_to_path(pubkey_path, eth_address, 'w+')
     else:  # try to open address from filesystem

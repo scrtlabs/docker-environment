@@ -20,7 +20,9 @@ required = [  # global environment setting
               # defaults in local config file
               'ETH_NODE_ADDRESS', 'ETH_NODE_PORT',
               'CONTRACTS_FOLDER', 'DEFAULT_CONFIG_PATH',
-              'FAUCET_URL', 'KEYPAIR_FILE_NAME', 'TEMP_CONFIG_PATH']
+              'FAUCET_URL', 'KEYPAIR_FILE_NAME', 'TEMP_CONFIG_PATH',
+              "MINIMUM_ETHER_BALANCE", "MINIMUM_ENG_BALANCE",
+]
 
 env_defaults = {'K8S': './config/k8s_config.json',
                 'TESTNET': './config/testnet_config.json',
@@ -112,6 +114,7 @@ if __name__ == '__main__':
 
     # set the URL of the ethereum node we're going to use -- this will be picked up by the application config
     config['URL'] = f'http://{config["ETH_NODE_ADDRESS"]}:{config["ETH_NODE_PORT"]}'
+    config['ACCOUNT'] = eth_address
 
     try:
         get_initial_coins(eth_address, 'ETH', config)
@@ -122,8 +125,6 @@ if __name__ == '__main__':
     except ConnectionError as e:
         logger.critical(f'Failed to connect to remote address: {e}')
         exit(-1)
-
-
 
     logger.info(f'Waiting for enigma-contract @ '
                 f'http://{config["CONTRACT_DISCOVERY_ADDRESS"]}:{config["CONTRACT_DISCOVERY_PORT"]} for enigma contract')

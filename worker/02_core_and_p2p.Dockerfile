@@ -93,9 +93,9 @@ RUN apt-get update \
     python3.6-dev \
  && rm -rf /var/lib/apt/lists/*
 
-COPY scripts/requirements.txt ./
-
 RUN pip3 install wheel
+
+COPY scripts/requirements.txt ./
 
 RUN pip3 wheel --wheel-dir=/root/wheels -r requirements.txt -i http://pypi.keytango.io --trusted-host pypi.keytango.io
 

@@ -75,4 +75,3 @@ def get_initial_coins(account: str, currency: str, config: dict):
         logger.info(f'Successfully got {currency} from faucet')
 
         wait_for_balance(account, _currency, min_balance[currency], int(config['BALANCE_WAIT_TIME']), 60, config)
-
