@@ -43,8 +43,7 @@ def save_to_path(path, file, flags='wb+'):
     with open(path, flags) as f:
         f.write(file)
 
-
-if __name__ == '__main__':
+def main():
     # todo: unhardcode this
     executable = '/root/p2p/src/cli/cli_app.js'
 
@@ -132,5 +131,16 @@ if __name__ == '__main__':
 
     # Setting workdir to the base path of the executable, because everything is fragile
     os.chdir(pathlib.Path(executable).parent)
+    import time
+    p2p_runner.start()
+    while not p2p_runner.kill_now:
+        time.sleep(2)
+        # add cleanup here if necessary
 
-    p2p_runner.run()
+
+if __name__ == '__main__':
+    main()
+
+
+
+

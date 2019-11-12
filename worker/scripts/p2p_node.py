@@ -1,3 +1,9 @@
+import time
+import signal
+import threading
+import atexit
+import subprocess
+
 from typing import List
 
 from enigma_docker_common.logger import get_logger
@@ -5,9 +11,10 @@ from enigma_docker_common.logger import get_logger
 logger = get_logger('worker.p2p-node')
 
 
-class P2PNode:
+class P2PNode(threading.Thread):
     exec_file = 'cli_app.js'
     runner = 'node'
+    kill_now = False
 
     def __init__(self,
                  ether_node: str,
@@ -26,7 +33,8 @@ class P2PNode:
                  deposit_amount: int = 0,
                  login_and_deposit: bool = False,
                  ethereum_key: str = '',
-                 executable_name: str = 'cli_app.js'):
+                 executable_name: str = 'cli_app.js', *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self.exec_file = executable_name
         self.km_node = key_mgmt_node
 
@@ -50,6 +58,32 @@ class P2PNode:
         self.login_and_deposit = login_and_deposit
         self.ethereum_key = ethereum_key
         self.bootstrap_id = bootstrap_id
+        self.proc = None
+        atexit.register(self.stop)
+        signal.signal(signal.SIGINT, self._kill)
+        signal.signal(signal.SIGTERM, self._kill)
+
+    def run(self):
+        self._start()
+
+    def stop(self):
+        if self.proc:
+            self._kill(None, None)
+
+    def _kill(self, signum, frame):
+        if self.proc:
+            logger.info('Logging out...')
+            self.proc.stdin.write(b'logout\n')
+            self.proc.stdin.flush()
+            time.sleep(2)
+            self.proc.send_signal(signal.SIGINT)
+            time.sleep(2)
+            self.proc.terminate()
+            self.proc.wait(timeout=0.2)
+            del self.proc
+            self.proc = None
+            self.kill_now = True
+            logger.info('Killed p2p cli')
 
     def _map_params_to_exec(self) -> List[str]:
         """ build executable params -- if cli params change just change the keys and everything should still work """
@@ -93,11 +127,11 @@ class P2PNode:
 
         return params_list
 
-    def run(self):
-        import subprocess
+    def _start(self):
 
         params = self._map_params_to_exec()
 
         logger.info(f'Running p2p: {self.exec_file} {params}')
 
-        subprocess.call([f'{self.runner}', f'--inspect=0.0.0.0', f'{self.exec_file}', *params])
+        self.proc = subprocess.Popen([f'{self.runner}', f'--inspect=0.0.0.0', f'{self.exec_file}', *params],
+                                     stdin=subprocess.PIPE, stderr=subprocess.STDOUT, close_fds=True, shell=False)
