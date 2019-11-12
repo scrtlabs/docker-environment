@@ -29,6 +29,7 @@ services:
       - "8080"  # what is this?
     ports:
       - "3346:3346"
+      - "9229:9229"
 
   worker:
     hostname: worker

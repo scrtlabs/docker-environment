@@ -30,7 +30,26 @@ RUN . /opt/sgxsdk/environment && env && make full-clean
 
 RUN . /opt/sgxsdk/environment && env && SGX_MODE=${SGX_MODE} RUSTFLAGS=-Awarnings RUST_BACKTRACE=${DEBUG} make DEBUG=${DEBUG}
 
-##### STAGE 2
+######## Stage 2 - build python wheels
+
+FROM enigmampc/core-base:latest as pybuild
+
+WORKDIR /root
+
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends \
+    python3-setuptools \
+    gcc \
+    python3.6-dev \
+ && rm -rf /var/lib/apt/lists/*
+
+RUN pip3 install wheel
+
+COPY scripts/requirements.txt ./
+
+RUN pip3 wheel --wheel-dir=/root/wheels -r requirements.txt -i http://pypi.keytango.io --trusted-host pypi.keytango.io
+
+####### Stage 3
 
 FROM enigmampc/core-base:latest
 
@@ -38,16 +57,14 @@ RUN mkdir -p /tmp/contracts
 
 WORKDIR /root
 
-# this is here first don't run it again unless we actually change the requirements
-COPY scripts/requirements.txt ./
+COPY --from=pybuild /root/wheels /root/core/wheels
 
-RUN apt-get update \
- && apt-get install -y --no-install-recommends \
-    python3-setuptools \
- && rm -rf /var/lib/apt/lists/*
+COPY scripts/requirements.txt .
 
-# todo: temporarily running on my private pypi -- WILL NOT BUILD OUTSIDE ENIGMA NETWORK :)
-RUN pip3 install -r requirements.txt -i http://pypi.keytango.io --trusted-host pypi.keytango.io
+RUN pip3 install \
+      --no-index \
+      --find-links=/root/core/wheels \
+      -r requirements.txt
 
 COPY --from=core-build /root/enigma-principal/bin ./bin
 

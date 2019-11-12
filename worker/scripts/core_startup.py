@@ -1,4 +1,5 @@
 import os
+import time
 import pathlib
 import subprocess
 import argparse
@@ -51,6 +52,9 @@ if __name__ == '__main__':
     port = config['PORT']
     attestation_retries = config['ATTESTATION_RETRIES']
     os.chdir(pathlib.Path(args.executable).parent)
+
+    # wait for SGX service to start
+    time.sleep(2)
 
     subprocess.call([f'{args.executable}', f'{debug_trace_flags}',
                      '-p', f'{port}',

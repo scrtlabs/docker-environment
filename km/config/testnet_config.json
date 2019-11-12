@@ -9,9 +9,13 @@
  "KEYPAIR_FILE_NAME": "km_keypair.sealed",
  "KEYPAIR_FILE_NAME_SW": "km_keypair_sw.sealed",
  "KEYPAIR_STORAGE_DIRECTORY": "kmfiles",
+ "MINIMUM_ETHER_BALANCE": "0.1",
+ "MINIMUM_ENG_BALANCE": "10",
+ "BALANCE_WAIT_TIME": 1800,
  "RUST_BACKTRACE": "1",
  "EXECUTABLE_PATH": "/root/bin/enigma-principal-app",
  "KEYPAIR_PATH": "/root/.enigma/km_keypair.sealed",
  "KEYPAIR_PUBLIC_PATH": "/root/.enigma/principal-sign-addr.txt",
+ "KEYSTORE_DIRECTORY": "",
  "DEFAULT_CONFIG_PATH": "./config/default_config.json"
 }
