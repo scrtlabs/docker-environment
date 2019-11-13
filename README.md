@@ -90,9 +90,9 @@ docker-compose scale worker=X
 
 Be careful you have enough memory to run all those workers though!
 
-### Manual build
+## Manual build
 
-#### Worker
+### Worker
 
 1. Clone from github both `core` and `p2p`:
 ```
@@ -116,7 +116,7 @@ docker build --build-arg DEBUG=1 --build-arg SGX_MODE=SW -f 01_core_base.Dockerf
 docker build --build-arg SGX_MODE=SW -f 02_core_and_p2p.Dockerfile -t enigmampc/worker-minimal:latest .
 ``` 
 
-##### Optional steps
+#### Optional steps
 
 + Build custom image based off baidu image:
 ```
@@ -128,7 +128,7 @@ docker build -f baidu1804.Dockerfile -t baiduxlab/sgx-rust:1804-1.0.9 .
 docker build -f buildSGX.Dockerfile -t buildsgx .
 ```
 
-#### Key Management
+### Key Management
 
 1. Clone from github:
 ```
@@ -150,7 +150,7 @@ docker build --build-arg SGX_MODE=SW -f 01_core_base.Dockerfile -t enigmampc/cor
 docker build --build-arg SGX_MODE=SW -f km.Dockerfile -t enigmampc/key_management:latest .
 ``` 
 
-#### Contract
+### Contract
 
 1. Clone from github:
 ```
@@ -167,7 +167,14 @@ docker build -f gitclone_contract.Dockerfile -t gitclone_contract --build-arg br
 docker build --build-arg SGX_MODE=SW -f contract.Dockerfile -t enigmampc/contract:latest .
 ```  
 
-#### Development
+### Client
+
+1. Build Enigma-Client image:
+```
+docker build -f client.Dockerfile -t enigmampc/client:latest .
+```
+
+### Development
 
 Clone this repository. If cloned into Pycharm you should get all the build configurations for free
 
