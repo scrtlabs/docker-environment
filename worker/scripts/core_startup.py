@@ -7,8 +7,9 @@ import argparse
 SGX_ENV_PATH = '/opt/sgxsdk/environment'
 
 from enigma_docker_common.config import Config
-# from enigma_docker_common.logger import get_logger
+from enigma_docker_common.logger import get_logger
 
+logger = get_logger('worker.core-startup')
 
 required = ['RUST_BACKTRACE', 'SPID', 'PORT', 'ATTESTATION_RETRIES']
 
@@ -37,7 +38,7 @@ def map_log_level_to_exec_flags(loglevel: str) -> str:
         return ''
 
 
-if __name__ == '__main__':
+def main():
     parser = init_arg_parse()
     args = parser.parse_args()
 
@@ -55,8 +56,13 @@ if __name__ == '__main__':
 
     # wait for SGX service to start
     time.sleep(2)
-
+    env = os.environ.copy()
+    logger.error(f'Env: {env}')
     subprocess.call([f'{args.executable}', f'{debug_trace_flags}',
                      '-p', f'{port}',
                      '--spid', f'{spid}',
-                     '-r', f'{attestation_retries}'])
+                     '-r', f'{attestation_retries}'], env=env)
+
+
+if __name__ == '__main__':
+    main()
