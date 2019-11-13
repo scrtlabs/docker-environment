@@ -57,7 +57,7 @@ def main():
     # wait for SGX service to start
     time.sleep(2)
     env = os.environ.copy()
-    logger.error(f'Env: {env}')
+    logger.debug(f'Environment: {env}')
     subprocess.call([f'{args.executable}', f'{debug_trace_flags}',
                      '-p', f'{port}',
                      '--spid', f'{spid}',
