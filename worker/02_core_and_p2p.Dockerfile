@@ -129,4 +129,10 @@ RUN chmod +x ./p2p/scripts/p2p_startup.py && chmod +x ./core/core_startup.py
 
 COPY devops/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
-CMD . /opt/sgxsdk/environment && /usr/bin/supervisord -c /etc/supervisor/conf.d/supervisord.conf
+##### FOR NOW TILL I FIND A WAY TO SET THESE INSIDE PYTHON :'(
+ENV LD_LIBRARY_PATH=/opt/intel/libsgx-enclave-common/aesm:/opt/sgxsdk/sdk_libs:/opt/sgxsdk/sdk_libs
+ENV PKG_CONFIG_PATH=:/opt/sgxsdk/pkgconfig:/opt/sgxsdk/pkgconfig
+ENV SGX_SDK=/opt/sgxsdk
+ENV PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/opt/sgxsdk/bin:/opt/sgxsdk/bin/x64:/opt/sgxsdk/bin:/opt/sgxsdk/bin/x64
+
+CMD ["/usr/bin/python", "/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
