@@ -42,7 +42,11 @@ def generate_config_file(app_config: dict, default_config_path: str, config_file
         default_config = json.load(f)
 
     # for each value either use the environment variable set as key.upper() or take the value from the default config
-    temp_conf = {k: app_config.get(k.upper(), v) for k, v in default_config.items()}
+    # also, if the value can represent an integer, use that representation instead of a string
+    temp_conf = {k: int(app_config.get(k.upper(), v))
+                 if app_config.get(k.upper(), 'false').isdigit()
+                 else app_config.get(k.upper(), v)
+                 for k, v in default_config.items()}
 
     logger.debug(f'Running with config file at {config_file_path} with parameters: {temp_conf}')
 

@@ -161,11 +161,12 @@ class TransferEng(Resource):
 def block_miner():
     if config.get('AUTO_MINER', None):
         logger.info('Starting auto miner')
-        mining_delay = config.get('TIME_BETWEEN_BLOCKS', 60)
+        mining_delay = int(config.get('TIME_BETWEEN_BLOCKS', 60))
         logger.info(f'Time between transactions: {mining_delay}')
         logger.info(f'Time to confirm block: {config["BLOCK_TIME"]}')
-        block_time = int(config["BLOCK_TIME"]) or 1
-        logger.info(f'Min epoch time: {int(config["EPOCH_SIZE"]) * block_time * mining_delay}')
+        block_time = int(config["BLOCK_TIME"])
+        epoch_time = int(config["EPOCH_SIZE"]) * max(mining_delay, block_time)
+        logger.info(f'Min epoch time: {epoch_time}s')
         random_acc = '0x18A787C1e5fb92D7dFF1f920Ee740901Dc72BC1b'
         while True:
             coinbase = w3.toChecksumAddress(CoinBaseProvider.address())

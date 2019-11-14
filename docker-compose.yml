@@ -69,6 +69,7 @@ services:
     environment:
       ENIGMA_ENV: COMPOSE
       SGX_MODE: SW
+      CONFIRMATIONS: 1
     expose:
       - "3040" # JSON RPC port
 
