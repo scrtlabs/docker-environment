@@ -6,6 +6,7 @@
  "CORE_PORT": "5552",
  "CONTRACTS_FOLDER": "/root/p2p/contracts/",
  "KEY_MANAGEMENT_ADDRESS": "http://km-service:3040",
+ "KEY_MANAGEMENT_DISCOVERY": "http://km-service:8081",
  "FAUCET_URL": "http://contract-service:8001",
  "MINIMUM_ETHER_BALANCE": "0.1",
  "MINIMUM_ENG_BALANCE": "10",

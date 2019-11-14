@@ -16,6 +16,9 @@
  "EXECUTABLE_PATH": "/root/bin/enigma-principal-app",
  "KEYPAIR_PATH": "/root/.enigma/km_keypair.sealed",
  "KEYPAIR_PUBLIC_PATH": "/root/.enigma/principal-sign-addr.txt",
- "KEYSTORE_DIRECTORY": "",
- "DEFAULT_CONFIG_PATH": "./config/default_config.json"
+ "KEYSTORE_DIRECTORY": "/root/.enigma/",
+ "DEFAULT_CONFIG_PATH": "/root/scripts/principal_defaults.json",
+ "KM_FILENAME": "principal-sign-addr.txt",
+ "KEYPAIR_DIRECTORY": "/root/.enigma/",
+ "ADDRESS_DISCOVERY_PORT": 8081
 }
