@@ -10,6 +10,7 @@ const log = console;
 const region = argv.region || process.env.REGION || 'eastus';
 const cluster = argv.cluster || process.env.CLUSTER || 'enigma-cluster';
 const namespace = argv.ns || process.env.NS || 'app';
+const cacheRefreshInterval = _.toInteger(argv.cri || process.env.CACHE_REFRESH_INTERVAL || 15 * 1000);
 const DEBUG = argv.debug || process.env.DEBUG || false;
 
 const kubeconfig = new KubeConfig();
@@ -215,17 +216,28 @@ async function scaleWorkers({ namespace, targetNum, shouldDeleteService }) {
     }
 }
 
-async function getStatus({ namespace }) {
-    const retVal = {};
+async function getStatus({ namespace, fromCache }) {
+    if (fromCache) {
+        const _status = Cache[namespace];
+        if (_status) return _status;
+    }
+
+    const status = {};
     const names = _(await getDeployments({ namespace }))
         .map(x => x.metadata.name).value();
     const services = await getServices({ namespace });
     for (const name of names) {
         const svc = _(services).filter(x => x.metadata.name === `${name}-service`).head();
-        const externalIp = _.get(svc, 'status.loadBalancer.ingress[0].ip', '')
-        _.set(retVal, name, externalIp);
+        const val = {};
+        const externalIp = _.get(svc, 'status.loadBalancer.ingress[0].ip', '');
+        _.set(val, 'externalIp', externalIp);
+        if (_.startsWith(name, 'worker')) {
+            const ethereumAddress = await getWorkerEthereumAddress({ namespace, deploymentName: name });
+            _.set(val, 'ethereumAddress', ethereumAddress);
+        }
+        _.set(status, name, val);
     }
-    return retVal;
+    return status;
 }
 
 async function turnOffWorkers({ namespace, shouldDeleteService }) {
@@ -280,6 +292,59 @@ async function getApplicationInternalConfigFile({ namespace, name, index, subPat
     return JSON.parse(str);
 }
 
+async function getWorkerEthereumAddress({ namespace, deploymentName }) {
+    const pod = await getApplicationPodName({ app: deploymentName, namespace });
+    const cmd = `cat ./p2p/id_rsa.pub`;
+    const str = await execOnPod({ namespace, pod, cmd });
+    return str;
+}
+
+async function stopWorkerProcess({ namespace, index }) {
+    if (!index) {
+        index = await pickRandomWorkerIndex({ namespace });
+        log.info(index);
+    }
+    const name = Applications.WORKER;
+    const pod = await getApplicationPodName({ app: getDeploymentName({ name, index }), namespace });
+    let cmd = `supervisorctl stop p2p`;
+    await execOnPod({ namespace, pod, cmd });
+    cmd = `supervisorctl stop core`;
+    await execOnPod({ namespace, pod, cmd });
+}
+
+async function startWorkerProcess({ namespace, index }) {
+    if (!index) {
+        index = await pickRandomWorkerIndex({ namespace });
+        log.info(index);
+    }
+    const name = Applications.WORKER;
+    const pod = await getApplicationPodName({ app: getDeploymentName({ name, index }), namespace });
+    let cmd = `supervisorctl start core`;
+    await execOnPod({ namespace, pod, cmd });
+    cmd = `supervisorctl start p2p`;
+    await execOnPod({ namespace, pod, cmd });
+}
+
+const Cache = {};
+const Intervals = {};
+
+async function enableCache({ namespace }) {
+    if (Intervals[namespace]) {
+        log.info(`enableCache: cache already initialized for namespace ${namespace}`);
+        return;
+    }
+    const handle = setInterval(async () => {
+        statusCache[namespace] = await getStatus();
+    }, cacheRefreshInterval);
+    Intervals[namespace] = handle;
+}
+
+function disableCache({ namespace }) {
+    const handle = Intervals[namespace];
+    if (handle) {
+        clearInterval(handle);
+    }
+}
 
 module.exports = {
     Applications,
@@ -293,5 +358,6 @@ module.exports = {
     restartKeyManagement,
     getStatus,
     getApplicationInternalConfigFile,
+    startWorkerProcess,
+    stopWorkerProcess
 };
-
