@@ -43,6 +43,7 @@ def save_to_path(path, file, flags='wb+'):
     with open(path, flags) as f:
         f.write(file)
 
+
 def main():
     # todo: unhardcode this
     executable = '/root/p2p/src/cli/cli_app.js'
@@ -72,9 +73,10 @@ def main():
 
     login_and_deposit = False
 
-    keystore_dir = config['ETH_KEY_PATH'] or pathlib.Path.home()
-    private_key, eth_address = open_eth_keystore(keystore_dir, config, create=True)
-
+    keystore_dir = config.get('ETH_KEY_PATH', pathlib.Path.home())
+    password = config.get('PASSWORD', 'cupcake')  # :)
+    private_key, eth_address = open_eth_keystore(keystore_dir, config, password=password, create=True)
+    logger.error(f'key: {private_key}, len: {len(private_key)}')
     #  will not try a faucet if we're in mainnet - also, it should be logged inside
     try:
         get_initial_coins(eth_address, 'ETH', config)
