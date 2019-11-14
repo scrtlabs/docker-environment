@@ -18,7 +18,8 @@ required = [  # required by provider AND locally
               'CONTRACT_DISCOVERY_PORT', 'CONTRACT_DISCOVERY_ADDRESS', 'KEY_MANAGEMENT_DISCOVERY',
               # defaults in local config file
               'ETH_NODE_ADDRESS', 'ENIGMA_CONTRACT_FILE_NAME', 'CORE_ADDRESS', 'CORE_PORT', 'CONTRACTS_FOLDER',
-              'KEY_MANAGEMENT_ADDRESS', 'FAUCET_URL', 'MINIMUM_ETHER_BALANCE', 'BALANCE_WAIT_TIME']
+              'KEY_MANAGEMENT_ADDRESS', 'FAUCET_URL', 'MINIMUM_ETHER_BALANCE', 'BALANCE_WAIT_TIME', 'MIN_CONFIRMATION']
+
 env_defaults = {'K8S': './p2p/config/k8s_config.json',
                 'TESTNET': './p2p/config/testnet_config.json',
                 'MAINNET': './p2p/config/mainnet_config.json',

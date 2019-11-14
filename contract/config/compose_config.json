@@ -8,4 +8,6 @@
  "CONTRACT_FILES":  ["enigmacontract.txt", "enigmatokencontract.txt"],
  "FAUCET_PORT": 8001,
  "TIME_BETWEEN_BLOCKS": 10,
- "EPOCH_SIZE": 10}
+ "EPOCH_SIZE": 10,
+ "KEY_MANAGEMENT_TIMEOUT": 120,
+ "CONTRACT_TIMEOUT": 3600}

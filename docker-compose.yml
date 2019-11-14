@@ -55,7 +55,8 @@ services:
       SGX_MODE: SW
       ENIGMA_ENV: COMPOSE
       AUTO_MINER: "YAY"
-      BLOCK_TIME: 0
+      BLOCK_TIME: 30
+      TIME_BETWEEN_BLOCKS: 35
     ports:
       - "8081:8081" # contract discovery service
       - "9545:9545" # ethereum node port

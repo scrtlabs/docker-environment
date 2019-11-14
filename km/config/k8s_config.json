@@ -20,5 +20,7 @@
  "DEFAULT_CONFIG_PATH": "/root/scripts/principal_defaults.json",
  "KM_FILENAME": "principal-sign-addr.txt",
  "KEYPAIR_DIRECTORY": "/root/.enigma/",
- "ADDRESS_DISCOVERY_PORT": 8081
+ "ADDRESS_DISCOVERY_PORT": 8081,
+ "KEY_MANAGEMENT_TIMEOUT": 120,
+ "CONTRACT_TIMEOUT": 3600
 }
