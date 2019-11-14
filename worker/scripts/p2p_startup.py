@@ -7,7 +7,7 @@ from p2p_node import P2PNode
 from enigma_docker_common.config import Config
 from enigma_docker_common.provider import Provider
 from enigma_docker_common.logger import get_logger
-from enigma_docker_common.crypto import get_eth_address, open_eth_keystore
+from enigma_docker_common.crypto import open_eth_keystore
 from enigma_docker_common.blockchain import get_initial_coins
 from enigma_docker_common.enigma import EnigmaTokenContract
 
@@ -15,7 +15,7 @@ logger = get_logger('worker.p2p-startup')
 
 # required configuration parameters -- these can all be overridden as environment variables
 required = [  # required by provider AND locally
-              'CONTRACT_DISCOVERY_PORT', 'CONTRACT_DISCOVERY_ADDRESS',
+              'CONTRACT_DISCOVERY_PORT', 'CONTRACT_DISCOVERY_ADDRESS', 'KEY_MANAGEMENT_DISCOVERY',
               # defaults in local config file
               'ETH_NODE_ADDRESS', 'ENIGMA_CONTRACT_FILE_NAME', 'CORE_ADDRESS', 'CORE_PORT', 'CONTRACTS_FOLDER',
               'KEY_MANAGEMENT_ADDRESS', 'FAUCET_URL', 'MINIMUM_ETHER_BALANCE', 'BALANCE_WAIT_TIME']
