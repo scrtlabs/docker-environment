@@ -58,12 +58,11 @@ describe('Enigma tests', () => {
     let task;
     const homedir = os.homedir();
     it('should deploy secret contract while restarting worker', async () => {
-        await cluster_sdk.scaleWorkers({namespace: 'app', targetNum: 1, shouldDeleteService: false});
-        let net_status = await cluster_sdk.getStatus({namespace: 'app'});
+        // let net_status = await cluster_sdk.getStatus({namespace: 'app'});
         // extracts the number of the worker out of the status hashmap
-        let num_worker = '1';
-        Object.keys(net_status).forEach((k) => { if (k.startsWith('worker')) num_worker = k[k.length - 1]});
-        console.log('num worker is ' + num_worker);
+        // let num_worker = '1';
+        // Object.keys(net_status).forEach((k) => { if (k.startsWith('worker')) num_worker = k[k.length - 1]});
+        // console.log('num worker is ' + num_worker);
         let scTaskFn = 'construct()';
         let scTaskArgs = '';
         let scTaskGasLimit = 1000000;
@@ -74,19 +73,23 @@ describe('Enigma tests', () => {
         } catch(e) {
             console.log('Error:', e.stack);
         }
+        await sleep(5000);
         task = new Promise((resolve, reject) => {
             enigma.deploySecretContract(scTaskFn, scTaskArgs, scTaskGasLimit, scTaskGasPx, accounts[0], preCode)
                 .on(eeConstants.DEPLOY_SECRET_CONTRACT_RESULT, (receipt) => resolve(receipt))
                 .on(eeConstants.ERROR, (error) => reject(error));
         });
         await sleep(2000);
-        await cluster_sdk.restartWorker({namespace: 'app', index: parseInt(num_worker)});
-        await task;
-    }, constants.TIMEOUT_COMPUTE_LONG);
+        await cluster_sdk.stopWorkerProcess({namespace: 'app', index: 6});
+        await sleep(20000);
+        await cluster_sdk.startWorkerProcess({namespace: 'app', index: 6});
+        task = await task;
+    }, 110000);
 
     it('should get the failed task receipt', async () => {
         do {
             await sleep(1000);
+            console.log("the task is " + JSON.stringify(task) + '\n');
             task = await enigma.getTaskRecordStatus(task);
             process.stdout.write('Waiting. Current Task Status is '+task.ethStatus+'\r');
         } while (task.ethStatus != 3);
@@ -94,13 +97,13 @@ describe('Enigma tests', () => {
         process.stdout.write('Completed. Final Task Status is '+task.ethStatus+'\n');
     }, constants.TIMEOUT_COMPUTE_LONG);
 
-    it('should fail to verify deployed contract', async () => {
-        const result = await enigma.admin.isDeployed(task.scAddr);
-        expect(result).toEqual(false);
-    });
-
-    it('should fail to get deployed contract bytecode hash', async () => {
-        const result = await enigma.admin.getCodeHash(task.scAddr);
-        expect(result).toBeFalsy;
-    });
+    // it('should fail to verify deployed contract', async () => {
+    //     const result = await enigma.admin.isDeployed(task.scAddr);
+    //     expect(result).toEqual(false);
+    // });
+    //
+    // it('should fail to get deployed contract bytecode hash', async () => {
+    //     const result = await enigma.admin.getCodeHash(task.scAddr);
+    //     expect(result).toBeFalsy;
+    // });
 });
