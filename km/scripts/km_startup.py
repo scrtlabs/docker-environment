@@ -119,11 +119,13 @@ if __name__ == '__main__':
     # save_to_path(public, public_key)
 
     keystore_dir = config['KEYSTORE_DIRECTORY'] or pathlib.Path.home()
-    private, eth_address = open_eth_keystore(keystore_dir, config, create=True)
+    # private, eth_address = open_eth_keystore(keystore_dir, config, create=True)
+    with open('/root/.enigma/ethereum-account-addr.txt', 'r') as f:
+        eth_address = f.read()
 
     # set the URL of the ethereum node we're going to use -- this will be picked up by the application config
     config['URL'] = f'http://{config["ETH_NODE_ADDRESS"]}:{config["ETH_NODE_PORT"]}'
-    config['ACCOUNT'] = eth_address
+    config['ACCOUNT_ADDRESS'] = eth_address
 
     try:
         get_initial_coins(eth_address, 'ETH', config)

@@ -1,6 +1,7 @@
 {"ENIGMA_ENV" : "COMPOSE",
  "CONTRACT_DISCOVERY_ADDRESS" : "contract-service",
  "CONTRACT_DISCOVERY_PORT": "8081",
+ "KEY_MANAGEMENT_DISCOVERY": "",
  "ETH_NODE_ADDRESS" : "contract-service",
  "ETH_NODE_PORT" : "9545",
  "CONTRACTS_FOLDER" : "/tmp/contracts/",
