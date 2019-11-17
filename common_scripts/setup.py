@@ -9,18 +9,18 @@ with open("README.md", "r") as fh:
 import os
 thelibFolder = os.path.dirname(os.path.realpath(__file__))
 requirementPath = thelibFolder + '/requirements.txt'
-install_requires = [] # Examples: ["gunicorn", "docutils>=0.3", "lxml==0.5a7"]
+install_requires = []  # Examples: ["gunicorn", "docutils>=0.3", "lxml==0.5a7"]
 if os.path.isfile(requirementPath):
     with open(requirementPath) as f:
         install_requires = f.read().splitlines()
 
 setup(
     name='enigma_docker_common',
-    version='0.1.8',
+    version='0.2.0',
     description='Scripts for Enigma Docker Images',
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/enigmampc/kubernetes",
+    url="https://github.com/enigmampc/docker-environment",
     author='Itzik Grossman',
     install_requires=install_requires,
     author_email='itzik@enigma.co',

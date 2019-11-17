@@ -3,10 +3,15 @@ import os
 import json
 import subprocess
 import pathlib
+import threading
+
+from km_address_server import run
 
 from enigma_docker_common.config import Config
 from enigma_docker_common.provider import Provider
 from enigma_docker_common.logger import get_logger
+from enigma_docker_common.crypto import open_eth_keystore
+from enigma_docker_common.blockchain import get_initial_coins
 
 logger = get_logger('key_management.startup')
 
@@ -14,16 +19,21 @@ logger = get_logger('key_management.startup')
 required = [  # global environment setting
               'ENIGMA_ENV',
               # required by provider AND locally
-              'CONTRACT_DISCOVERY_PORT', 'CONTRACT_DISCOVERY_ADDRESS',
+              'CONTRACT_DISCOVERY_PORT', 'CONTRACT_DISCOVERY_ADDRESS', 'KEY_MANAGEMENT_DISCOVERY',
               # defaults in local config file
               'ETH_NODE_ADDRESS', 'ETH_NODE_PORT',
               'CONTRACTS_FOLDER', 'DEFAULT_CONFIG_PATH',
-              'FAUCET_URL', 'STORAGE_CONNECTION_STRING', 'KEYPAIR_FILE_NAME', 'TEMP_CONFIG_PATH']
+              'FAUCET_URL', 'KEYPAIR_FILE_NAME', 'TEMP_CONFIG_PATH',
+              "MINIMUM_ETHER_BALANCE", "MINIMUM_ENG_BALANCE",
+]
 
 env_defaults = {'K8S': './config/k8s_config.json',
                 'TESTNET': './config/testnet_config.json',
                 'MAINNET': './config/mainnet_config.json',
                 'COMPOSE': './config/compose_config.json'}
+
+env = os.getenv('ENIGMA_ENV', 'COMPOSE')
+SGX_MODE = os.getenv('SGX_MODE', 'HW')
 
 
 def generate_config_file(app_config: dict, default_config_path: str, config_file_path: str) -> None:
@@ -40,9 +50,14 @@ def generate_config_file(app_config: dict, default_config_path: str, config_file
         f.write(json.dumps(temp_conf))
 
 
-def generate_keypair(keypair_path, km_executable: str):
+def generate_keypair(km_executable: str, keypair_path, address_path, config_path: str) -> None:
     import subprocess
-    subprocess.run([km_executable, "-w"])
+    subprocess.call([km_executable, "-w", f'--principal-config', f"{config_path}"])
+
+    if not os.path.exists(keypair_path):
+        raise FileNotFoundError(f'Keypair file doesn\'t exist -- initializing must have failed')
+    if not os.path.exists(address_path):
+        raise FileNotFoundError(f'Address file doesn\'t exist -- initializing must have failed')
 
 
 def save_to_path(path, file):
@@ -66,9 +81,8 @@ def map_log_level_to_exec_flags(loglevel: str) -> str:
 
 if __name__ == '__main__':
     # parse arguments
-    logger.info('STARTING KEY MANAGEMENT STARTUP.....')
-
-    env = os.getenv('ENIGMA_ENV', 'COMPOSE')
+    logger.info('STARTING KEY MANAGEMENT.....')
+    logger.info(f'Enviroment: {env}')
 
     config = Config(required=required, config_file=env_defaults[env])
     provider = Provider(config=config)
@@ -82,35 +96,47 @@ if __name__ == '__main__':
         del os.environ['EXECUTABLE_PATH']
 
     executable = config['EXECUTABLE_PATH']
+    os.chdir(pathlib.Path(executable).parent)
 
-    if env == "LOCAL":  # allow a self-generating option for independent scenarios
-        generate_keypair(keypair, executable)
-    else:
-        # get Keypair file -- environment variable STORAGE_CONNECTION_STRING must be set
-        if os.getenv('SGX_MODE', 'HW') == 'SW':
-            sealed_km = provider.get_file(config['KEYPAIR_STORAGE_DIRECTORY'], config['KEYPAIR_FILE_NAME_SW'])
-        else:
-            sealed_km = provider.get_file(config['KEYPAIR_STORAGE_DIRECTORY'], config['KEYPAIR_FILE_NAME'])
-        save_to_path(keypair, sealed_km)
+    if not os.path.exists(keypair) or not os.path.exists(public):
+        generate_keypair(executable, keypair, public, config['DEFAULT_CONFIG_PATH'])
+        # make sure key generation worked
 
-        # get public key file
-        public_key = provider.principal_address
-        save_to_path(public, public_key)
+    thread1 = threading.Thread(target=run, args=(int(config.get('ADDRESS_DISCOVERY_PORT', 8081)), ))
+    thread1.start()
 
-    if not os.path.exists(keypair):
-        logger.critical(f'Keypair file doesn\'t exist -- initializing must have failed')
-        exit(-1)
-    if not os.path.exists(public):
-        logger.critical(f'Public key file doesn\'t exist -- initializing must have failed')
-        exit(-1)
+    # # get Keypair file -- environment variable STORAGE_CONNECTION_STRING must be set
+    # if SGX_MODE == 'SW':
+    #     sealed_km = provider.get_file(config['KEYPAIR_STORAGE_DIRECTORY'], config['KEYPAIR_FILE_NAME_SW'])
+    # else:
+    #     sealed_km = provider.get_file(config['KEYPAIR_STORAGE_DIRECTORY'], config['KEYPAIR_FILE_NAME'])
+    # save_to_path(keypair, sealed_km)
+    #
+    # # get public key file
 
-    CONFIG_FILE_PATH = '/tmp/config.json'
+    # public_key = provider.principal_address
+
+    # save_to_path(public, public_key)
+
+    keystore_dir = config['KEYSTORE_DIRECTORY'] or pathlib.Path.home()
+    private, eth_address = open_eth_keystore(keystore_dir, config, create=True)
 
     # set the URL of the ethereum node we're going to use -- this will be picked up by the application config
     config['URL'] = f'http://{config["ETH_NODE_ADDRESS"]}:{config["ETH_NODE_PORT"]}'
+    config['ACCOUNT'] = eth_address
+
+    try:
+        get_initial_coins(eth_address, 'ETH', config)
+        get_initial_coins(eth_address, 'ENG', config)
+    except RuntimeError as e:
+        logger.critical(f'Failed to get enough ETH or ENG to start - {e}')
+        exit(-2)
+    except ConnectionError as e:
+        logger.critical(f'Failed to connect to remote address: {e}')
+        exit(-1)
 
     logger.info(f'Waiting for enigma-contract @ '
-                f'http://{config["CONTRACT_DISCOVERY_ADDRESS"]}:{config["CONTRACT_DISCOVERY_PORT"]} for enigma contract')
+                f'http://{config["CONTRACT_DISCOVERY_ADDRESS"]}:{config["CONTRACT_DISCOVERY_PORT"]}')
     enigma_address = provider.enigma_contract_address
     logger.info(f'Got address {enigma_address} for enigma contract')
 
@@ -136,8 +162,6 @@ if __name__ == '__main__':
         if config['RUST_BACKTRACE'] != '0':
             os.environ["RUST_BACKTRACE"] = config['RUST_BACKTRACE']
 
-    os.chdir(pathlib.Path(executable).parent)
-
     debug_trace_flags = map_log_level_to_exec_flags(config.get('LOG_LEVEL', 'INFO'))
 
-    subprocess.call([f'{executable}', f'{debug_trace_flags}', f'--principal-config', f'{CONFIG_FILE_PATH}'])
+    subprocess.call([f'{executable}', f'{debug_trace_flags}', f'--principal-config', f'{config["TEMP_CONFIG_PATH"]}'])

@@ -1,1 +1,5 @@
-enigma_docker_common==0.1.8
+enigma_docker_common==0.2.0
+requests
+flask
+flask_cors
+flask_restplus

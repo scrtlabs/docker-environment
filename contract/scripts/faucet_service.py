@@ -2,8 +2,10 @@ import logging
 import json
 import os
 import random
-
+import time
 import web3
+import threading
+
 from flask import Flask, request
 from flask_cors import CORS
 from flask_restplus import Api, Resource, abort
@@ -21,7 +23,7 @@ logger = get_logger('enigma-contract.faucet')
 required = [
             "ETH_NODE_ADDRESS", "ETH_NODE_PORT",
             "CONTRACT_DISCOVERY_PORT", "CONTRACT_DISCOVERY_ADDRESS",
-            "FAUCET_PORT"]
+            "FAUCET_PORT", "BLOCK_TIME"]
 
 env_defaults = {'K8S': './config/k8s_config.json',
                 'TESTNET': './config/testnet_config.json',
@@ -156,6 +158,22 @@ class TransferEng(Resource):
 ######################################
 
 
+def block_miner():
+    if config.get('AUTO_MINER', None):
+        logger.info('Starting auto miner')
+        mining_delay = config.get('TIME_BETWEEN_BLOCKS', 60)
+        logger.info(f'Time between transactions: {mining_delay}')
+        logger.info(f'Time to confirm block: {config["BLOCK_TIME"]}')
+        block_time = int(config["BLOCK_TIME"]) or 1
+        logger.info(f'Min epoch time: {int(config["EPOCH_SIZE"]) * block_time * mining_delay}')
+        random_acc = '0x18A787C1e5fb92D7dFF1f920Ee740901Dc72BC1b'
+        while True:
+            coinbase = w3.toChecksumAddress(CoinBaseProvider.address())
+            w3.eth.sendTransaction({'to': random_acc, 'from': coinbase, 'value': 1})
+            logger.debug('Sent Transaction -- should create new block')
+            time.sleep(mining_delay)
+
+
 def shutdown_server():
     func = request.environ.get('werkzeug.server.shutdown')
     if func is None:
@@ -175,4 +193,8 @@ if __name__ == '__main__':
     parser = ArgumentParser()
     parser.add_argument('-p', '--port', default=0, type=int, help='port to listen on')
     args = parser.parse_args()
+
+    miner_thread = threading.Thread(target=block_miner, args=())
+    miner_thread.start()
+
     run(args.port)

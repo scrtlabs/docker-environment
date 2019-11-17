@@ -8,9 +8,16 @@
  "FAUCET_URL": "http://contract:8001",
  "KEYPAIR_FILE_NAME": "km_keypair.sealed",
  "KEYPAIR_STORAGE_DIRECTORY": "kmfiles",
+ "MINIMUM_ETHER_BALANCE": "0.1",
+ "MINIMUM_ENG_BALANCE": "10",
+ "BALANCE_WAIT_TIME": 1800,
  "RUST_BACKTRACE": "1",
  "EXECUTABLE_PATH": "/root/bin/enigma-principal-app",
  "KEYPAIR_PATH": "/root/.enigma/km_keypair.sealed",
  "KEYPAIR_PUBLIC_PATH": "/root/.enigma/principal-sign-addr.txt",
- "DEFAULT_CONFIG_PATH": "./config/default_config.json"
+ "KEYSTORE_DIRECTORY": "/root/.enigma/",
+ "DEFAULT_CONFIG_PATH": "/root/scripts/principal_defaults.json",
+ "KM_FILENAME": "principal-sign-addr.txt",
+ "KEYPAIR_DIRECTORY": "/root/.enigma/",
+ "ADDRESS_DISCOVERY_PORT": 8081
 }

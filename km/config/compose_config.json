@@ -1,11 +1,15 @@
 {"ENIGMA_ENV" : "COMPOSE",
  "CONTRACT_DISCOVERY_PORT" : "8081",
  "CONTRACT_DISCOVERY_ADDRESS" : "contract",
+ "KEY_MANAGEMENT_DISCOVERY": "",
  "ETH_NODE_ADDRESS" : "contract",
  "ETH_NODE_PORT" : "9545",
  "CONTRACTS_FOLDER" : "/tmp/contracts/",
  "TEMP_CONFIG_PATH": "/tmp/config.json",
  "FAUCET_URL": "http://contract:8001",
+ "MINIMUM_ETHER_BALANCE": "0.1",
+ "MINIMUM_ENG_BALANCE": "10",
+ "BALANCE_WAIT_TIME": 1800,
  "KEYPAIR_FILE_NAME": "km_keypair.sealed",
  "KEYPAIR_FILE_NAME_SW": "km_keypair_sw.sealed",
  "KEYPAIR_STORAGE_DIRECTORY": "kmfiles",
@@ -13,5 +17,9 @@
  "EXECUTABLE_PATH": "/root/bin/enigma-principal-app",
  "KEYPAIR_PATH": "/root/.enigma/km_keypair.sealed",
  "KEYPAIR_PUBLIC_PATH": "/root/.enigma/principal-sign-addr.txt",
- "DEFAULT_CONFIG_PATH": "./config/default_config.json"
+ "KEYSTORE_DIRECTORY": "/root/.enigma/",
+ "DEFAULT_CONFIG_PATH": "/root/scripts/principal_defaults.json",
+ "KM_FILENAME": "principal-sign-addr.txt",
+ "KEYPAIR_DIRECTORY": "/root/.enigma/",
+ "ADDRESS_DISCOVERY_PORT": 8081
 }

@@ -28,12 +28,12 @@ class AzureContainerFileService:
 
 
 class HttpFileService:
-    def __init__(self, url):
+    def __init__(self, url, namespace: str = 'contract'):
         # self.account_name = 'objectstorage2'
         p = urlparse(url)
         self.hostname = p.hostname
         self.port = p.port
-        self.account_url = f'{url}/contract/address?name='
+        self.account_url = f'{url}/{namespace}/address?name='
         # self.container_name = directory
         self.credential = os.getenv('STORAGE_CONNECTION_STRING')
 

@@ -12,15 +12,16 @@ class Provider:
         self.eth_node_address = config['CONTRACT_DISCOVERY_ADDRESS']
         self.CONTRACT_DISCOVERY_PORT = config['CONTRACT_DISCOVERY_PORT']
         self.CONTRACT_DISCOVERY_ADDRESS = f'http://{self.eth_node_address}:{self.CONTRACT_DISCOVERY_PORT}'
+        self.KM_DISCOVERY_ADDRESS = config['KEY_MANAGEMENT_DISCOVERY']
 
         self._enigma_contract_filename = config.get('ENIGMA_CONTRACT_FILENAME', 'enigmacontract.txt')
         self._token_contract_filename = config.get('TOKEN_CONTRACT_FILENAME', 'enigmatokencontract.txt')
 
         self._principal_address_directory = config.get('PRINCIPAL_ADDRESS_DIRECTORY', 'public')
-        if os.getenv('SGX_MODE', 'HW') == 'SW':
-            self._principal_address_filename = config.get('PRINCIPAL_ADDRESS_FILENAME', 'principal-sign-addr_sw.txt')
-        else:
-            self._principal_address_filename = config.get('PRINCIPAL_ADDRESS_FILENAME', 'principal-sign-addr.txt')
+        # if os.getenv('SGX_MODE', 'HW') == 'SW':
+        #     self._principal_address_filename = config.get('PRINCIPAL_ADDRESS_FILENAME', 'principal-sign-addr_sw.txt')
+        # else:
+        self._principal_address_filename = config.get('PRINCIPAL_ADDRESS_FILENAME', 'principal-sign-addr.txt')
         self._enigma_token_abi_directory = config.get('TOKEN_CONTRACT_ABI_DIRECTORY', 'contract')
         self._enigma_token_abi_filename = config.get('TOKEN_CONTRACT_ABI_FILENAME', 'EnigmaToken.json')
         self._enigma_token_abi_filename_zip = config.get('ENIGMA_CONTRACT_ABI_FILENAME_ZIPPED', 'EnigmaToken.zip')
@@ -45,6 +46,12 @@ class Provider:
                                   "K8S": storage.HttpFileService(self.CONTRACT_DISCOVERY_ADDRESS),
                                   "TESTNET": storage.HttpFileService(self.CONTRACT_DISCOVERY_ADDRESS),
                                   "MAINNET": storage.HttpFileService(self.CONTRACT_DISCOVERY_ADDRESS)}
+
+        self.key_management_discovery = {"COMPOSE": storage.HttpFileService(self.KM_DISCOVERY_ADDRESS, namespace='km'),
+                                        "COMPOSE_DEV": storage.HttpFileService(self.KM_DISCOVERY_ADDRESS, namespace='km'),
+                                        "K8S": storage.HttpFileService(self.KM_DISCOVERY_ADDRESS, namespace='km'),
+                                        "TESTNET": storage.HttpFileService(self.KM_DISCOVERY_ADDRESS, namespace='km'),
+                                        "MAINNET": storage.HttpFileService(self.KM_DISCOVERY_ADDRESS, namespace='km')}
 
         # information stored in global storage
         self.backend_strategy = {"COMPOSE": storage.AzureContainerFileService,
@@ -79,8 +86,12 @@ class Provider:
     @property
     @functools.lru_cache()
     def principal_address(self):
-        return self.get_file(directory_name=self._principal_address_directory,
-                             file_name=self._principal_address_filename)
+        fs = self.key_management_discovery[os.getenv('ENIGMA_ENV', 'COMPOSE')]
+        is_contract_ready = self._wait_till_open(timeout=120, fs=fs)
+        if not is_contract_ready:
+            logger.error(f'Key management address wasn\'t ready before timeout (120s) expired')
+            raise TimeoutError(f'Timeout for server @ {self.KM_DISCOVERY_ADDRESS}')
+        return fs[self._principal_address_filename]
 
     @property
     @functools.lru_cache()
@@ -110,11 +121,11 @@ class Provider:
             logger.critical(f'Failed to get file: {type(e)} - {e}')
             exit(-1)
 
-    def _wait_till_open(self, timeout: int = 60) -> bool:
-        fs = self.contract_strategy[os.getenv('ENIGMA_ENV', 'COMPOSE')]
+    def _wait_till_open(self, timeout: int = 60, fs: storage.HttpFileService = None) -> bool:
+        _fs = fs or self.contract_strategy[os.getenv('ENIGMA_ENV', 'COMPOSE')]
         import time
         for _ in range(timeout):
-            if fs.is_ready():
+            if _fs.is_ready():
                 return True
             time.sleep(1)
         return False

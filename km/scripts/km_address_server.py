@@ -1,6 +1,7 @@
 import logging
 import json
 import os
+from pathlib import Path
 
 from flask import Flask, request
 from flask_cors import CORS
@@ -18,7 +19,7 @@ env_defaults = {'K8S': './config/k8s_config.json',
 
 config = Config(config_file=env_defaults[os.getenv('ENIGMA_ENV', 'COMPOSE')])
 
-logger = get_logger('enigma-contract.server')
+logger = get_logger('km.server')
 
 logging.getLogger("urllib3.connectionpool").setLevel(logging.ERROR)
 logging.getLogger("werkzeug").setLevel(logging.ERROR)
@@ -27,22 +28,21 @@ application = Flask(__name__)
 CORS(application)
 
 api = Api(app=application, version='1.0')
-contract_ns = api.namespace('contract', description='Contract operations')
+ns = api.namespace('km', description='Contract operations')
 
 
-@contract_ns.route("/address")
+@ns.route("/address")
 class GetAddress(Resource):
     """ returns a list of tracked addresses for a chain/network. If parameters are empty, will return
     all addresses """
-    @contract_ns.param('name', 'contract name -- by default right now can only be enigmacontract.txt '
-                               'or engimatokencontract.txt', 'query')
+    @ns.param('name', 'Key management address filename -- by default right now can only be principal-sign-addr.txt', 'query')
     def get(self):
-        contract_name = request.args.get('name')
+        filename = request.args.get('name')
         try:
-            if contract_name not in config["CONTRACT_FILES"]:
-                logger.error(f'Tried to retrieve file which was not in allowed file names: {contract_name}')
+            if filename not in config["KM_FILENAME"]:
+                logger.error(f'Tried to retrieve file which was not in allowed file names: {filename}')
                 return abort(404)
-            contract_filename = f'{config["CONTRACT_PATH"]}{contract_name}'
+            contract_filename = f'{config["KEYPAIR_DIRECTORY"]}{filename}'
             with open(contract_filename) as f:
                 return f.read()
         except FileNotFoundError as e:
@@ -55,7 +55,7 @@ class GetAddress(Resource):
 
 def run(port):
     logger.debug("using port:"+str(port))
-    application.run(host='0.0.0.0', port=port, debug=True)
+    application.run(host='0.0.0.0', port=port, debug=False)
 
 
 if __name__ == '__main__':
