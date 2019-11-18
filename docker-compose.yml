@@ -72,6 +72,7 @@ services:
       CONFIRMATIONS: 1
     expose:
       - "3040" # JSON RPC port
+      - "8081"
 
   client:
     hostname: client
