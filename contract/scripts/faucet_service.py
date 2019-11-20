@@ -21,8 +21,7 @@ logging.getLogger("werkzeug").setLevel(logging.ERROR)
 logger = get_logger('enigma-contract.faucet')
 
 required = [
-            "ETH_NODE_ADDRESS", "ETH_NODE_PORT",
-            "CONTRACT_DISCOVERY_PORT", "CONTRACT_DISCOVERY_ADDRESS",
+            "ETH_NODE_ADDRESS", "CONTRACT_DISCOVERY_ADDRESS",
             "FAUCET_PORT", "BLOCK_TIME"]
 
 env_defaults = {'K8S': './config/k8s_config.json',
@@ -34,7 +33,7 @@ config = Config(required=required, config_file=env_defaults[os.getenv('ENIGMA_EN
 eng_provider = Provider(config=config)
 
 PORT = config['FAUCET_PORT']
-NODE_URL = f'http://{config["ETH_NODE_ADDRESS"]}:{config["ETH_NODE_PORT"]}'
+NODE_URL = config["ETH_NODE_ADDRESS"]
 
 ETH_ALLOWANCE_AMT = config.get('ALLOWANCE_AMOUNT', web3.Web3.toWei(1, 'ether'))
 ENG_ALLOWANCE_AMT = config.get('ENG_ALLOWANCE_AMOUNT', 100000)

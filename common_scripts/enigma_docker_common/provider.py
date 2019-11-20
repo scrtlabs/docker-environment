@@ -10,9 +10,8 @@ logger = get_logger('enigma_common.provider')
 class Provider:
     def __init__(self, config: dict):
         self.config = config
-        self.eth_node_address = config['CONTRACT_DISCOVERY_ADDRESS']
-        self.CONTRACT_DISCOVERY_PORT = config['CONTRACT_DISCOVERY_PORT']
-        self.CONTRACT_DISCOVERY_ADDRESS = f'http://{self.eth_node_address}:{self.CONTRACT_DISCOVERY_PORT}'
+
+        self.CONTRACT_DISCOVERY_ADDRESS = config['CONTRACT_DISCOVERY_ADDRESS']
         self.KM_DISCOVERY_ADDRESS = config['KEY_MANAGEMENT_DISCOVERY']
 
         self._enigma_contract_filename = config.get('ENIGMA_CONTRACT_FILENAME', 'enigmacontract.txt')

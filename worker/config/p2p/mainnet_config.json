@@ -1,5 +1,4 @@
-{"CONTRACT_DISCOVERY_PORT": "8081",
- "CONTRACT_DISCOVERY_ADDRESS": "contract",
+{"CONTRACT_DISCOVERY_ADDRESS": "http://contract:8081",
  "ETH_NODE_ADDRESS": "http://contract:9545",
  "ENIGMA_CONTRACT_FILE_NAME": "Enigma.json",
  "CORE_ADDRESS": "localhost",

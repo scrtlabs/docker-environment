@@ -112,6 +112,8 @@ RUN chmod +x ./scripts/contract_server.py && chmod +x ./scripts/migrate.sh && ch
 
 COPY devops/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
+COPY truffle.js /root/enigma-contract/truffle.js
+
 EXPOSE 9545
 EXPOSE 8081
 EXPOSE 8001

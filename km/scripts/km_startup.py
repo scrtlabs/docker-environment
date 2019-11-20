@@ -19,12 +19,10 @@ logger = get_logger('key_management.startup')
 required = [  # global environment setting
               'ENIGMA_ENV',
               # required by provider AND locally
-              'CONTRACT_DISCOVERY_PORT', 'CONTRACT_DISCOVERY_ADDRESS', 'KEY_MANAGEMENT_DISCOVERY',
+              'CONTRACT_DISCOVERY_ADDRESS', 'KEY_MANAGEMENT_DISCOVERY',
               # defaults in local config file
-              'ETH_NODE_ADDRESS', 'ETH_NODE_PORT',
-              'CONTRACTS_FOLDER', 'DEFAULT_CONFIG_PATH',
-              'FAUCET_URL', 'KEYPAIR_FILE_NAME', 'TEMP_CONFIG_PATH',
-              "MINIMUM_ETHER_BALANCE", "MINIMUM_ENG_BALANCE",
+              'ETH_NODE_ADDRESS', 'CONTRACTS_FOLDER', 'DEFAULT_CONFIG_PATH', 'FAUCET_URL',
+              'KEYPAIR_FILE_NAME', 'TEMP_CONFIG_PATH', "MINIMUM_ETHER_BALANCE", "MINIMUM_ENG_BALANCE",
 ]
 
 env_defaults = {'K8S': './config/k8s_config.json',
@@ -122,16 +120,23 @@ if __name__ == '__main__':
 
     # save_to_path(public, public_key)
 
-    keystore_dir = config['KEYSTORE_DIRECTORY'] or pathlib.Path.home()
-    private, eth_address = open_eth_keystore(keystore_dir, config, create=True)
-
+    # keystore_dir = config['KEYSTORE_DIRECTORY'] or pathlib.Path.home()
+    # private, eth_address = open_eth_keystore(keystore_dir, config, create=True)
+    try:
+        with open('/root/.enigma/ethereum-account-addr.txt') as f:
+            eth_address = f.read()
+            logger.error(f'Eth-addr: {eth_address}')
+    except FileNotFoundError:
+        logger.critical('Ethereum address not found -- exiting')
+        exit(-5)
+    eth_address = '062B3e365052A92bcf3cC9E54a63c5078caC4eCC'
     # set the URL of the ethereum node we're going to use -- this will be picked up by the application config
-    config['URL'] = f'http://{config["ETH_NODE_ADDRESS"]}:{config["ETH_NODE_PORT"]}'
-    config['ACCOUNT'] = eth_address
+    config['URL'] = f'{config["ETH_NODE_ADDRESS"]}'
+    config['ACCOUNT_ADDRESS'] = eth_address
 
     try:
-        get_initial_coins(eth_address, 'ETH', config)
-        get_initial_coins(eth_address, 'ENG', config)
+        get_initial_coins('0x' + eth_address, 'ETH', config)
+        get_initial_coins('0x' + eth_address, 'ENG', config)
     except RuntimeError as e:
         logger.critical(f'Failed to get enough ETH or ENG to start - {e}')
         exit(-2)
@@ -140,7 +145,7 @@ if __name__ == '__main__':
         exit(-1)
 
     logger.info(f'Waiting for enigma-contract @ '
-                f'http://{config["CONTRACT_DISCOVERY_ADDRESS"]}:{config["CONTRACT_DISCOVERY_PORT"]}')
+                f'{config["CONTRACT_DISCOVERY_ADDRESS"]}')
     enigma_address = provider.enigma_contract_address
     logger.info(f'Got address {enigma_address} for enigma contract')
 

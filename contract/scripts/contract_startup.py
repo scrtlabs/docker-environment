@@ -14,7 +14,7 @@ logger = get_logger(__file__)
 # required configuration parameters -- these can all be overridden as environment variables
 required = [
               # required by provider AND locally
-              'PRINCIPAL_ADDRESS_PATH', 'CONTRACT_DISCOVERY_ADDRESS', 'CONTRACT_DISCOVERY_PORT',
+              'PRINCIPAL_ADDRESS_PATH', 'CONTRACT_DISCOVERY_ADDRESS',
               'KEY_MANAGEMENT_DISCOVERY']
 
 env_defaults = {'K8S': './config/k8s_config.json',
