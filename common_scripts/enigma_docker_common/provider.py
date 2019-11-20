@@ -16,6 +16,8 @@ class Provider:
 
         self._enigma_contract_filename = config.get('ENIGMA_CONTRACT_FILENAME', 'enigmacontract.txt')
         self._token_contract_filename = config.get('TOKEN_CONTRACT_FILENAME', 'enigmatokencontract.txt')
+        self._voting_contract_filename = config.get('TOKEN_CONTRACT_FILENAME', 'votingcontract.txt')
+        self._sample_contract_filename = config.get('TOKEN_CONTRACT_FILENAME', 'samplecontract.txt')
 
         self._principal_address_directory = config.get('PRINCIPAL_ADDRESS_DIRECTORY', 'public')
         # if os.getenv('SGX_MODE', 'HW') == 'SW':
@@ -39,6 +41,14 @@ class Provider:
         else:
             self._enigma_contract_abi_filename = config.get('ENIGMA_CONTRACT_ABI_FILENAME', 'Enigma.json')
             self._enigma_contract_abi_filename_zip = config.get('ENIGMA_CONTRACT_ABI_FILENAME_ZIPPED', 'Enigma.zip')
+
+        self._voting_abi_directory = config.get('VOTING_CONTRACT_ABI_DIRECTORY', 'voting')
+        self._voting_abi_filename = config.get('VOTING_CONTRACT_ABI_FILENAME', 'VotingETH.json')
+        self._voting_abi_filename_zip = config.get('VOTING_CONTRACT_ABI_FILENAME_ZIPPED', 'VotingETH.zip')
+
+        self._sample_abi_directory = config.get('SAMPLE_CONTRACT_ABI_DIRECTORY', 'sample')
+        self._sample_abi_filename = config.get('SAMPLE_CONTRACT_ABI_FILENAME', 'Sample.json')
+        self._sample_abi_filename_zip = config.get('SAMPLE_CONTRACT_ABI_FILENAME_ZIPPED', 'Sample.zip')
 
         # strategy for information we get from enigma-contract
         self.contract_strategy = {"COMPOSE": storage.HttpFileService(self.CONTRACT_DISCOVERY_ADDRESS),
@@ -85,6 +95,16 @@ class Provider:
 
     @property
     @functools.lru_cache()
+    def voting_contract_address(self):
+        return self._deployed_contract_address(contract_name=self._voting_contract_filename)
+
+    @property
+    @functools.lru_cache()
+    def sample_contract_address(self):
+        return self._deployed_contract_address(contract_name=self._sample_contract_filename)
+
+    @property
+    @functools.lru_cache()
     def principal_address(self):
         fs = self.key_management_discovery[os.getenv('ENIGMA_ENV', 'COMPOSE')]
         is_contract_ready = self._wait_till_open(timeout=120, fs=fs)
@@ -108,6 +128,20 @@ class Provider:
                                file_name=self._enigma_token_abi_filename_zip)
 
         return self._unzip_bytes(zipped, self._enigma_token_abi_filename)
+
+    @property
+    @functools.lru_cache()
+    def voting_abi(self):
+        zipped = self.get_file(directory_name=self._voting_abi_directory,
+                               file_name=self._voting_abi_filename_zip)
+        return self._unzip_bytes(zipped, self._voting_abi_filename)
+
+    @property
+    @functools.lru_cache()
+    def sample_abi(self):
+        zipped = self.get_file(directory_name=self._sample_abi_directory,
+                               file_name=self._sample_abi_filename_zip)
+        return self._unzip_bytes(zipped, self._sample_abi_filename)
 
     def get_file(self, directory_name: str, file_name) -> bytes:
         fs = self.backend_strategy[os.getenv('ENIGMA_ENV', 'COMPOSE')](directory_name)

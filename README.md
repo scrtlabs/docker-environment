@@ -56,9 +56,11 @@ The following make targets also exist:
 * clone-p2p
 * clone-km
 * clone-contract
+* clone-client
 * build-km
 * build-contract
 * build-worker
+* build-client
 
 ## Installation
 
@@ -169,7 +171,25 @@ docker build --build-arg SGX_MODE=SW -f contract.Dockerfile -t enigmampc/contrac
 
 ### Client
 
-1. Build Enigma-Client image:
+1. Build `enigma_common` Docker image:
+```
+cd common_scripts/
+docker build -f common.Dockerfile -t enigma_common .
+cd ..
+```
+
+2. Clone `integration-tests` from Github:
+```
+cd client
+docker build -f gitclone_integration.Dockerfile -t gitclone_integration .
+```
+
+Note: it's possible to change each image to pull from a branch, for example `develop`:
+```
+docker build -f gitclone_integration.Dockerfile -t gitclone_integration --build-arg branch=develop .
+```
+
+3. Build Client image:
 ```
 docker build -f client.Dockerfile -t enigmampc/client:latest .
 ```
