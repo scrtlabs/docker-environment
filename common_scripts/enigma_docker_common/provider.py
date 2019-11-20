@@ -9,9 +9,9 @@ logger = get_logger('enigma_common.provider')
 
 class Provider:
     def __init__(self, config: dict):
-        self.eth_node_address = config['CONTRACT_DISCOVERY_ADDRESS']
-        self.CONTRACT_DISCOVERY_PORT = config['CONTRACT_DISCOVERY_PORT']
-        self.CONTRACT_DISCOVERY_ADDRESS = f'http://{self.eth_node_address}:{self.CONTRACT_DISCOVERY_PORT}'
+        self.config = config
+
+        self.CONTRACT_DISCOVERY_ADDRESS = config['CONTRACT_DISCOVERY_ADDRESS']
         self.KM_DISCOVERY_ADDRESS = config['KEY_MANAGEMENT_DISCOVERY']
 
         self._enigma_contract_filename = config.get('ENIGMA_CONTRACT_FILENAME', 'enigmacontract.txt')
@@ -87,7 +87,8 @@ class Provider:
     @functools.lru_cache()
     def principal_address(self):
         fs = self.key_management_discovery[os.getenv('ENIGMA_ENV', 'COMPOSE')]
-        is_contract_ready = self._wait_till_open(timeout=120, fs=fs)
+        timeout = self.config.get("KEY_MANAGEMENT_TIMEOUT", 120)
+        is_contract_ready = self._wait_till_open(timeout=timeout, fs=fs)
         if not is_contract_ready:
             logger.error(f'Key management address wasn\'t ready before timeout (120s) expired')
             raise TimeoutError(f'Timeout for server @ {self.KM_DISCOVERY_ADDRESS}')
@@ -134,8 +135,9 @@ class Provider:
         fs = self.contract_strategy[os.getenv('ENIGMA_ENV', 'COMPOSE')]
         return fs[contract_name]
 
-    def _deployed_contract_address(self, contract_name, timeout: int = 60):
+    def _deployed_contract_address(self, contract_name):
         logger.debug(f'Waiting for enigma-contract @ http://{self.CONTRACT_DISCOVERY_ADDRESS} for enigma contract')
+        timeout = self.config.get("CONTRACT_TIMEOUT", 60)
         # wait for contract to be ready
         is_contract_ready = self._wait_till_open(timeout=timeout)
         if not is_contract_ready:
