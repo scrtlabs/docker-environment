@@ -81,7 +81,7 @@ docker-compose -f docker-compose_hw.yml up
 The compose by default comes with a client you can use to run tests on the cluster. To use, just exec ``make test`` in the client
 
 ```
-docker exec dockerfiles_client_1 make test
+docker-compose exec client make test
 ```
 
 ### Set the number of workers

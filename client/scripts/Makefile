@@ -1,4 +1,4 @@
 .PHONY: all test clean
 
 test:
-	/bin/bash ./test/integrationTests/runTests.bash
+	/bin/bash ./test/runTests.bash
