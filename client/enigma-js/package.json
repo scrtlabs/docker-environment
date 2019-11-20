@@ -7,7 +7,7 @@
     "build": "webpack --env dev && webpack --env build && npm run test",
     "dev": "webpack --progress --colors --watch --env dev",
     "test": "jest",
-    "test:integration": "jest -c=test/integrationTests/jest.config.js",
+    "test:integration": "jest -c=test/integrationTests/jest.config.js --testTimeout=1000000",
     "test:watch": "jest --watch",
     "report-coverage": "codecov"
   },

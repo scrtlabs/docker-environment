@@ -24,6 +24,7 @@ services:
       ENIGMA_ENV: COMPOSE
       SGX_MODE: SW
       BOOTSTRAP: "TRUE"
+      MIN_CONFIRMATION: 1
     expose:
       - "10300" # libp2p port
       - "8080"  # what is this?
@@ -40,6 +41,7 @@ services:
     environment:
       ENIGMA_ENV: COMPOSE
       SGX_MODE: SW
+      MIN_CONFIRMATION: 1
       # FORCE_NEW_ETH_ADDR: "true"
     expose:
       - "8080" # what is this?
@@ -54,8 +56,9 @@ services:
     environment:
       SGX_MODE: SW
       ENIGMA_ENV: COMPOSE
-      AUTO_MINER: "YAY"
+      AUTO_MINER: "ON"
       BLOCK_TIME: 0
+      TIME_BETWEEN_BLOCKS: 5
     ports:
       - "8081:8081" # contract discovery service
       - "9545:9545" # ethereum node port
@@ -68,16 +71,18 @@ services:
     environment:
       ENIGMA_ENV: COMPOSE
       SGX_MODE: SW
+      CONFIRMATIONS: 1
     expose:
       - "3040" # JSON RPC port
+      - "8081"
 
-  client:
-    hostname: client
-    image: enigmampc/client:latest
-    stdin_open: true
-    tty: true
-    depends_on:
-      - contract
-    environment:
-      ENIGMA_ENV: COMPOSE
-      SGX_MODE: SW
+#  client:
+#    hostname: client
+#    image: enigmampc/client:latest
+#    stdin_open: true
+#    tty: true
+#    depends_on:
+#      - contract
+#    environment:
+#      ENIGMA_ENV: COMPOSE
+#      SGX_MODE: SW
