@@ -11,4 +11,6 @@ jobs:
     steps:
     - uses: actions/checkout@v1
     - name: Build the Docker image
-      run: make build SGX_MODE=SW
+      run: |
+        make clone-all
+        make build SGX_MODE=SW
