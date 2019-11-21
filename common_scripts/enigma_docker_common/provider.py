@@ -42,14 +42,6 @@ class Provider:
             self._enigma_contract_abi_filename = config.get('ENIGMA_CONTRACT_ABI_FILENAME', 'Enigma.json')
             self._enigma_contract_abi_filename_zip = config.get('ENIGMA_CONTRACT_ABI_FILENAME_ZIPPED', 'Enigma.zip')
 
-        self._voting_abi_directory = config.get('VOTING_CONTRACT_ABI_DIRECTORY', 'voting')
-        self._voting_abi_filename = config.get('VOTING_CONTRACT_ABI_FILENAME', 'VotingETH.json')
-        self._voting_abi_filename_zip = config.get('VOTING_CONTRACT_ABI_FILENAME_ZIPPED', 'VotingETH.zip')
-
-        self._sample_abi_directory = config.get('SAMPLE_CONTRACT_ABI_DIRECTORY', 'sample')
-        self._sample_abi_filename = config.get('SAMPLE_CONTRACT_ABI_FILENAME', 'Sample.json')
-        self._sample_abi_filename_zip = config.get('SAMPLE_CONTRACT_ABI_FILENAME_ZIPPED', 'Sample.zip')
-
         # strategy for information we get from enigma-contract
         self.contract_strategy = {"COMPOSE": storage.HttpFileService(self.CONTRACT_DISCOVERY_ADDRESS),
                                   "COMPOSE_DEV": storage.HttpFileService(self.CONTRACT_DISCOVERY_ADDRESS),
