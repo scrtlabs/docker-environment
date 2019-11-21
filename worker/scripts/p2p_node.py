@@ -102,7 +102,7 @@ class P2PNode(threading.Thread):
                   'ethereum-contract-abi-path': self.abi_path}
 
         if self.min_confirmations:
-            params.update({'min_confirmations': self.min_confirmations})
+            params.update({'min-confirmations': self.min_confirmations})
         if self.ethereum_key:
             params.update({'ethereum-key': self.ethereum_key})
 
