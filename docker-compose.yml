@@ -86,7 +86,21 @@ services:
     environment:
       ENIGMA_ENV: K8S
       SGX_MODE: SW
-      CONTRACT_DISCOVERY_ADDRESS: "52.224.217.218"
-      ETH_NODE_ADDRESS: "52.224.217.218"
-      FAUCET_URL: "http://52.224.217.218:8001"
-      WORKER_URL: "http://13.68.180.103"
+      CONTRACT_DISCOVERY_ADDRESS: "contract"
+      ETH_NODE_ADDRESS: "contract"
+      FAUCET_URL: "http://contract:8001"
+      WORKER_URL: "http://bootstrap"
+#  client:
+#    hostname: client
+#    image: enigmampc/client:latest
+#    stdin_open: true
+#    tty: true
+#    depends_on:
+#      - contract
+#    environment:
+#      ENIGMA_ENV: K8S
+#      SGX_MODE: SW
+#      CONTRACT_DISCOVERY_ADDRESS: "52.224.217.218"
+#      ETH_NODE_ADDRESS: "52.224.217.218"
+#      FAUCET_URL: "http://52.224.217.218:8001"
+#      WORKER_URL: "http://13.68.180.103"

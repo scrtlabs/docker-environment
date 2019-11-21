@@ -24,11 +24,11 @@ describe('Enigma tests', () => {
         web3 = new Web3(provider);
         return web3.eth.getAccounts().then(async (result) => {
             accounts = result;
-            await web3.eth.sendTransaction({to:"0x18A787C1e5fb92D7dFF1f920Ee740901Dc72BC1b", from:accounts[0], value:web3.utils.toWei("0.5", "ether")});
-            await web3.eth.sendTransaction({to:"0x18A787C1e5fb92D7dFF1f920Ee740901Dc72BC1b", from:accounts[0], value:web3.utils.toWei("0.5", "ether")});
-            await web3.eth.sendTransaction({to:"0x18A787C1e5fb92D7dFF1f920Ee740901Dc72BC1b", from:accounts[0], value:web3.utils.toWei("0.5", "ether")});
-            await web3.eth.sendTransaction({to:"0x18A787C1e5fb92D7dFF1f920Ee740901Dc72BC1b", from:accounts[0], value:web3.utils.toWei("0.5", "ether")});
-            await web3.eth.sendTransaction({to:"0x18A787C1e5fb92D7dFF1f920Ee740901Dc72BC1b", from:accounts[0], value:web3.utils.toWei("0.5", "ether")});
+            await web3.eth.sendTransaction({to:accounts[1], from:accounts[0], value:web3.utils.toWei("0.5", "ether")});
+            await web3.eth.sendTransaction({to:accounts[1], from:accounts[0], value:web3.utils.toWei("0.5", "ether")});
+            await web3.eth.sendTransaction({to:accounts[1], from:accounts[0], value:web3.utils.toWei("0.5", "ether")});
+            await web3.eth.sendTransaction({to:accounts[1], from:accounts[0], value:web3.utils.toWei("0.5", "ether")});
+            await web3.eth.sendTransaction({to:accounts[1], from:accounts[0], value:web3.utils.toWei("0.5", "ether")});
             enigma = new Enigma(
                 web3,
                 EnigmaContractAddress,

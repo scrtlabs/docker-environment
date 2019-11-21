@@ -58,6 +58,7 @@ services:
     environment:
       SGX_MODE: HW
       ENIGMA_ENV: COMPOSE
+      BLOCK_TIME: 0
     ports:
       - "8081:8081" # contract discovery service
       - "9545:9545" # ethereum node port
