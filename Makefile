@@ -20,6 +20,7 @@ clone-all:
 	${core}
 	${p2p}
 	${contract}
+	${client}
 
 clone-core:
 	${core}
@@ -34,6 +35,7 @@ clone-contract:
 	${contract}
 
 clone-client:
+	${contract}
 	${client}
 
 build:
