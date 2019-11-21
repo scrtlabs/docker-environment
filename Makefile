@@ -2,6 +2,7 @@ core = cd worker; docker build --build-arg branch=${BRANCH} -f gitclone_core.Doc
 km = cd worker; docker build --build-arg branch=${BRANCH} -f gitclone_core.Dockerfile -t gitclone_core .
 contract = cd contract; docker build --build-arg branch=${BRANCH} -f gitclone_contract.Dockerfile -t gitclone_contract .
 p2p = cd worker; docker build --build-arg branch=${BRANCH} -f gitclone_p2p.Dockerfile -t gitclone_p2p .
+client = cd client; docker build --build-arg branch=${BRANCH} -f gitclone_integration.Dockerfile -t gitclone_integration .
 
 SGX_MODE ?= HW
 BRANCH ?= develop
@@ -19,6 +20,7 @@ clone-all:
 	${core}
 	${p2p}
 	${contract}
+	${client}
 
 clone-core:
 	${core}
@@ -32,11 +34,16 @@ clone-km:
 clone-contract:
 	${contract}
 
+clone-client:
+	${contract}
+	${client}
+
 build:
 	cd worker; docker build --build-arg DEBUG=${DEBUG} -f 01_core_base.Dockerfile -t enigmampc/core-base:latest .
 	cd worker; docker build --build-arg DEBUG=${DEBUG} --build-arg SGX_MODE=${SGX_MODE} -f 02_core_and_p2p.Dockerfile -t enigmampc/worker_${ext}:latest .
 	cd km; docker build --build-arg DEBUG=${DEBUG} --build-arg SGX_MODE=${SGX_MODE} -f km.Dockerfile -t enigmampc/key_management_${ext}:latest .
 	cd contract; docker build -f contract.Dockerfile -t enigmampc/contract:latest .
+	cd common_scripts; docker build -f common.Dockerfile -t enigma_common .
 	cd client; docker build -f client.Dockerfile -t enigmampc/client:latest .
 
 build-km:
@@ -51,4 +58,5 @@ build-worker:
 	cd worker; docker build --build-arg DEBUG=${DEBUG} --build-arg SGX_MODE=${SGX_MODE} -f 02_core_and_p2p.Dockerfile -t enigmampc/worker_${ext}:latest .
 
 build-client:
+	cd common_scripts; docker build -f common.Dockerfile -t enigma_common .
 	cd client; docker build -f client.Dockerfile -t enigmampc/client:latest .
