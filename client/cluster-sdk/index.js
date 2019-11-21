@@ -3,21 +3,26 @@ const yaml = require('js-yaml');
 const fs = require('fs');
 const path = require('path');
 const { argv } = require('yargs');
-const { KubeConfig, Client } = require('kubernetes-client');
-const Request = require('kubernetes-client/backends/request')
+
+const { sleep } = require('./utils');
+const {
+    createNamespace,
+    getNamespaces,
+    deleteNamespace,
+    createDeployment,
+    getDeployments,
+    deleteDeployment,
+    createService,
+    getServices,
+    deleteService,
+    getPods,
+    deletePod,
+} = require('./k8s');
 const log = console;
 
-const region = argv.region || process.env.REGION || 'eastus';
-const cluster = argv.cluster || process.env.CLUSTER || 'enigma-cluster';
-const namespace = argv.ns || process.env.NS || 'app';
 const cacheRefreshInterval = _.toInteger(argv.cri || process.env.CACHE_REFRESH_INTERVAL || 15 * 1000);
 const DEBUG = argv.debug || process.env.DEBUG || false;
 
-const kubeconfig = new KubeConfig();
-const kubernetesVersion = '1.13';
-kubeconfig.loadFromFile(`../k8s-deployment/_output/${cluster}/kubeconfig/kubeconfig.${region}.json`);
-
-const client = new Client({ backend: new Request({ kubeconfig }), version: kubernetesVersion });
 
 const Applications = {
     'WORKER': 'WORKER',
@@ -29,28 +34,17 @@ const Applications = {
     'CONTRACT': 'CONTRACT'
 };
 
+const SgxModes = {
+    'SW': 'SW',
+    'HW': 'HW',
+}
+
 function getDeploymentName({ name, index }) {
     return index ? `${_.toLower(name)}-${index}` : `${_.toLower(name)}`;
 }
 
 function getServiceName({ name, index }) {
     return `${getDeploymentName({ name, index })}-service`;
-}
-
-async function getServices({ namespace }) {
-    return (await client.api.v1.namespaces(namespace).services.get()).body.items;
-}
-
-async function getPods({ namespace }) {
-    return (await client.api.v1.namespaces(namespace).pods.get()).body.items;
-}
-
-async function getDeployments({ namespace }) {
-    return (await client.apis.apps.v1.namespaces(namespace).deployments.get()).body.items;
-}
-
-async function getNamespaces() {
-    return (await client.api.v1.namespaces.get()).body.items;
 }
 
 function loadTemplateDeploymentFile(_app) {
@@ -99,46 +93,6 @@ async function getNextWorkerIndex({ namespace }) {
         i++;
     } while (_.includes(workerIdxs, i))
     return i;
-}
-
-async function createDeployment({ namespace, deployment }) {
-    const name = deployment.metadata.name;
-    try {
-        const create = await client.apis.apps.v1.namespaces(namespace).deployments.post({ body: deployment });
-        // log.info('Create:', create);
-    } catch (err) {
-        if (err.code !== 409) throw err;
-        const replace = await client.apis.apps.v1.namespaces(namespace).deployments(name).put({ body: deployment });
-        // log.info('Replace:', replace);
-    }
-}
-
-async function deleteDeployment({ namespace, name }) {
-    await client.apis.apps.v1.namespaces(namespace).deployments(name).delete();
-}
-
-async function createService({ namespace, service }) {
-    const name = service.metadata.name;
-    try {
-        const create = await client.api.v1.namespaces(namespace).services.post({ body: service });
-        // log.info('Create:', create);
-    } catch (err) {
-        if (err.code !== 409) throw err;
-        const existingSvc = _(await getServices({ namespace })).filter(x => x.metadata.name === name).head();
-        // ClusterIP is immutable, resourceVersion should be set
-        service.spec.clusterIP = existingSvc.spec.clusterIP;
-        service.metadata.resourceVersion = existingSvc.metadata.resourceVersion;
-        const replace = await client.api.v1.namespaces(namespace).services(name).put({ body: service });
-        // log.info('Replace:', replace);
-    }
-}
-
-async function deleteService({ namespace, name }) {
-    await client.api.v1.namespaces(namespace).services(name).delete();
-}
-
-async function deletePod({ namespace, name }) {
-    await client.api.v1.namespaces(namespace).pods(name).delete();
 }
 
 async function createWorkerInstance({ namespace, index }) {
@@ -299,26 +253,26 @@ async function getWorkerEthereumAddress({ namespace, deploymentName }) {
     return str;
 }
 
-async function stopWorkerProcess({ namespace, index }) {
+async function stopWorkerProcess({ namespace, index, name }) {
     if (!index) {
         index = await pickRandomWorkerIndex({ namespace });
         log.info(index);
     }
-    const name = Applications.WORKER;
-    const pod = await getApplicationPodName({ app: getDeploymentName({ name, index }), namespace });
+    const app_name = name ? name : Applications.WORKER;
+    const pod = await getApplicationPodName({ app: getDeploymentName({ name: app_name, index }), namespace });
     let cmd = `supervisorctl stop p2p`;
     await execOnPod({ namespace, pod, cmd });
     cmd = `supervisorctl stop core`;
     await execOnPod({ namespace, pod, cmd });
 }
 
-async function startWorkerProcess({ namespace, index }) {
+async function startWorkerProcess({ namespace, index, name}) {
     if (!index) {
         index = await pickRandomWorkerIndex({ namespace });
         log.info(index);
     }
-    const name = Applications.WORKER;
-    const pod = await getApplicationPodName({ app: getDeploymentName({ name, index }), namespace });
+    const app_name = name ? name : Applications.WORKER;
+    const pod = await getApplicationPodName({ app: getDeploymentName({ name: app_name, index }), namespace });
     let cmd = `supervisorctl start core`;
     await execOnPod({ namespace, pod, cmd });
     cmd = `supervisorctl start p2p`;
@@ -346,8 +300,75 @@ function disableCache({ namespace }) {
     }
 }
 
+// Hashmap of namespace -> sgx mode (HW/SW), default is SW
+const SgxModeStatus = {};
+function setSgxMode({ namespace, sgxMode }) {
+    const mode = _.trim(_.toUpper(sgxMode));
+    if (mode === SgxModes.HW) {
+        _.set(SgxModeStatus, namespace, SgxModes.HW);
+    } else {
+        _.set(SgxModeStatus, namespace, SgxModes.SW);
+    }
+}
+
+function getSgxMode({ namespace }) {
+    return SgxModeStatus[namespace] || SgxModes.SW;
+}
+
+function manipulateDeploymentDueSgxMode({ namespace, deployment }) {
+    const DEFAULT_IMAGE_SGX_MODE = '_sw:';
+    const currentImage = deployment.spec.template.spec.containers[0].image;
+    if (_.includes(currentImage, DEFAULT_IMAGE_SGX_MODE)) {
+        const newImage = _.replace(currentImage, DEFAULT_IMAGE_SGX_MODE, _.toLower(`_${getSgxMode({ namespace })}:`));
+        deployment.spec.template.spec.containers[0].image = newImage;
+    }
+
+    const keyName = 'SGX_MODE';
+    const env = deployment.spec.template.spec.containers[0].env;
+    const index = _.findIndex(env, x => x.name === keyName);
+    if (index > 0) {
+        env[index] = { name: keyName, value: getSgxMode({ namespace })};
+        deployment.spec.template.spec.containers[0].env = env;
+    }
+
+
+    let i = 9;
+    return deployment;
+}
+
+// Deploys contract, KM and Bootstrappers
+async function createEnvironment({ namespace }) {
+    await createNamespace({ namespace });
+
+    const contractManifests = loadTemplateDeploymentFile(Applications.CONTRACT);
+    const newContractDp = manipulateDeploymentDueSgxMode({ namespace, deployment: contractManifests.dp });
+    await createDeployment({ namespace, deployment: newContractDp });
+    await createService({ namespace, service: contractManifests.svc });
+
+    const minutesToSleep = 3;
+    log.info(`Sleeping for ${minutesToSleep} minutes so the contract will be up and running`);
+    await sleep(minutesToSleep * 60 * 1000);
+
+    const kmManifests = loadTemplateDeploymentFile(Applications.KM);
+    const newKmDp = manipulateDeploymentDueSgxMode({ namespace, deployment: kmManifests.dp });
+    await createDeployment({ namespace, deployment: newKmDp });
+    await createService({ namespace, service: kmManifests.svc });
+
+    // TODO multi!!
+    const btsManifests = loadTemplateDeploymentFile(Applications.BOOTSTRAPPER);
+    const newBtsDp = manipulateDeploymentDueSgxMode({ namespace, deployment: btsManifests.dp });
+    await createDeployment({ namespace, deployment: newBtsDp });
+    await createService({ namespace, service: btsManifests.svc });
+}
+
+async function deleteEnvironment({ namespace }) {
+    // Namespace will be deleted, all sub-objects will be cascaded
+    return deleteNamespace({ namespace });
+}
+
 module.exports = {
     Applications,
+    SgxModes,
     turnOffWorkers,
     scaleWorkers,
     restartWorker,
@@ -359,5 +380,10 @@ module.exports = {
     getStatus,
     getApplicationInternalConfigFile,
     startWorkerProcess,
-    stopWorkerProcess
+    stopWorkerProcess,
+    createEnvironment,
+    deleteEnvironment,
+    setSgxMode,
+    getSgxMode,
 };
+
