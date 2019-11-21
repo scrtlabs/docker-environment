@@ -1,8 +1,7 @@
 {"ENIGMA_ENV" : "COMPOSE",
- "CONTRACT_DISCOVERY_PORT" : "8081",
- "CONTRACT_DISCOVERY_ADDRESS" : "contract",
- "ETH_NODE_ADDRESS" : "contract",
- "ETH_NODE_PORT" : "9545",
+ "CONTRACT_DISCOVERY_ADDRESS" : "http://contract:8081",
+ "KEY_MANAGEMENT_DISCOVERY": "",
+ "ETH_NODE_ADDRESS" : "https://kovan.infura.io/v3/",
  "CONTRACTS_FOLDER" : "/tmp/contracts/",
  "TEMP_CONFIG_PATH": "/tmp/config.json",
  "FAUCET_URL": "http://contract:8001",
@@ -20,5 +19,7 @@
  "DEFAULT_CONFIG_PATH": "/root/scripts/principal_defaults.json",
  "KM_FILENAME": "principal-sign-addr.txt",
  "KEYPAIR_DIRECTORY": "/root/.enigma/",
- "ADDRESS_DISCOVERY_PORT": 8081
+ "ADDRESS_DISCOVERY_PORT": 8081,
+ "KEY_MANAGEMENT_TIMEOUT": 120,
+ "CONTRACT_TIMEOUT": 3600
 }

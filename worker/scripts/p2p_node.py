@@ -33,6 +33,7 @@ class P2PNode(threading.Thread):
                  deposit_amount: int = 0,
                  login_and_deposit: bool = False,
                  ethereum_key: str = '',
+                 min_confirmations: int = 12,
                  executable_name: str = 'cli_app.js', *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.exec_file = executable_name
@@ -58,6 +59,7 @@ class P2PNode(threading.Thread):
         self.login_and_deposit = login_and_deposit
         self.ethereum_key = ethereum_key
         self.bootstrap_id = bootstrap_id
+        self.min_confirmations = str(min_confirmations) if int(min_confirmations) != 12 else None
         self.proc = None
         atexit.register(self.stop)
         signal.signal(signal.SIGINT, self._kill)
@@ -95,6 +97,8 @@ class P2PNode(threading.Thread):
                   'ethereum-contract-address': f'{self.contract_addr}',
                   'ethereum-contract-abi-path': self.abi_path}
 
+        if self.min_confirmations:
+            params.update({'min_confirmations': self.min_confirmations})
         if self.ethereum_key:
             params.update({'ethereum-key': self.ethereum_key})
 
