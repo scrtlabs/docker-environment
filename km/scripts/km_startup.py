@@ -91,7 +91,7 @@ if __name__ == '__main__':
 
     keypair = config['KEYPAIR_PATH']
     public = config['KEYPAIR_PUBLIC_PATH']
-
+    config['URL'] = f'{config["ETH_NODE_ADDRESS"]}'
     # not sure we want to let people set the executable from outside, especially
     # since we're running as root atm O.o
     if 'EXECUTABLE_PATH' in os.environ:
@@ -125,24 +125,23 @@ if __name__ == '__main__':
     try:
         with open('/root/.enigma/ethereum-account-addr.txt') as f:
             eth_address = f.read()
-            logger.error(f'Eth-addr: {eth_address}')
-    except FileNotFoundError:
-        logger.critical('Ethereum address not found -- exiting')
-        exit(-5)
-    eth_address = '062B3e365052A92bcf3cC9E54a63c5078caC4eCC'
-    # set the URL of the ethereum node we're going to use -- this will be picked up by the application config
-    config['URL'] = f'{config["ETH_NODE_ADDRESS"]}'
-    config['ACCOUNT_ADDRESS'] = eth_address
+            logger.info(f'Found Ethereum-address: {eth_address}')
+            config['ACCOUNT_ADDRESS'] = eth_address
 
-    try:
         get_initial_coins('0x' + eth_address, 'ETH', config)
         get_initial_coins('0x' + eth_address, 'ENG', config)
+
+    except FileNotFoundError:
+        logger.warning('Ethereum address not found, continuing from defaults')
     except RuntimeError as e:
         logger.critical(f'Failed to get enough ETH or ENG to start - {e}')
         exit(-2)
     except ConnectionError as e:
         logger.critical(f'Failed to connect to remote address: {e}')
         exit(-1)
+
+    # eth_address = '062B3e365052A92bcf3cC9E54a63c5078caC4eCC'
+    # set the URL of the ethereum node we're going to use -- this will be picked up by the application config
 
     logger.info(f'Waiting for enigma-contract @ '
                 f'{config["CONTRACT_DISCOVERY_ADDRESS"]}')
