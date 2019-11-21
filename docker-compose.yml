@@ -76,13 +76,13 @@ services:
       - "3040" # JSON RPC port
       - "8081"
 
-#  client:
-#    hostname: client
-#    image: enigmampc/client:latest
-#    stdin_open: true
-#    tty: true
-#    depends_on:
-#      - contract
-#    environment:
-#      ENIGMA_ENV: COMPOSE
-#      SGX_MODE: SW
+  client:
+    hostname: client
+    image: enigmampc/client:latest
+    stdin_open: true
+    tty: true
+    depends_on:
+      - contract
+    environment:
+      ENIGMA_ENV: COMPOSE
+      SGX_MODE: SW
