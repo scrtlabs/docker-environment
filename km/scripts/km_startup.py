@@ -122,17 +122,17 @@ if __name__ == '__main__':
 
     # keystore_dir = config['KEYSTORE_DIRECTORY'] or pathlib.Path.home()
     # private, eth_address = open_eth_keystore(keystore_dir, config, create=True)
-    try:
-        with open('/root/.enigma/ethereum-account-addr.txt') as f:
-            eth_address = f.read()
-            logger.error(f'Eth-addr: {eth_address}')
-    except FileNotFoundError:
-        logger.critical('Ethereum address not found -- exiting')
-        exit(-5)
+    # try:
+    #     with open('/root/.enigma/ethereum-account-addr.txt') as f:
+    #         eth_address = f.read()
+    #         logger.error(f'Eth-addr: {eth_address}')
+    # except FileNotFoundError:
+    #     logger.critical('Ethereum address not found -- exiting')
+    #     exit(-5)
     eth_address = '062B3e365052A92bcf3cC9E54a63c5078caC4eCC'
     # set the URL of the ethereum node we're going to use -- this will be picked up by the application config
     config['URL'] = f'{config["ETH_NODE_ADDRESS"]}'
-    config['ACCOUNT_ADDRESS'] = eth_address
+    # config['ACCOUNT_ADDRESS'] = eth_address
 
     try:
         get_initial_coins('0x' + eth_address, 'ETH', config)
