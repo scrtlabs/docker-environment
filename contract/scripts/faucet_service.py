@@ -163,14 +163,14 @@ def block_miner():
         mining_delay = int(config.get('TIME_BETWEEN_BLOCKS', 60))
         logger.info(f'Time between transactions: {mining_delay}')
         logger.info(f'Time to confirm block: {config["BLOCK_TIME"]}')
-        block_time = int(config["BLOCK_TIME"])
-        epoch_time = int(config["EPOCH_SIZE"]) * max(mining_delay, block_time)
-        logger.info(f'Min epoch time: {epoch_time}s')
+        # block_time = int(config["BLOCK_TIME"])
+        # epoch_time = int(config["EPOCH_SIZE"]) * max(mining_delay, block_time)
+        # logger.info(f'Min epoch time: {epoch_time}s')
         random_acc = '0x18A787C1e5fb92D7dFF1f920Ee740901Dc72BC1b'
         while True:
             coinbase = w3.toChecksumAddress(CoinBaseProvider.address())
             w3.eth.sendTransaction({'to': random_acc, 'from': coinbase, 'value': 1})
-            logger.debug('Sent Transaction -- should create new block')
+            logger.info('Sent Transaction -- should create new block')
             time.sleep(mining_delay)
 
 

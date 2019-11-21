@@ -28,11 +28,13 @@ class P2PNode(threading.Thread):
                  random_db: bool = True,
                  auto_init: bool = True,
                  bootstrap: bool = False,
-                 bootstrap_address: str = '',
+                 bootstrap_address: str = 'B1',
                  bootstrap_id: str = 'B1',
                  deposit_amount: int = 0,
                  login_and_deposit: bool = False,
                  ethereum_key: str = '',
+                 bootstrap_path: str = "B1",
+                 bootstrap_port: str = "B1",
                  min_confirmations: int = 12,
                  executable_name: str = 'cli_app.js', *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -58,7 +60,9 @@ class P2PNode(threading.Thread):
         self.deposit_amount = deposit_amount
         self.login_and_deposit = login_and_deposit
         self.ethereum_key = ethereum_key
-        self.bootstrap_id = bootstrap_id
+        self.bootstrap_id: str = bootstrap_id
+        self.bootstrap_path: str = bootstrap_path
+        self.bootstrap_port: str = bootstrap_port
         self.min_confirmations = str(min_confirmations) if int(min_confirmations) != 12 else None
         self.proc = None
         atexit.register(self.stop)
@@ -98,7 +102,7 @@ class P2PNode(threading.Thread):
                   'ethereum-contract-abi-path': self.abi_path}
 
         if self.min_confirmations:
-            params.update({'min_confirmations': self.min_confirmations})
+            params.update({'min-confirmations': self.min_confirmations})
         if self.ethereum_key:
             params.update({'ethereum-key': self.ethereum_key})
 
@@ -107,9 +111,9 @@ class P2PNode(threading.Thread):
 
         if self.bootstrap:
             params.update({
-                'path': self.bootstrap_id,
-                'bnodes': self.bootstrap_id,
-                'port': self.bootstrap_id
+                'path': self.bootstrap_path,
+                'bnodes': f'{self.bootstrap_addr}',  # f'{self.bootstrap_addr}'
+                'port': self.bootstrap_port
             })
         else:
             params.update({
