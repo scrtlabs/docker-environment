@@ -31,7 +31,7 @@ RUN pip3 install \
 
 
 COPY --from=gitclone_integration /integration-tests /root/integration-tests
-COPY --from=gitclone_contract /enigma-contract/enigma-js/lib/enigma-js.node.js /root/integration-tests/enigma-js/lib
+COPY --from=gitclone_contract /enigma-contract/enigma-js/lib/enigma-js.node.js /root/integration-tests/enigma-js/lib/enigma-js.node.js
 COPY --from=enigmampc/contract /root/enigma-contract/build /root/build
 
 WORKDIR /root/integration-tests
