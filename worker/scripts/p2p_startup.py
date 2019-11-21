@@ -123,7 +123,8 @@ def main():
                              bootstrap_address=bootstrap_address,
                              key_mgmt_node=config["KEY_MANAGEMENT_ADDRESS"],
                              deposit_amount=deposit_amount,
-                             login_and_deposit=login_and_deposit)
+                             login_and_deposit=login_and_deposit,
+                             min_confirmations=config["MIN_CONFIRMATIONS"])
     else:
         bootstrap_node = config['BOOTSTRAP_ADDRESS']
         p2p_runner = P2PNode(bootstrap=False,
@@ -136,7 +137,8 @@ def main():
                              abi_path=enigma_abi_path,
                              bootstrap_address=bootstrap_node,
                              deposit_amount=deposit_amount,
-                             login_and_deposit=login_and_deposit)
+                             login_and_deposit=login_and_deposit,
+                             min_confirmations=config["MIN_CONFIRMATIONS"])
 
     # Setting workdir to the base path of the executable, because everything is fragile
     os.chdir(pathlib.Path(executable).parent)
