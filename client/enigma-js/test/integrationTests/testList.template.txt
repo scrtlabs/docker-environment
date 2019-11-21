@@ -1,4 +1,5 @@
-91_restart_workers.spec.js
+02_deploy_factorization.spec.js
+91_simultaneous_calls_same_gateway.spec.js
 02_deploy_calculator.spec.js
 02_deploy_flipcoin.spec.js
 02_deploy_millionaire.spec.js
@@ -14,3 +15,4 @@
 10_execute_erc20.spec.js
 20_execute_fail_outofgas.spec.js
 20_execute_fail_parameters.spec.js
+91_restart_workers.spec.js
