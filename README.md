@@ -64,6 +64,11 @@ The following make targets also exist:
 
 ## Installation
 
+Copy `.env.template` to `.env` and adjust any values as needed:
+```
+cp .env.template .env
+```
+
 Software mode:
 ```
 docker-compose up
