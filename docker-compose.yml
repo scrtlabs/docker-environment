@@ -24,7 +24,7 @@ services:
       ENIGMA_ENV: COMPOSE
       SGX_MODE: SW
       BOOTSTRAP: "TRUE"
-      MIN_CONFIRMATION: 1
+      MIN_CONFIRMATIONS: 1
     expose:
       - "10300" # libp2p port
       - "8080"  # what is this?
@@ -41,7 +41,7 @@ services:
     environment:
       ENIGMA_ENV: COMPOSE
       SGX_MODE: SW
-      MIN_CONFIRMATION: 1
+      MIN_CONFIRMATIONS: 1
       # FORCE_NEW_ETH_ADDR: "true"
     expose:
       - "8080" # what is this?
