@@ -107,6 +107,10 @@ def main():
         logger.info(f'Current allowance for {provider.enigma_contract_address}, from {eth_address}: {val} ENG')
 
     if is_bootstrap:
+
+        bootstrap_path = config['BOOTSTRAP_PATH']
+        bootstrap_port = config['BOOTSTRAP_PORT']
+        bootstrap_address = "B1"  # config['BOOTSTRAP_ADDRESS']
         p2p_runner = P2PNode(bootstrap=True,
                              bootstrap_id=bootstrap_id,
                              ethereum_key=private_key,
@@ -114,6 +118,9 @@ def main():
                              public_address=eth_address,
                              ether_node=config["ETH_NODE_ADDRESS"],
                              abi_path=enigma_abi_path,
+                             bootstrap_path=bootstrap_path,
+                             bootstrap_port=bootstrap_port,
+                             bootstrap_address=bootstrap_address,
                              key_mgmt_node=config["KEY_MANAGEMENT_ADDRESS"],
                              deposit_amount=deposit_amount,
                              login_and_deposit=login_and_deposit)
