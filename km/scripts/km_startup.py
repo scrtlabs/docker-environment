@@ -122,6 +122,7 @@ if __name__ == '__main__':
 
     # keystore_dir = config['KEYSTORE_DIRECTORY'] or pathlib.Path.home()
     # private, eth_address = open_eth_keystore(keystore_dir, config, create=True)
+
     try:
         with open('/root/.enigma/ethereum-account-addr.txt') as f:
             eth_address = f.read()
