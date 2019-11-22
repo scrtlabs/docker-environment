@@ -10,7 +10,12 @@ jobs:
 
     steps:
     - uses: actions/checkout@v1
-    - name: Build the Docker image
+    - name: Build the Docker images
       run: |
         make clone-all
         make build SGX_MODE=SW
+    - name: Run the tests
+      run: |
+        cp .env.template .env
+        MIN_CONFIRMATIONS=0 docker-compose --exit-code-from client up & sleep 60 && docker-compose exec client make test
+
