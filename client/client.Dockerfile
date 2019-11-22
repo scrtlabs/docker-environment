@@ -15,32 +15,12 @@ RUN apt-get update && \
     && apt-get install -y --no-install-recommends nodejs yarn \
     && rm -rf /var/lib/apt/lists/*
 
-######## Stage 4 - build python wheels
-
-FROM base as pybuild
-
-WORKDIR /root
-
-# this is here first don't run it again unless we actually change the requirements
-COPY scripts/requirements.txt ./
-
-RUN apt-get update \
- && apt-get install -y --no-install-recommends \
-    python3-setuptools \
-    gcc \
-    python3.6-dev \
- && rm -rf /var/lib/apt/lists/*
-
-RUN pip3 install wheel
-
-RUN pip3 wheel --wheel-dir=/root/wheels -r requirements.txt -i http://pypi.keytango.io --trusted-host pypi.keytango.io
-
 ########################
 FROM base
 
 WORKDIR /root
 
-COPY --from=pybuild /root/wheels /root/wheels
+COPY --from=enigma_common /root/wheels /root/wheels
 
 COPY scripts/requirements.txt .
 
@@ -49,22 +29,20 @@ RUN pip3 install \
       --find-links=/root/wheels \
       -r requirements.txt
 
-# COPY --from=gitclone /enigma-contract/enigma-js /root/enigma-contract/enigma-js
-COPY enigma-js/package.json /root/enigma-contract/enigma-js/
-COPY enigma-js/.babelrc /root/enigma-contract/enigma-js/
-WORKDIR /root/enigma-contract/enigma-js
 
+COPY --from=gitclone_integration /integration-tests /root/integration-tests
+COPY --from=gitclone_contract /enigma-contract/enigma-js/lib/enigma-js.node.js /root/integration-tests/enigma-js/lib/enigma-js.node.js
+COPY --from=enigmampc/contract /root/enigma-contract/build /root/build
+
+WORKDIR /root/integration-tests
 RUN yarn install
-
-COPY enigma-js/jest.init.js /root/enigma-contract/enigma-js/
-COPY enigma-js/test /root/enigma-contract/enigma-js/test
-COPY enigma-js/Makefile /root/enigma-contract/enigma-js/Makefile
 
 RUN mkdir -p /root/.enigma/
 
 COPY config config
 COPY scripts/tests_setup.py .
 COPY scripts/startup.sh .
+COPY scripts/Makefile .
 
 RUN chmod +x startup.sh && chmod +x tests_setup.py
 

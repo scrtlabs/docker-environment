@@ -56,11 +56,18 @@ The following make targets also exist:
 * clone-p2p
 * clone-km
 * clone-contract
+* clone-client
 * build-km
 * build-contract
 * build-worker
+* build-client
 
 ## Installation
+
+Copy `.env.template` to `.env` and adjust any values as needed:
+```
+cp .env.template .env
+```
 
 Software mode:
 ```
@@ -79,7 +86,7 @@ docker-compose -f docker-compose_hw.yml up
 The compose by default comes with a client you can use to run tests on the cluster. To use, just exec ``make test`` in the client
 
 ```
-docker exec dockerfiles_client_1 make test
+docker-compose exec client make test
 ```
 
 ### Set the number of workers
@@ -169,7 +176,25 @@ docker build --build-arg SGX_MODE=SW -f contract.Dockerfile -t enigmampc/contrac
 
 ### Client
 
-1. Build Enigma-Client image:
+1. Build `enigma_common` Docker image:
+```
+cd common_scripts/
+docker build -f common.Dockerfile -t enigma_common .
+cd ..
+```
+
+2. Clone `integration-tests` from Github:
+```
+cd client
+docker build -f gitclone_integration.Dockerfile -t gitclone_integration .
+```
+
+Note: it's possible to change each image to pull from a branch, for example `develop`:
+```
+docker build -f gitclone_integration.Dockerfile -t gitclone_integration --build-arg branch=develop .
+```
+
+3. Build Client image:
 ```
 docker build -f client.Dockerfile -t enigmampc/client:latest .
 ```
