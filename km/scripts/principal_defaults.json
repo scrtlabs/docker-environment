@@ -15,5 +15,5 @@
     "attestation_retries": 10,
     "http_port": 3040,
     "confirmations": 0,
-    "chain_id": 13
+    "chain_id": 4447
 }
