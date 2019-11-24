@@ -1,4 +1,5 @@
 {
+ "CONTRACT_DISCOVERY_PORT": "8081",
  "CONTRACT_DISCOVERY_ADDRESS": "http://contract:8081",
  "ETH_NODE_ADDRESS": "contract",
  "ETH_NODE_PORT": "9545",
