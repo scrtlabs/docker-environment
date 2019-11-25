@@ -103,10 +103,11 @@ export default class Enigma {
    * @param {string/Buffer} scAddrOrPreCode - Either secret contract address (string) or precode (Buffer), depending
    * on if user is running a contract deployment or compute task
    * @param {boolean} isContractDeploymentTask - Is this task a contract deployment task (if not, it's a compute task)
+   * @param {string} key - location in hashmap of the keyPair
    * @returns {EventEmitter} EventEmitter to be listened to track creation of task. Emits a Task with base attributes
    * to be used for remainder of task lifecycle
    */
-  createTask(fn, args, gasLimit, gasPx, sender, scAddrOrPreCode, isContractDeploymentTask) {
+  createTask(fn, args, gasLimit, gasPx, sender, scAddrOrPreCode, isContractDeploymentTask, key='') {
     let emitter = new EventEmitter();
     (async () => {
       // TODO: never larger that 53-bit?
@@ -141,7 +142,10 @@ export default class Enigma {
       const firstBlockNumber = workerParams.firstBlockNumber;
       let workerAddress = await this.selectWorkerGroup(scAddr, workerParams, 1)[0]; // TODO: tmp fix 1 worker
       workerAddress = workerAddress.toLowerCase().slice(-40); // remove leading '0x' if present
-      const {publicKey, privateKey} = this.obtainTaskKeyPair();
+      if (key === '') {
+          key = 'encodedPrivateKey'
+      }
+      const {publicKey, privateKey} = this.obtainTaskKeyPair(key);
       try {
         const getWorkerEncryptionKeyResult = await new Promise((resolve, reject) => {
           this.client.request('getWorkerEncryptionKey',
@@ -219,7 +223,7 @@ export default class Enigma {
         });
         return;
       }
-      await this.tokenContract.methods.approve(this.enigmaContract.options.address, task.gasLimit * task.gasPx).send({
+      await this.tokenContract.methods.approve(this.enigmaContract.options.address, task.gasLimit * task.gasPx * 5).send({
         from: task.sender,
       });
       try {
@@ -505,12 +509,12 @@ export default class Enigma {
    * Decrypt task result
    *
    * @param {Task} task - Task wrapper for contract deployment and compute tasks
+   * @param {string} key - location of keyPair storage
    * @return {Task} Task result wrapper with an updated decrypted output attribute
    */
-  async decryptTaskResult(task) {
-    console.log('task.encryptedAbiEncodedOutputs is '+task.encryptedAbiEncodedOutputs);
+  async decryptTaskResult(task, key='encodedPrivateKey') {
     if (task.encryptedAbiEncodedOutputs) {
-      const {privateKey} = this.obtainTaskKeyPair();
+      const {privateKey} = this.obtainTaskKeyPair(key);
       const derivedKey = utils.getDerivedKey(task.workerEncryptionKey, privateKey);
       task.decryptedOutput = utils.decryptMessage(derivedKey, task.encryptedAbiEncodedOutputs);
     } else {
@@ -658,12 +662,12 @@ export default class Enigma {
    *
    * @return {Object} Public key-private key pair
    */
-  obtainTaskKeyPair() {
+  obtainTaskKeyPair(key='encodedPrivateKey') {
     // TODO: Developer tool to allow users to select their own unique passphrase to generate private key
     const isBrowser = typeof window !== 'undefined';
     let privateKey;
-    let encodedPrivateKey = isBrowser ? window.localStorage.getItem('encodedPrivateKey') :
-      this.taskKeyLocalStorage['encodedPrivateKey'];
+    let encodedPrivateKey = isBrowser ? window.localStorage.getItem(key) :
+      this.taskKeyLocalStorage[key];
     if (encodedPrivateKey == null) {
       throw Error('Need to set task key pair first');
     } else {
@@ -680,7 +684,7 @@ export default class Enigma {
    * @param {string} seed - Optional seed
    * @return {string} Seed
    */
-  setTaskKeyPair(seed='') {
+  setTaskKeyPair(seed='', key='encodedPrivateKey') {
     const isBrowser = typeof window !== 'undefined';
     if (seed === '') {
       const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
@@ -694,8 +698,8 @@ export default class Enigma {
       return forge.util.fillString(seed, needed);
     };
     const privateKey = forge.util.bytesToHex(random.getBytes(32));
-    isBrowser ? window.localStorage.setItem('encodedPrivateKey', btoa(privateKey)) :
-      this.taskKeyLocalStorage['encodedPrivateKey'] = Buffer.from(privateKey, 'binary').toString('base64');
+    isBrowser ? window.localStorage.setItem(key, btoa(privateKey)) :
+      this.taskKeyLocalStorage[key] = Buffer.from(privateKey, 'binary').toString('base64');
     return seed;
   }
 
@@ -761,16 +765,17 @@ export default class Enigma {
    * @param {string} sender - ETH address for task sender
    * @param {string} scAddr - Secret contract address
    * @param {Number} maxRetries - Max number of retries if submitted around epoch change
+   * @param {string} key - location of the keyPair storage
    * @return {Task} Task with attributes necessary for task record and Enigma network
    */
-  computeTask(fn, args, gasLimit, gasPx, sender, scAddr, maxRetries=1) {
+  computeTask(fn, args, gasLimit, gasPx, sender, scAddr, maxRetries=1, key='') {
     let emitter = new EventEmitter();
     (async () => {
       let retryCount = 0;
       while (true) {
         try {
           let task = await new Promise((resolve, reject) => {
-            this.createTask(fn, args, gasLimit, gasPx, sender, scAddr, false).
+            this.createTask(fn, args, gasLimit, gasPx, sender, scAddr, false, key).
             on(eeConstants.CREATE_TASK, (result) => resolve(result)).
             on(eeConstants.ERROR, (error) => {
               reject("create task error" + error);
@@ -781,7 +786,7 @@ export default class Enigma {
             this.createTaskRecord(task).
             on(eeConstants.CREATE_TASK_RECORD, (result) => resolve(result)).
             on(eeConstants.ERROR, (error) => {
-              reject(`create task record error.. id=` + task.taskId + error);
+              reject(`create task record error.. id=` + JSON.stringify(task.taskId) + JSON.stringify(error));
             });
           });
           emitter.emit(eeConstants.CREATE_TASK_RECORD, task);
