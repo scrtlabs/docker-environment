@@ -1,6 +1,7 @@
 02_deploy_factorization.spec.js
 91_simultaneous_multi_gateways.spec.js
 02_deploy_calculator.spec.js
+91_simultaneous_multi_contracts.spec.js
 02_deploy_flipcoin.spec.js
 02_deploy_millionaire.spec.js
 02_deploy_voting.spec.js
