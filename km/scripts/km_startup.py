@@ -127,10 +127,10 @@ if __name__ == '__main__':
         with open('/root/.enigma/ethereum-account-addr.txt') as f:
             eth_address = f.read()
             logger.info(f'Found Ethereum-address: {eth_address}')
-            config['ACCOUNT_ADDRESS'] = eth_address
+            config['ACCOUNT_ADDRESS'] = eth_address[2:]
 
-        get_initial_coins('0x' + eth_address, 'ETH', config)
-        get_initial_coins('0x' + eth_address, 'ENG', config)
+        get_initial_coins(eth_address, 'ETH', config)
+        get_initial_coins(eth_address, 'ENG', config)
 
     except FileNotFoundError:
         logger.warning('Ethereum address not found, continuing from defaults')
