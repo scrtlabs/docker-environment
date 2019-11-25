@@ -67,6 +67,7 @@ WORKDIR /root/enigma-contract/enigma-js
 
 COPY enigma-js/jest.init.js /root/enigma-contract/enigma-js/
 COPY enigma-js/test /root/enigma-contract/enigma-js/test
+COPY enigma-js/src /root/enigma-contract/enigma-js/src
 COPY enigma-js/Makefile /root/enigma-contract/enigma-js/Makefile
 
 RUN mkdir -p /root/.enigma/
@@ -74,6 +75,8 @@ RUN mkdir -p /root/.enigma/
 COPY config config
 COPY scripts/tests_setup.py .
 COPY scripts/startup.sh .
+
+COPY --from=enigmampc/contract /root/enigma-contract/build /root/enigma-contract/build
 
 RUN chmod +x startup.sh && chmod +x tests_setup.py
 
