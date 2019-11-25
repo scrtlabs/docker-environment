@@ -219,7 +219,7 @@ export default class Enigma {
         });
         return;
       }
-      await this.tokenContract.methods.approve(this.enigmaContract.options.address, task.gasLimit * task.gasPx * 5).send({
+      await this.tokenContract.methods.approve(this.enigmaContract.options.address, task.gasLimit * task.gasPx).send({
         from: task.sender,
       });
       try {
