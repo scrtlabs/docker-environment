@@ -8,7 +8,7 @@ from bootstrap_loader import BootstrapLoader
 from enigma_docker_common.config import Config
 from enigma_docker_common.provider import Provider
 from enigma_docker_common.logger import get_logger
-from enigma_docker_common.crypto import open_eth_keystore, save_to_path
+from enigma_docker_common.crypto import open_eth_keystore
 from enigma_docker_common.blockchain import get_initial_coins
 from enigma_docker_common.enigma import EnigmaTokenContract
 
@@ -30,7 +30,10 @@ env = os.getenv('ENIGMA_ENV', 'COMPOSE')
 
 is_bootstrap = os.getenv('BOOTSTRAP', '')
 
-config = Config(required=required, config_file=env_defaults[os.getenv('ENIGMA_ENV', 'COMPOSE')])
+try:
+    config = Config(required=required, config_file=env_defaults[os.getenv('ENIGMA_ENV', 'COMPOSE')])
+except (ValueError, IOError):
+    exit(-1)
 
 # local path to where we save the private key/public key if we generate it locally
 KEY_PAIR_PATH = os.path.dirname(os.path.dirname(__file__))
@@ -69,7 +72,7 @@ def main():
         bootstrap_id = bootstrap_loader.address
         bootstrap_config_path = bootstrap_path + bootstrap_id
 
-        save_to_path(bootstrap_config_path+'.json', keyfile, flags="w+")
+        save_to_path(bootstrap_config_path+'.json', keyfile)
 
         bootstrap_path = bootstrap_config_path
         if not bootstrap_address:

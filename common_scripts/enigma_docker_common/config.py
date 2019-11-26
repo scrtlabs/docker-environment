@@ -51,9 +51,9 @@ class Config(UserDict):
             except IOError:
                 logger.critical("there was a problem opening the config file")
                 raise
-            except json.JSONDecodeError:
+            except json.JSONDecodeError as e:
                 logger.critical("config file isn't valid json")
-                raise
+                raise ValueError from e
 
         self.check_required()
 

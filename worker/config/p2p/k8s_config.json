@@ -10,7 +10,7 @@
  "MINIMUM_ETHER_BALANCE": "0.1",
  "MINIMUM_ENG_BALANCE": "10",
  "DEPOSIT_AMOUNT": 10,
- "BOOTSTRAP_ADDRESS": "/dnsaddr/bootstrap/tcp/10300/ipfs/QmcrQZ6RJdpYuGvZqD5QEHAv6qX4BrQLJLQPQUrTrzdcgm",
+ "BOOTSTRAP_ADDRESS": "/dnsaddr/bootstrap-service/tcp/10300/ipfs/QmcrQZ6RJdpYuGvZqD5QEHAv6qX4BrQLJLQPQUrTrzdcgm",
  "ETH_KEY_PATH": "/root/p2p/",
  "BOOTSTRAP_ID": "B1",
  "BOOTSTRAP_PORT": "10300",

@@ -26,8 +26,8 @@ class BootstrapLoader:
         self._public: str = ''
         self.keyfile: str = ''
 
-    def all_bootstraps(self):
-        return self.storage_public[self.bootstrap_file_name]
+    def all_bootstraps(self) -> str:
+        return self.storage_public[self.bootstrap_file_name].decode()
 
     def to_json(self):
         self.load()
@@ -67,7 +67,7 @@ class BootstrapLoader:
             return self.storage[file_name]
         except PermissionError as e:
             logger.error(f'Failed to get file, probably missing credentials. {e}')
+            raise
         except ValueError as e:  # not sure what Exceptions right now
             logger.error(f'Failed to get file: {e}')
-        except Exception as e:  # not sure what Exceptions right now
-            logger.error(f'Failed to get file: {type(e)} - {e}')
+            raise

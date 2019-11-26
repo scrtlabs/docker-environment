@@ -1,1 +1,1 @@
-enigma_docker_common==0.2.3
+enigma_docker_common==0.2.4

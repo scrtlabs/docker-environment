@@ -55,10 +55,10 @@ class HttpFileService:
 
 
 class LocalStorage:
-    def __init__(self, directory: str):
+    def __init__(self, directory: str, flags: str = 'b+'):
         self.path = Path(directory)
         os.makedirs(self.path, exist_ok=True)
-        self.flags = '+'
+        self.flags = flags
 
     def __getitem__(self, item: str):
         with open(self.path / item, 'r'+self.flags) as f:
