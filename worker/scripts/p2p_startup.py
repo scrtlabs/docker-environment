@@ -58,13 +58,13 @@ def main():
     # *** Load parameters from config
     enigma_abi_path = f'{config["CONTRACTS_FOLDER"]}{config["ENIGMA_CONTRACT_FILE_NAME"]}'
 
-    peer_name = config.get('PEER_NAME', 'peer1')
     bootstrap_id = config.get('BOOTSTRAP_ID', '')
     bootstrap_address = config.get('BOOTSTRAP_ADDRESS', '')
     bootstrap_loader = BootstrapLoader(config, bootstrap_id)
     bootstrap_path = config['BOOTSTRAP_PATH']
     bootstrap_port = config['BOOTSTRAP_PORT']
-    # bootstrap params
+
+    # #### bootstrap params #####
     if is_bootstrap:
 
         keyfile = bootstrap_loader.to_json()
@@ -72,14 +72,13 @@ def main():
         bootstrap_id = bootstrap_loader.address
         bootstrap_config_path = bootstrap_path + bootstrap_id
 
+        # file must be .json since p2p will try to use require(). Can remove when p2p is changed
         save_to_path(bootstrap_config_path+'.json', keyfile)
 
         bootstrap_path = bootstrap_config_path
-        if not bootstrap_address:
-            bootstrap_address = bootstrap_loader.all_bootstraps()
-    else:  # is worker
-        if not bootstrap_address:  # if bootstrap addresses are not configured, try to pull
-            bootstrap_address = bootstrap_loader.all_bootstraps()
+
+    if not bootstrap_address:  # if bootstrap addresses are not configured, try to pull
+        bootstrap_address = bootstrap_loader.all_bootstraps()
 
     deposit_amount = int(config['DEPOSIT_AMOUNT'])
 
@@ -140,7 +139,6 @@ def main():
                              min_confirmations=config["MIN_CONFIRMATIONS"])
     else:
         p2p_runner = P2PNode(bootstrap=False,
-                             peer_name=peer_name,
                              ethereum_key=private_key,
                              contract_address=eng_contract_addr,
                              public_address=eth_address,
