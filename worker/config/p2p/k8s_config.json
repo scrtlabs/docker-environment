@@ -13,7 +13,7 @@
  "BOOTSTRAP_ADDRESS": "/dnsaddr/bootstrap/tcp/10300/ipfs/QmcrQZ6RJdpYuGvZqD5QEHAv6qX4BrQLJLQPQUrTrzdcgm",
  "ETH_KEY_PATH": "/root/p2p/",
  "BOOTSTRAP_ID": "B1",
- "BOOTSTRAP_PORT": "B1",
+ "BOOTSTRAP_PORT": "10300",
  "BOOTSTRAP_PATH": "B1",
  "PEER_NAME": "peer1",
  "BALANCE_WAIT_TIME": 1800,

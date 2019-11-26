@@ -3,11 +3,12 @@ import json
 import pathlib
 
 from p2p_node import P2PNode
+from bootstrap_loader import BootstrapLoader
 
 from enigma_docker_common.config import Config
 from enigma_docker_common.provider import Provider
 from enigma_docker_common.logger import get_logger
-from enigma_docker_common.crypto import open_eth_keystore
+from enigma_docker_common.crypto import open_eth_keystore, save_to_path
 from enigma_docker_common.blockchain import get_initial_coins
 from enigma_docker_common.enigma import EnigmaTokenContract
 
@@ -28,9 +29,6 @@ env_defaults = {'K8S': './p2p/config/k8s_config.json',
 env = os.getenv('ENIGMA_ENV', 'COMPOSE')
 
 is_bootstrap = os.getenv('BOOTSTRAP', '')
-
-if not is_bootstrap:
-    required.append('BOOTSTRAP_ADDRESS')
 
 config = Config(required=required, config_file=env_defaults[os.getenv('ENIGMA_ENV', 'COMPOSE')])
 
@@ -56,13 +54,29 @@ def main():
 
     # *** Load parameters from config
     enigma_abi_path = f'{config["CONTRACTS_FOLDER"]}{config["ENIGMA_CONTRACT_FILE_NAME"]}'
+
+    peer_name = config.get('PEER_NAME', 'peer1')
+    bootstrap_id = config.get('BOOTSTRAP_ID', '')
+    bootstrap_address = config.get('BOOTSTRAP_ADDRESS', '')
+    bootstrap_loader = BootstrapLoader(config, bootstrap_id)
+    bootstrap_path = config['BOOTSTRAP_PATH']
+    bootstrap_port = config['BOOTSTRAP_PORT']
     # bootstrap params
     if is_bootstrap:
-        bootstrap_id = config.get('BOOTSTRAP_ID', 'B1')
-        peer_name = ''
-    else:
-        peer_name = config.get('PEER_NAME', 'peer1')
-        bootstrap_id = ''
+
+        keyfile = bootstrap_loader.to_json()
+
+        bootstrap_id = bootstrap_loader.address
+        bootstrap_config_path = bootstrap_path + bootstrap_id
+
+        save_to_path(bootstrap_config_path+'.json', keyfile, flags="w+")
+
+        bootstrap_path = bootstrap_config_path
+        if not bootstrap_address:
+            bootstrap_address = bootstrap_loader.all_bootstraps()
+    else:  # is worker
+        if not bootstrap_address:  # if bootstrap addresses are not configured, try to pull
+            bootstrap_address = bootstrap_loader.all_bootstraps()
 
     deposit_amount = int(config['DEPOSIT_AMOUNT'])
 
@@ -107,10 +121,6 @@ def main():
         logger.info(f'Current allowance for {provider.enigma_contract_address}, from {eth_address}: {val} ENG')
 
     if is_bootstrap:
-
-        bootstrap_path = config['BOOTSTRAP_PATH']
-        bootstrap_port = config['BOOTSTRAP_PORT']
-        bootstrap_address = "B1"  # config['BOOTSTRAP_ADDRESS']
         p2p_runner = P2PNode(bootstrap=True,
                              bootstrap_id=bootstrap_id,
                              ethereum_key=private_key,
@@ -126,7 +136,6 @@ def main():
                              login_and_deposit=login_and_deposit,
                              min_confirmations=config["MIN_CONFIRMATIONS"])
     else:
-        bootstrap_node = config['BOOTSTRAP_ADDRESS']
         p2p_runner = P2PNode(bootstrap=False,
                              peer_name=peer_name,
                              ethereum_key=private_key,
@@ -135,7 +144,7 @@ def main():
                              ether_node=config["ETH_NODE_ADDRESS"],
                              key_mgmt_node=config["KEY_MANAGEMENT_ADDRESS"],
                              abi_path=enigma_abi_path,
-                             bootstrap_address=bootstrap_node,
+                             bootstrap_address=bootstrap_address,
                              deposit_amount=deposit_amount,
                              login_and_deposit=login_and_deposit,
                              min_confirmations=config["MIN_CONFIRMATIONS"])
