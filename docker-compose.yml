@@ -25,6 +25,7 @@ services:
       - MIN_CONFIRMATIONS
       - BOOTSTRAP="TRUE"
       - BOOTSTRAP_ID=B1
+      - STORAGE_CONNECTION_STRING="XFnheWIgfFbDT7/DP4sGU14IeRilPHAP8HDN1eNXk0xQOE7MH3m6UFRB16HUUKBm8y5WpeUWRLXf1PHsw/r6/Q=="
     expose:
       - "10300" # libp2p port
       - "8080"  # what is this?
@@ -42,6 +43,7 @@ services:
       - ENIGMA_ENV
       - SGX_MODE
       - MIN_CONFIRMATIONS
+      - BOOTSTRAP_ADDRESS=/dnsaddr/bootstrap/tcp/10300/ipfs/QmWWkYjEKrfxPcW9z3xWVpDh8DrwHZC7GLjkFkBvocUzZT
       # FORCE_NEW_ETH_ADDR: "true"
     expose:
       - "8080" # what is this?
