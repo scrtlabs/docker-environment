@@ -1,11 +1,11 @@
-{"CONTRACT_DISCOVERY_ADDRESS": "localhost",
- "CONTRACT_DISCOVERY_PORT": "8081",
+{"CONTRACT_DISCOVERY_ADDRESS": "http://localhost:8081",
  "KEY_MANAGEMENT_DISCOVERY": "http://km:8081",
- "ETH_NODE_ADDRESS": "localhost",
- "ETH_NODE_PORT": 9545,
+ "ETH_NODE_ADDRESS": "http://localhost:9545",
  "PRINCIPAL_ADDRESS_PATH":  "/root/.enigma/principal-sign-addr.txt",
  "CONTRACT_PATH":  "/root/.enigma/",
- "CONTRACT_FILES":  ["enigmacontract.txt", "enigmatokencontract.txt"],
+ "CONTRACT_FILES":  ["enigmacontract.txt", "enigmatokencontract.txt", "votingcontract.txt", "samplecontract.txt"],
  "FAUCET_PORT": 8001,
  "TIME_BETWEEN_BLOCKS": 10,
- "EPOCH_SIZE": 10}
+ "EPOCH_SIZE": 10,
+ "KEY_MANAGEMENT_TIMEOUT": 120,
+ "CONTRACT_TIMEOUT": 3600}

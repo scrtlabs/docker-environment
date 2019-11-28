@@ -19,12 +19,10 @@ logger = get_logger('key_management.startup')
 required = [  # global environment setting
               'ENIGMA_ENV',
               # required by provider AND locally
-              'CONTRACT_DISCOVERY_PORT', 'CONTRACT_DISCOVERY_ADDRESS', 'KEY_MANAGEMENT_DISCOVERY',
+              'CONTRACT_DISCOVERY_ADDRESS', 'KEY_MANAGEMENT_DISCOVERY',
               # defaults in local config file
-              'ETH_NODE_ADDRESS', 'ETH_NODE_PORT',
-              'CONTRACTS_FOLDER', 'DEFAULT_CONFIG_PATH',
-              'FAUCET_URL', 'KEYPAIR_FILE_NAME', 'TEMP_CONFIG_PATH',
-              "MINIMUM_ETHER_BALANCE", "MINIMUM_ENG_BALANCE",
+              'ETH_NODE_ADDRESS', 'CONTRACTS_FOLDER', 'DEFAULT_CONFIG_PATH', 'FAUCET_URL',
+              'KEYPAIR_FILE_NAME', 'TEMP_CONFIG_PATH', "MINIMUM_ETHER_BALANCE", "MINIMUM_ENG_BALANCE",
 ]
 
 env_defaults = {'K8S': './config/k8s_config.json',
@@ -42,7 +40,11 @@ def generate_config_file(app_config: dict, default_config_path: str, config_file
         default_config = json.load(f)
 
     # for each value either use the environment variable set as key.upper() or take the value from the default config
-    temp_conf = {k: app_config.get(k.upper(), v) for k, v in default_config.items()}
+    # also, if the value can represent an integer, use that representation instead of a string
+    temp_conf = {k: int(app_config.get(k.upper(), v))
+                 if app_config.get(k.upper(), 'false').isdigit()
+                 else app_config.get(k.upper(), v)
+                 for k, v in default_config.items()}
 
     logger.debug(f'Running with config file at {config_file_path} with parameters: {temp_conf}')
 
@@ -89,7 +91,7 @@ if __name__ == '__main__':
 
     keypair = config['KEYPAIR_PATH']
     public = config['KEYPAIR_PUBLIC_PATH']
-
+    config['URL'] = f'{config["ETH_NODE_ADDRESS"]}'
     # not sure we want to let people set the executable from outside, especially
     # since we're running as root atm O.o
     if 'EXECUTABLE_PATH' in os.environ:
@@ -118,18 +120,20 @@ if __name__ == '__main__':
 
     # save_to_path(public, public_key)
 
-    keystore_dir = config['KEYSTORE_DIRECTORY'] or pathlib.Path.home()
+    # keystore_dir = config['KEYSTORE_DIRECTORY'] or pathlib.Path.home()
     # private, eth_address = open_eth_keystore(keystore_dir, config, create=True)
-    with open('/root/.enigma/ethereum-account-addr.txt', 'r') as f:
-        eth_address = f.read()
-
-    # set the URL of the ethereum node we're going to use -- this will be picked up by the application config
-    config['URL'] = f'http://{config["ETH_NODE_ADDRESS"]}:{config["ETH_NODE_PORT"]}'
-    config['ACCOUNT_ADDRESS'] = eth_address
 
     try:
-        get_initial_coins(eth_address, 'ETH', config)
-        get_initial_coins(eth_address, 'ENG', config)
+        with open('/root/.enigma/ethereum-account-addr.txt') as f:
+            eth_address = f.read()
+            logger.info(f'Found Ethereum-address: {eth_address}')
+            config['ACCOUNT_ADDRESS'] = eth_address
+
+        get_initial_coins('0x' + eth_address, 'ETH', config)
+        get_initial_coins('0x' + eth_address, 'ENG', config)
+
+    except FileNotFoundError:
+        logger.warning('Ethereum address not found, continuing from defaults')
     except RuntimeError as e:
         logger.critical(f'Failed to get enough ETH or ENG to start - {e}')
         exit(-2)
@@ -137,8 +141,11 @@ if __name__ == '__main__':
         logger.critical(f'Failed to connect to remote address: {e}')
         exit(-1)
 
+    # eth_address = '062B3e365052A92bcf3cC9E54a63c5078caC4eCC'
+    # set the URL of the ethereum node we're going to use -- this will be picked up by the application config
+
     logger.info(f'Waiting for enigma-contract @ '
-                f'http://{config["CONTRACT_DISCOVERY_ADDRESS"]}:{config["CONTRACT_DISCOVERY_PORT"]}')
+                f'{config["CONTRACT_DISCOVERY_ADDRESS"]}')
     enigma_address = provider.enigma_contract_address
     logger.info(f'Got address {enigma_address} for enigma contract')
 

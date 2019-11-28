@@ -4,7 +4,6 @@ volumes:
   esdata01:
     driver: local
 
-
 networks:
   backend:
   frontend:
@@ -21,9 +20,10 @@ services:
       - contract
       - km
     environment:
-      ENIGMA_ENV: COMPOSE
-      SGX_MODE: SW
-      BOOTSTRAP: "TRUE"
+      - ENIGMA_ENV
+      - SGX_MODE
+      - MIN_CONFIRMATIONS
+      - BOOTSTRAP="TRUE"
     expose:
       - "10300" # libp2p port
       - "8080"  # what is this?
@@ -38,8 +38,9 @@ services:
       - contract
       - km
     environment:
-      ENIGMA_ENV: COMPOSE
-      SGX_MODE: SW
+      - ENIGMA_ENV
+      - SGX_MODE
+      - MIN_CONFIRMATIONS
       # FORCE_NEW_ETH_ADDR: "true"
     expose:
       - "8080" # what is this?
@@ -52,10 +53,11 @@ services:
     container_name: contract
     image: enigmampc/contract:latest
     environment:
-      SGX_MODE: SW
-      ENIGMA_ENV: COMPOSE
-      AUTO_MINER: "YAY"
-      BLOCK_TIME: 0
+      - SGX_MODE
+      - ENIGMA_ENV
+      - AUTO_MINER
+      - BLOCK_TIME
+      - TIME_BETWEEN_BLOCKS
     ports:
       - "8081:8081" # contract discovery service
       - "9545:9545" # ethereum node port
@@ -66,10 +68,12 @@ services:
     container_name: km
     image: enigmampc/key_management_sw:latest
     environment:
-      ENIGMA_ENV: COMPOSE
-      SGX_MODE: SW
+      - ENIGMA_ENV
+      - SGX_MODE
+      - CONFIRMATIONS
     expose:
       - "3040" # JSON RPC port
+      - "8081"
 
   client:
     hostname: client
@@ -79,5 +83,5 @@ services:
     depends_on:
       - contract
     environment:
-      ENIGMA_ENV: COMPOSE
-      SGX_MODE: SW
+      - ENIGMA_ENV
+      - SGX_MODE

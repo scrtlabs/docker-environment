@@ -9,13 +9,15 @@ logger = get_logger('enigma_common.provider')
 
 class Provider:
     def __init__(self, config: dict):
-        self.eth_node_address = config['CONTRACT_DISCOVERY_ADDRESS']
-        self.CONTRACT_DISCOVERY_PORT = config['CONTRACT_DISCOVERY_PORT']
-        self.CONTRACT_DISCOVERY_ADDRESS = f'http://{self.eth_node_address}:{self.CONTRACT_DISCOVERY_PORT}'
+        self.config = config
+
+        self.CONTRACT_DISCOVERY_ADDRESS = config['CONTRACT_DISCOVERY_ADDRESS']
         self.KM_DISCOVERY_ADDRESS = config['KEY_MANAGEMENT_DISCOVERY']
 
         self._enigma_contract_filename = config.get('ENIGMA_CONTRACT_FILENAME', 'enigmacontract.txt')
         self._token_contract_filename = config.get('TOKEN_CONTRACT_FILENAME', 'enigmatokencontract.txt')
+        self._voting_contract_filename = config.get('TOKEN_CONTRACT_FILENAME', 'votingcontract.txt')
+        self._sample_contract_filename = config.get('TOKEN_CONTRACT_FILENAME', 'samplecontract.txt')
 
         self._principal_address_directory = config.get('PRINCIPAL_ADDRESS_DIRECTORY', 'public')
         # if os.getenv('SGX_MODE', 'HW') == 'SW':
@@ -85,9 +87,20 @@ class Provider:
 
     @property
     @functools.lru_cache()
+    def voting_contract_address(self):
+        return self._deployed_contract_address(contract_name=self._voting_contract_filename)
+
+    @property
+    @functools.lru_cache()
+    def sample_contract_address(self):
+        return self._deployed_contract_address(contract_name=self._sample_contract_filename)
+
+    @property
+    @functools.lru_cache()
     def principal_address(self):
         fs = self.key_management_discovery[os.getenv('ENIGMA_ENV', 'COMPOSE')]
-        is_contract_ready = self._wait_till_open(timeout=120, fs=fs)
+        timeout = self.config.get("KEY_MANAGEMENT_TIMEOUT", 120)
+        is_contract_ready = self._wait_till_open(timeout=timeout, fs=fs)
         if not is_contract_ready:
             logger.error(f'Key management address wasn\'t ready before timeout (120s) expired')
             raise TimeoutError(f'Timeout for server @ {self.KM_DISCOVERY_ADDRESS}')
@@ -108,6 +121,20 @@ class Provider:
                                file_name=self._enigma_token_abi_filename_zip)
 
         return self._unzip_bytes(zipped, self._enigma_token_abi_filename)
+
+    @property
+    @functools.lru_cache()
+    def voting_abi(self):
+        zipped = self.get_file(directory_name=self._voting_abi_directory,
+                               file_name=self._voting_abi_filename_zip)
+        return self._unzip_bytes(zipped, self._voting_abi_filename)
+
+    @property
+    @functools.lru_cache()
+    def sample_abi(self):
+        zipped = self.get_file(directory_name=self._sample_abi_directory,
+                               file_name=self._sample_abi_filename_zip)
+        return self._unzip_bytes(zipped, self._sample_abi_filename)
 
     def get_file(self, directory_name: str, file_name) -> bytes:
         fs = self.backend_strategy[os.getenv('ENIGMA_ENV', 'COMPOSE')](directory_name)
@@ -134,8 +161,9 @@ class Provider:
         fs = self.contract_strategy[os.getenv('ENIGMA_ENV', 'COMPOSE')]
         return fs[contract_name]
 
-    def _deployed_contract_address(self, contract_name, timeout: int = 60):
+    def _deployed_contract_address(self, contract_name):
         logger.debug(f'Waiting for enigma-contract @ http://{self.CONTRACT_DISCOVERY_ADDRESS} for enigma contract')
+        timeout = self.config.get("CONTRACT_TIMEOUT", 60)
         # wait for contract to be ready
         is_contract_ready = self._wait_till_open(timeout=timeout)
         if not is_contract_ready:

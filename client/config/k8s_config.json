@@ -3,7 +3,7 @@
  "ETH_NODE_ADDRESS": "52.170.208.250",
  "ETH_NODE_PORT": "9545",
  "ENIGMA_CONTRACT_FILE_NAME": "Enigma.json",
- "CONTRACTS_FOLDER": "/root/enigma-contract/enigma-js/test/contracts/",
+ "CONTRACTS_FOLDER": "/root/build/contracts/",
  "KEY_MANAGEMENT_ADDRESS": "km",
  "KEY_MANAGEMENT_PORT": "3040",
  "FAUCET_URL": "http://52.170.208.250:8001",

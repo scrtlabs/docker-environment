@@ -34,7 +34,8 @@ def save_to_path(path, file):
 if __name__ == '__main__':
 
     logger.info('STARTING P2P STARTUP')
-    config = Config(required=required, config_file=env_defaults[os.getenv('ENIGMA_ENV', 'COMPOSE')])
+    env = os.getenv('ENIGMA_ENV', 'COMPOSE')
+    config = Config(required=required, config_file=env_defaults[env])
     provider = Provider(config=config)
 
     # *** Load parameters from config
@@ -62,6 +63,10 @@ if __name__ == '__main__':
                  'token': token_contract_address,
                  'eth_node': f'http://{eth_node_address}',
                  'proxy': f'{config["WORKER_URL"]}:{config["PROXY_PORT"]}'}
+
+    if env == 'COMPOSE':
+        addresses['voting'] = provider.voting_contract_address
+        addresses['sample'] = provider.sample_contract_address
 
     save_to_path(contracts_folder_path+'addresses.json', json.dumps(addresses).encode())
 

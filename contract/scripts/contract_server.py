@@ -55,7 +55,7 @@ class GetAddress(Resource):
 
 def run(port):
     logger.debug("using port:"+str(port))
-    application.run(host='0.0.0.0', port=port, debug=True)
+    application.run(host='0.0.0.0', port=port, debug=False)
 
 
 if __name__ == '__main__':

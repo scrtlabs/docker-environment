@@ -1,5 +1,4 @@
-{"CONTRACT_DISCOVERY_PORT": "8081",
- "CONTRACT_DISCOVERY_ADDRESS": "contract-service",
+{"CONTRACT_DISCOVERY_ADDRESS": "http://contract-service:8081",
  "ETH_NODE_ADDRESS": "http://contract-service:9545",
  "ENIGMA_CONTRACT_FILE_NAME": "Enigma.json",
  "CORE_ADDRESS": "localhost",
@@ -14,6 +13,11 @@
  "BOOTSTRAP_ADDRESS": "/dnsaddr/bootstrap/tcp/10300/ipfs/QmcrQZ6RJdpYuGvZqD5QEHAv6qX4BrQLJLQPQUrTrzdcgm",
  "ETH_KEY_PATH": "/root/p2p/",
  "BOOTSTRAP_ID": "B1",
+ "BOOTSTRAP_PORT": "B1",
+ "BOOTSTRAP_PATH": "B1",
  "PEER_NAME": "peer1",
- "BALANCE_WAIT_TIME": 1800
+ "BALANCE_WAIT_TIME": 1800,
+ "MIN_CONFIRMATIONS": 12,
+ "KEY_MANAGEMENT_TIMEOUT": 120,
+ "CONTRACT_TIMEOUT": 3600
 }
