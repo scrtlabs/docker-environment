@@ -1,26 +1,4 @@
-FROM baiduxlab/sgx-rust:1804-1.0.9 as core-build
-
-LABEL maintainer=enigmampc
-
-ARG DEBUG
-
-ARG SGX_MODE
-
-ENV SGX_MODE=${SGX_MODE}
-
-ENV PATH="/root/.cargo:/root/.cargo/bin:${PATH}"
-
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends libzmq3-dev llvm clang-3.9 && \
-    rm -rf /var/lib/apt/lists/*
-
-RUN rustup target add wasm32-unknown-unknown && \
-    cargo install bindgen && \
-    rm -rf /root/.cargo/registry && \
-    rm -rf /root/.cargo/git
-
-# clone the rust-sgx-sdk baidu sdk
-RUN git clone --depth 1  -b v1.0.9 https://github.com/baidu/rust-sgx-sdk.git  sgx
+FROM enigmampc/core-compile-base:latest
 
 COPY --from=gitclone_core /enigma-core /root/
 
@@ -32,7 +10,7 @@ RUN . /opt/sgxsdk/environment && env && SGX_MODE=${SGX_MODE} RUSTFLAGS=-Awarning
 
 ######## Stage 2 - build python wheels
 
-FROM enigmampc/core-base:latest as pybuild
+FROM enigmampc/core-runtime-base:latest as pybuild
 
 WORKDIR /root
 
@@ -51,7 +29,7 @@ RUN pip3 wheel --wheel-dir=/root/wheels -r requirements.txt -i http://pypi.keyta
 
 ####### Stage 3
 
-FROM enigmampc/core-base:latest
+FROM enigmampc/core-runtime-base:latest
 
 RUN mkdir -p /tmp/contracts
 
