@@ -39,7 +39,6 @@ clone-client:
 	${client}
 
 build:
-# 	cd worker; docker build --build-arg DEBUG=${DEBUG} -f 01_core_base.Dockerfile -t enigmampc/core-base:latest .
 	cd worker; docker build --build-arg DEBUG=${DEBUG} --build-arg SGX_MODE=${SGX_MODE} -f worker.Dockerfile -t enigmampc/worker_${ext}:latest .
 	cd km; docker build --build-arg DEBUG=${DEBUG} --build-arg SGX_MODE=${SGX_MODE} -f km.Dockerfile -t enigmampc/key_management_${ext}:latest .
 	cd contract; docker build -f contract.Dockerfile -t enigmampc/contract:latest .
