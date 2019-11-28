@@ -1,4 +1,8 @@
-FROM enigmampc/core-compile-base:latest
+FROM enigmampc/core-compile-base:latest as core-build
+
+ARG DEBUG
+ARG SGX_MODE
+ENV SGX_MODE=${SGX_MODE}
 
 COPY --from=gitclone_core /enigma-core /root/
 

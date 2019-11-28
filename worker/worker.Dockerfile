@@ -1,8 +1,9 @@
-#### RUN 01_core_base before this with image target name enigmampc/core-base
-
 ###### STAGE 1 -- build core
-FROM enigmampc/core-compile-base:latest
+FROM enigmampc/core-compile-base:latest as core-build
 
+ARG SGX_MODE
+ARG DEBUG
+ENV SGX_MODE=${SGX_MODE}
 COPY --from=gitclone_core /enigma-core /root/
 
 WORKDIR /root/enigma-core

@@ -56,10 +56,10 @@ build-worker:
 	cd worker; docker build --build-arg DEBUG=${DEBUG} --build-arg SGX_MODE=${SGX_MODE} -f worker.Dockerfile -t enigmampc/worker_${ext}:latest .
 
 build-runtime-base:
-	cd worker; docker build -f runtime_base.Dockerfile -t enigmampc/core-compile-base:latest .
+	cd worker; docker build -f runtime_base.Dockerfile -t enigmampc/core-runtime-base:latest .
 
 build-compile-base:
-	cd worker; docker build -f compile_base.Dockerfile -t enigmampc/core-runtime-base:latest .
+	cd worker; docker build -f compile_base.Dockerfile -t enigmampc/core-compile-base:latest .
 
 build-client:
 	cd common_scripts; docker build -f common.Dockerfile -t enigma_common .

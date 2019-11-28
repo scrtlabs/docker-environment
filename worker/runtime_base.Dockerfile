@@ -7,9 +7,6 @@ ARG SGX_VERSION=2.6.100.51363
 ARG OS_REVESION=bionic1
 
 
-#### install core & p2p dependencies/dynamic libraries -- gnupg, gcc, g++, git are p2p dependencies for native module compiles
- # todo: move p2p compile out of worker file. Installing p2p depends means we're making KM image larger than it should be
- ####
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
     #### Core dependencies ####
