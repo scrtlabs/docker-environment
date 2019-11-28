@@ -85,3 +85,22 @@ services:
     environment:
       - ENIGMA_ENV
       - SGX_MODE
+
+  mongo:
+    container_name: mongo
+    hostname: mongo
+    image: mongo
+    ports:
+      - "27017:27017"
+
+  salad_operator:
+    # TODO figure out how to make the operator wait until PTT has happened in the network, add that to salad/operator/migrate.sh
+    hostname: salad_relayer
+    image: enigma_salad_operator:latest
+    tty: true
+    depends_on:
+      - contract
+      - mongo
+    environment:
+      - ENIGMA_ENV
+      - SGX_MODE
