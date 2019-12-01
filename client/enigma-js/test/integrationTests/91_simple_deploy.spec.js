@@ -99,6 +99,6 @@ describe('Enigma tests', () => {
     //
     // it('should fail to get deployed contract bytecode hash', async () => {
     //     const result = await enigma.admin.getCodeHash(task.scAddr);
-    //     expect(result)..toBeFalsy();
+    //     expect(result).toBeFalsy();
     // });
 });
