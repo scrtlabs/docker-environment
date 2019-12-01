@@ -90,7 +90,7 @@ services:
     container_name: mongo
     hostname: mongo
     image: mongo
-    ports:
+    expose:
       - "27017:27017"
 
   salad_operator:
