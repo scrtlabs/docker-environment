@@ -3,10 +3,10 @@ import fs from 'fs';
 import os from 'os';
 import path from 'path';
 import Web3 from 'web3';
-import {Enigma, utils, eeConstants} from 'enigma-js/lib/enigma-js.node';
+import { Enigma, utils, eeConstants } from 'enigma-js/lib/enigma-js.node';
 // import utils from 'enigma-js';
 // import eeConstants from 'enigma-js';
-import {EnigmaContractAddress, EnigmaTokenContractAddress, proxyAddress, ethNodeAddr} from './addressLoader';
+import { EnigmaContractAddress, EnigmaTokenContractAddress, proxyAddress, ethNodeAddr } from './addressLoader';
 import * as constants from './testConstants';
 import cluster_sdk from '../../../cluster-sdk';
 
@@ -32,11 +32,11 @@ describe('Enigma tests', () => {
         web3 = new Web3(provider);
         return web3.eth.getAccounts().then(async (result) => {
             accounts = result;
-            await web3.eth.sendTransaction({to:"0x18A787C1e5fb92D7dFF1f920Ee740901Dc72BC1b", from:accounts[0], value:web3.utils.toWei("0.5", "ether")});
-            await web3.eth.sendTransaction({to:"0x18A787C1e5fb92D7dFF1f920Ee740901Dc72BC1b", from:accounts[0], value:web3.utils.toWei("0.5", "ether")});
-            await web3.eth.sendTransaction({to:"0x18A787C1e5fb92D7dFF1f920Ee740901Dc72BC1b", from:accounts[0], value:web3.utils.toWei("0.5", "ether")});
-            await web3.eth.sendTransaction({to:"0x18A787C1e5fb92D7dFF1f920Ee740901Dc72BC1b", from:accounts[0], value:web3.utils.toWei("0.5", "ether")});
-            await web3.eth.sendTransaction({to:"0x18A787C1e5fb92D7dFF1f920Ee740901Dc72BC1b", from:accounts[0], value:web3.utils.toWei("0.5", "ether")});
+            await web3.eth.sendTransaction({ to: "0x18A787C1e5fb92D7dFF1f920Ee740901Dc72BC1b", from: accounts[0], value: web3.utils.toWei("0.5", "ether") });
+            await web3.eth.sendTransaction({ to: "0x18A787C1e5fb92D7dFF1f920Ee740901Dc72BC1b", from: accounts[0], value: web3.utils.toWei("0.5", "ether") });
+            await web3.eth.sendTransaction({ to: "0x18A787C1e5fb92D7dFF1f920Ee740901Dc72BC1b", from: accounts[0], value: web3.utils.toWei("0.5", "ether") });
+            await web3.eth.sendTransaction({ to: "0x18A787C1e5fb92D7dFF1f920Ee740901Dc72BC1b", from: accounts[0], value: web3.utils.toWei("0.5", "ether") });
+            await web3.eth.sendTransaction({ to: "0x18A787C1e5fb92D7dFF1f920Ee740901Dc72BC1b", from: accounts[0], value: web3.utils.toWei("0.5", "ether") });
 
             enigma = new Enigma(
                 web3,
@@ -70,7 +70,7 @@ describe('Enigma tests', () => {
         let preCode;
         try {
             preCode = fs.readFileSync(path.resolve(__dirname, 'secretContracts/calculator.wasm'));
-        } catch(e) {
+        } catch (e) {
             console.log('Error:', e.stack);
         }
         await sleep(5000);
@@ -86,10 +86,10 @@ describe('Enigma tests', () => {
             await sleep(1000);
             console.log("the task is " + JSON.stringify(task) + '\n');
             task = await enigma.getTaskRecordStatus(task);
-            process.stdout.write('Waiting. Current Task Status is '+task.ethStatus+'\r');
+            process.stdout.write('Waiting. Current Task Status is ' + task.ethStatus + '\r');
         } while (task.ethStatus != 2);
         expect(task.ethStatus).toEqual(2);
-        process.stdout.write('Completed. Final Task Status is '+task.ethStatus+'\n');
+        process.stdout.write('Completed. Final Task Status is ' + task.ethStatus + '\n');
     }, constants.TIMEOUT_COMPUTE_LONG);
 
     // it('should fail to verify deployed contract', async () => {
@@ -99,6 +99,6 @@ describe('Enigma tests', () => {
     //
     // it('should fail to get deployed contract bytecode hash', async () => {
     //     const result = await enigma.admin.getCodeHash(task.scAddr);
-    //     expect(result).toBeFalsy;
+    //     expect(result)..toBeFalsy();
     // });
 });
