@@ -3,10 +3,10 @@ import fs from 'fs';
 import path from 'path';
 import dotenv from 'dotenv';
 import Web3 from 'web3';
-import {Enigma, utils, eeConstants} from 'enigma-js/lib/enigma-js.node.min';
+import { Enigma, utils, eeConstants } from 'enigma-js/lib/enigma-js.node.min';
 //import utils from '../../src/enigma-utils';
 //import * as eeConstants from '../../src/emitterConstants';
-import {EnigmaContract, EnigmaTokenContract, SampleContract} from './contractLoader';
+import { EnigmaContract, EnigmaTokenContract, SampleContract } from './contractLoader';
 import * as constants from './testConstants';
 
 dotenv.config();
@@ -40,8 +40,8 @@ describe('Enigma tests', () => {
           from: accounts[0],
         },
       );
-    enigma.admin();
-    enigma.setTaskKeyPair('cupcake');
+      enigma.admin();
+      enigma.setTaskKeyPair('cupcake');
       expect(Enigma.version()).toEqual('0.0.1');
     });
   });
@@ -49,10 +49,10 @@ describe('Enigma tests', () => {
   it('initializes Sample contract', async () => {
     sampleContract = new enigma.web3.eth.Contract(SampleContract['abi'],
       SampleContract.networks['4447'].address);
-    expect(sampleContract.options.address).toBeTruthy;
+    expect(sampleContract.options.address).toBeTruthy();
   });
 
-  it('should clean up', async() => {
+  it('should clean up', async () => {
     // Log out
     let promises = [];
     for (let i = 0; i < nodes; i++) {
@@ -72,7 +72,7 @@ describe('Enigma tests', () => {
 
     let workerStatuses = []
     let resultsArray = [];
-    for(let i = 0; i < nodes; i++) {
+    for (let i = 0; i < nodes; i++) {
       workerStatuses.push(await enigma.admin.getWorkerStatus(accounts[i]));
       resultsArray[i] = 2;
     }
@@ -81,7 +81,7 @@ describe('Enigma tests', () => {
     // Advance epoch to be able to withdraw
     const epochSize = await enigma.enigmaContract.methods.getEpochSize().call();
     for (let i = 0; i < epochSize; i++) {
-      await sampleContract.methods.incrementCounter().send({from: accounts[8]});
+      await sampleContract.methods.incrementCounter().send({ from: accounts[8] });
     }
 
     // Wait for 2s for the Ppal node to pick up the new epoch

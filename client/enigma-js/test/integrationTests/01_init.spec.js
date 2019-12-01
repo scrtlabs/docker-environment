@@ -51,7 +51,7 @@ describe('Init tests', () => {
   it('initializes Sample contract', async () => {
     sampleContract = new enigma.web3.eth.Contract(SampleContract['abi'],
       SampleContract.networks['4447'].address);
-    expect(sampleContract.options.address).toBeTruthy;
+    expect(sampleContract.options.address).toBeTruthy();
 
     fs.writeFile(path.join(homedir, '.enigma', 'addr-sample.txt'), sampleContract.options.address, 'utf8', function(err) {
       if(err) {

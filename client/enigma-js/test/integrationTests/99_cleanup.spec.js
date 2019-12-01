@@ -50,7 +50,7 @@ describe('Enigma tests', () => {
   it('initializes Sample contract', async () => {
     sampleContract = new enigma.web3.eth.Contract(SampleContract['abi'],
       SampleContract.networks['4447'].address);
-    expect(sampleContract.options.address).toBeTruthy;
+    expect(sampleContract.options.address).toBeTruthy();
   });
 
   it('should clean up', async() => {

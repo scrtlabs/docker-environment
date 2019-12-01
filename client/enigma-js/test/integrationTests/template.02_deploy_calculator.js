@@ -3,10 +3,10 @@ import fs from 'fs';
 import os from 'os';
 import path from 'path';
 import Web3 from 'web3';
-import {Enigma, utils, eeConstants} from 'enigma-js/lib/enigma-js.node.min';
+import { Enigma, utils, eeConstants } from 'enigma-js/lib/enigma-js.node.min';
 //import utils from '../../src/enigma-utils';
 //import * as eeConstants from '../../src/emitterConstants';
-import {EnigmaContractAddress, EnigmaTokenContractAddress, proxyAddress, ethNodeAddr} from './addressLoader';
+import { EnigmaContractAddress, EnigmaTokenContractAddress, proxyAddress, ethNodeAddr } from './addressLoader';
 import * as constants from './testConstants';
 
 
@@ -35,8 +35,8 @@ describe('Enigma tests', () => {
           from: accounts[0],
         },
       );
-    enigma.admin();
-    enigma.setTaskKeyPair('cupcake');
+      enigma.admin();
+      enigma.setTaskKeyPair('cupcake');
       expect(Enigma.version()).toEqual('0.0.1');
     });
   });
@@ -56,8 +56,8 @@ describe('Enigma tests', () => {
     let scTaskGasPx = utils.toGrains(1);
     let preCode;
     try {
-      preCode = fs.readFileSync(path.resolve(__dirname,'secretContracts/calculator.wasm'));
-    } catch(e) {
+      preCode = fs.readFileSync(path.resolve(__dirname, 'secretContracts/calculator.wasm'));
+    } catch (e) {
       console.log('Error:', e.stack);
     }
     scTask = await new Promise((resolve, reject) => {
@@ -66,8 +66,8 @@ describe('Enigma tests', () => {
         .on(eeConstants.ERROR, (error) => reject(error));
     });
 
-    fs.writeFile(path.join(homedir, '.enigma', 'addr-calculator.txt'), scTask.scAddr, 'utf8', function(err) {
-      if(err) {
+    fs.writeFile(path.join(homedir, '.enigma', 'addr-calculator.txt'), scTask.scAddr, 'utf8', function (err) {
+      if (err) {
         return console.log(err);
       }
     });
@@ -77,10 +77,10 @@ describe('Enigma tests', () => {
     do {
       await sleep(1000);
       scTask = await enigma.getTaskRecordStatus(scTask);
-      process.stdout.write('Waiting. Current Task Status is '+scTask.ethStatus+'\r');
+      process.stdout.write('Waiting. Current Task Status is ' + scTask.ethStatus + '\r');
     } while (scTask.ethStatus != 2);
     expect(scTask.ethStatus).toEqual(2);
-    process.stdout.write('Completed. Final Task Status is '+scTask.ethStatus+'\n');
+    process.stdout.write('Completed. Final Task Status is ' + scTask.ethStatus + '\n');
   }, constants.TIMEOUT_DEPLOY);
 
   it('should verify deployed contract', async () => {
@@ -90,7 +90,7 @@ describe('Enigma tests', () => {
 
   it('should get deployed contract bytecode hash', async () => {
     const result = await enigma.admin.getCodeHash(scTask.scAddr);
-    expect(result).toBeTruthy;
-    console.log('Deployed contract bytecode hash is: '+result);
+    expect(result).toBeTruthy();
+    console.log('Deployed contract bytecode hash is: ' + result);
   });
 });

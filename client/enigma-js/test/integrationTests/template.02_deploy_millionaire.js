@@ -90,7 +90,7 @@ describe('Enigma tests', () => {
 
   it('should get deployed contract bytecode hash', async () => {
     const result = await enigma.admin.getCodeHash(scTask.scAddr);
-    expect(result).toBeTruthy;
+    expect(result).toBeTruthy();
     console.log('Deployed contract bytecode hash is: '+result);
   });
 });
