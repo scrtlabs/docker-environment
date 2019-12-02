@@ -52,4 +52,4 @@ RUN : \
 
 COPY scripts ./scripts/
 
-#CMD ./scripts/run.sh
+CMD ./scripts/run.sh
