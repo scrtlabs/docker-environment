@@ -91,7 +91,7 @@ services:
     hostname: mongo
     image: mongo
     expose:
-      - "27017:27017"
+      - "27017"
 
   salad_operator:
     # TODO figure out how to make the operator wait until PTT has happened in the network, add that to salad/operator/migrate.sh
