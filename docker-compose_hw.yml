@@ -30,7 +30,7 @@ services:
       - "3346"
     devices:
       - "/dev/isgx:/dev/isgx"
-      - "/dev/mei0:/dev/mei0"
+      # - "/dev/mei0:/dev/mei0"
   worker:
     hostname: worker
     image: enigmampc/worker_hw:latest
@@ -42,7 +42,7 @@ services:
       SGX_MODE: HW
     devices:
       - "/dev/isgx:/dev/isgx"
-      - "/dev/mei0:/dev/mei0"
+      # - "/dev/mei0:/dev/mei0"
     expose:
       - "8080" # what is this?
       - "9229"
@@ -54,7 +54,7 @@ services:
     image: enigmampc/contract:latest
     devices:
       - "/dev/isgx:/dev/isgx"
-      - "/dev/mei0:/dev/mei0"
+      # - "/dev/mei0:/dev/mei0"
     environment:
       SGX_MODE: HW
       ENIGMA_ENV: COMPOSE
@@ -69,7 +69,7 @@ services:
     image: enigmampc/key_management_hw:latest
     devices:
       - "/dev/isgx:/dev/isgx"
-      - "/dev/mei0:/dev/mei0"
+      # - "/dev/mei0:/dev/mei0"
     environment:
       ENIGMA_ENV: COMPOSE
       SGX_MODE: HW
