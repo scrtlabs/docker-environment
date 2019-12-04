@@ -103,7 +103,7 @@ class P2PNode(threading.Thread):
                   'principal-node': f'{self.km_node}',
                   'ethereum-contract-address': f'{self.contract_addr}',
                   'ethereum-contract-abi-path': self.abi_path,
-                  'health': self.health_check_port}
+                  'health': f'{self.health_check_port}'}
 
         if self.min_confirmations:
             params.update({'min-confirmations': self.min_confirmations})
