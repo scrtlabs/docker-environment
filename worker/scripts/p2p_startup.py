@@ -136,7 +136,8 @@ def main():
                              key_mgmt_node=config["KEY_MANAGEMENT_ADDRESS"],
                              deposit_amount=deposit_amount,
                              login_and_deposit=login_and_deposit,
-                             min_confirmations=config["MIN_CONFIRMATIONS"])
+                             min_confirmations=config["MIN_CONFIRMATIONS"],
+                             health_check_port=12345)
     else:
         p2p_runner = P2PNode(bootstrap=False,
                              ethereum_key=private_key,
@@ -148,7 +149,8 @@ def main():
                              bootstrap_address=bootstrap_address,
                              deposit_amount=deposit_amount,
                              login_and_deposit=login_and_deposit,
-                             min_confirmations=config["MIN_CONFIRMATIONS"])
+                             min_confirmations=config["MIN_CONFIRMATIONS"],
+                             health_check_port=12345)
 
     # Setting workdir to the base path of the executable, because everything is fragile
     os.chdir(pathlib.Path(executable).parent)
