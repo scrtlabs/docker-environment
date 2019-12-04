@@ -71,7 +71,7 @@ services:
     environment:
       - ENIGMA_ENV
       - SGX_MODE
-      - CONFIRMATIONS
+      - MIN_CONFIRMATIONS
     expose:
       - "3040" # JSON RPC port
       - "8081"

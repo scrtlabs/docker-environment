@@ -46,6 +46,10 @@ def generate_config_file(app_config: dict, default_config_path: str, config_file
                  else app_config.get(k.upper(), v)
                  for k, v in default_config.items()}
 
+    # Changing the name so it's consistent with the one in p2p
+    temp_conf['CONFIRMATIONS'] = int(app_config['MIN_CONFIRMATIONS']) if 'MIN_CONFIRMATIONS' in app_config \
+        else temp_conf['CONFIRMATIONS']
+
     logger.debug(f'Running with config file at {config_file_path} with parameters: {temp_conf}')
 
     with open(config_file_path, 'w') as f:
