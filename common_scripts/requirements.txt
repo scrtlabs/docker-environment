@@ -4,4 +4,8 @@ azure-storage-blob==12.0.0b4
 requests
 ecdsa
 pycryptodome
+typing_extensions
 web3
+flask
+flask_cors
+flask_restplus
