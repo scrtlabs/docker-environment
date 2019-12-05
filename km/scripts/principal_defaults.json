@@ -5,7 +5,7 @@
     "account_address": "1dF62f291b2E969fB0849d99D9Ce41e2F137006e",
     "test_net": true,
     "with_private_key": true,
-    "private_key": "3bb32c5e05038494dc91927ca3932fc1d25ae621df12a7cdb7f8f924625a5797",
+    "private_key": "b0057716d5917badaf911b193b12b910811c1497b5bada8d7711f758981c3773",
     "url": "http://localhost:9545",
     "epoch_size": 10,
     "polling_interval": 1,
@@ -17,3 +17,4 @@
     "confirmations": 0,
     "chain_id": 4447
 }
+

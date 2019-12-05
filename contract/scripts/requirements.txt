@@ -1,4 +1,4 @@
-enigma_docker_common==0.2.2
+enigma_docker_common==0.2.6
 web3
 requests
 flask

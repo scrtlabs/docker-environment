@@ -62,5 +62,5 @@ class EnigmaTokenContract:
     def check_allowance(self, approver, to):
         approver = self.w3.toChecksumAddress(approver)
         to = self.w3.toChecksumAddress(to)
-        val = self.erc20.functions.allowance(to, approver).call()
+        val = self.erc20.functions.allowance(approver, to).call()
         return val
