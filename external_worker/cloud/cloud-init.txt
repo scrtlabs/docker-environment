@@ -6,35 +6,29 @@ packages:
   - nodejs
   - npm
 write_files:
-  - owner: www-data:www-data
-    path: /etc/nginx/sites-available/default
+  - owner: enigma:enigma
+    path: /home/enigma/docker-compose.yml
     content: |
-      server {
-        listen 80;
-        location / {
-          proxy_pass http://localhost:3000;
-          proxy_http_version 1.1;
-          proxy_set_header Upgrade $http_upgrade;
-          proxy_set_header Connection keep-alive;
-          proxy_set_header Host $host;
-          proxy_cache_bypass $http_upgrade;
-        }
-      }
-  - owner: azureuser:azureuser
-    path: /home/azureuser/myapp/index.js
-    content: |
-      var express = require('express')
-      var app = express()
-      var os = require('os');
-      app.get('/', function (req, res) {
-        res.send('Hello World from host ' + os.hostname() + '!')
-      })
-      app.listen(3000, function () {
-        console.log('Hello world app listening on port 3000!')
-      })
+      version: "2"
+      services:
+        worker:
+          hostname: worker
+          image: enigmampc/worker_sw:0.0.1
+          environment:
+            - ENIGMA_ENV=K8S
+            - SGX_MODE=SW
+            - CONTRACT_DISCOVERY_ADDRESS=http://contract.app.services.enigma.co:8081
+            - ETH_NODE_ADDRESS=http://contract.app.services.enigma.co:9545
+            - FAUCET_URL=http://contract.app.services.enigma.co:8001
+            - KEY_MANAGEMENT_ADDRESS=http://km.app.services.enigma.co:3040
+            - KEY_MANAGEMENT_DISCOVERY=http://km.app.services.enigma.co:8081
+            - BOOTSTRAP_ADDRESS=/dnsaddr/bootstrap-1.app.services.enigma.co/tcp/10300/ipfs/QmWWkYjEKrfxPcW9z3xWVpDh8DrwHZC7GLjkFkBvocUzZT,/dnsaddr/bootstrap-2.app.services.enigma.co/tcp/10300/ipfs/QmVzK7PgMLbafjVeLtL5QZ4iu1FnM9jPoNWywcWfhg8fJY,/dnsaddr/bootstrap-3.app.services.enigma.co/tcp/10300/ipfs/QmQzbNA7zX75z8gL1U2uKpRXbapnHogPf2jPCTazHBuoSK
+            # - MIN_CONFIRMATIONS=
+            # - FORCE_NEW_ETH_ADDR=true
+          ports:
+            - "3346:3346"   # Json RPC
+            - "10300:10300" # LibP2P
+
 runcmd:
-  - service nginx restart
-  - cd "/home/azureuser/myapp"
-  - npm init
-  - npm install express -y
-  - nodejs index.js
+  - cd "/home/enigma"
+  - docker-compose up -d
