@@ -1,0 +1,31 @@
+version: "3.7"
+
+volumes:
+  esdata01:
+    driver: local
+
+networks:
+  backend:
+  frontend:
+    driver: bridge # use the bridge driver
+    ipam:
+      driver: default
+
+services:
+  worker:
+    hostname: worker
+    image: enigmampc/worker_sw:0.0.1
+    environment:
+      - ENIGMA_ENV=K8S
+      - SGX_MODE=SW
+      - CONTRACT_DISCOVERY_ADDRESS=http://13.82.197.97:8081
+      - ETH_NODE_ADDRESS=http://13.82.197.97:9545
+      - FAUCET_URL=http://13.82.197.97:8001
+      - KEY_MANAGEMENT_ADDRESS=http://13.82.193.142:3040
+      - KEY_MANAGEMENT_DISCOVERY=http://13.82.193.142:8081
+      -  BOOTSTRAP_ADDRESS=/ip4/40.87.45.107/tcp/10300/ipfs/QmWWkYjEKrfxPcW9z3xWVpDh8DrwHZC7GLjkFkBvocUzZT,/ip4/13.90.210.38/tcp/10300/ipfs/QmVzK7PgMLbafjVeLtL5QZ4iu1FnM9jPoNWywcWfhg8fJY,/ip4/13.82.227.60/tcp/10300/ipfs/QmQzbNA7zX75z8gL1U2uKpRXbapnHogPf2jPCTazHBuoSK
+      # - MIN_CONFIRMATIONS=
+      # - FORCE_NEW_ETH_ADDR=true
+    ports:
+      - "3346:3346"   # Json RPC
+      - "10300:10300" # LibP2P
