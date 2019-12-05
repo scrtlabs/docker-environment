@@ -17,4 +17,4 @@ jobs:
     - name: Run the tests
       run: |
         cp .env.template .env
-        MIN_CONFIRMATIONS=0 docker-compose up --exit-code-from client & sleep 60 && docker-compose exec -T client make test
+        docker-compose up --exit-code-from client & sleep 60 && docker-compose exec -T client make test
