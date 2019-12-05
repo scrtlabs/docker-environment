@@ -94,9 +94,12 @@ services:
       - "27017"
 
   salad_operator:
-    hostname: salad_relayer
+    hostname: salad_operator
+    container_name: salad_operator
     image: enigma_salad_operator:latest
     tty: true
+    expose:
+      - 8080
     depends_on:
       - contract
       - mongo

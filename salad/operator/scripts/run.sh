@@ -15,8 +15,15 @@ if [[ "$SGX_MODE" == 'SW' ]]; then
     sed -i -e 's/SGX_MODE=HW/SGX_MODE=SW/g' .env
 fi
 
-export ETHEREUM_PEER='contract'  # TODO grab this from configuration.
-export CONTRACT_ADDRESS_HOST='contract'  # used by the salad client library TODO grab this from configuration.
+# used by the salad client library
+export ETH_HOST='contract'
+export CONTRACT_ADDRESS_HOST='contract'
 
-./scripts/migrate.sh
+./scripts/wait_for_network.sh
+./scripts/fetch_enigma_contract_addresses.sh
+
+echo 'Running deployment...'
+npx truffle migrate --network compose
+echo 'Done deployment!'
+
 node ./operator/src/server.js
