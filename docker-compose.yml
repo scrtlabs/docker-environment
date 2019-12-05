@@ -106,3 +106,13 @@ services:
     environment:
       - ENIGMA_ENV
       - SGX_MODE
+
+  salad_client:
+    hostname: salad_client
+    image: enigma_salad_client:latest
+    tty: true
+    depends_on:
+      - salad_operator
+    environment:
+      - ENIGMA_ENV
+      - SGX_MODE
