@@ -1,7 +1,7 @@
 {"ENIGMA_ENV" : "COMPOSE",
  "CONTRACT_DISCOVERY_ADDRESS" : "http://contract:8081",
  "KEY_MANAGEMENT_DISCOVERY": "",
- "ETH_NODE_ADDRESS" : "https://kovan.infura.io/v3/",
+ "ETH_NODE_ADDRESS" : "http://contract:9545",
  "CONTRACTS_FOLDER" : "/tmp/contracts/",
  "TEMP_CONFIG_PATH": "/tmp/config.json",
  "FAUCET_URL": "http://contract:8001",

@@ -24,7 +24,7 @@ RUN apt-get update \
 
 RUN npm -g config set user root
 
-RUN npm install -g truffle ganache-cli
+RUN npm install -g truffle@5.1.2 ganache-cli
 
 ######## Stage 4 - build python wheels
 
@@ -111,8 +111,6 @@ COPY config ./config/
 RUN chmod +x ./scripts/contract_server.py && chmod +x ./scripts/migrate.sh && chmod +x ./scripts/faucet_service.py
 
 COPY devops/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
-
-# COPY truffle.js /root/enigma-contract/truffle.js
 
 EXPOSE 9545
 EXPOSE 8081
