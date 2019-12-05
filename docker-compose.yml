@@ -15,7 +15,7 @@ services:
   bootstrap:
     hostname: bootstrap
     container_name: bootstrap01
-    image: enigmampc/worker_sw:latest
+    image: enigmampc/worker_sw:${DOCKER_TAG}
     depends_on:
       - contract
       - km
@@ -34,7 +34,7 @@ services:
 
   worker:
     hostname: worker
-    image: enigmampc/worker_sw:latest
+    image: enigmampc/worker_sw:${DOCKER_TAG}
     depends_on:
       - contract
       - km
@@ -52,7 +52,7 @@ services:
   contract:
     hostname: contract
     container_name: contract
-    image: enigmampc/contract:latest
+    image: enigmampc/contract:${DOCKER_TAG}
     environment:
       - SGX_MODE
       - ENIGMA_ENV
@@ -67,7 +67,7 @@ services:
   km:
     hostname: km
     container_name: km
-    image: enigmampc/key_management_sw:latest
+    image: enigmampc/key_management_sw:${DOCKER_TAG}
     environment:
       - ENIGMA_ENV
       - SGX_MODE
@@ -78,7 +78,7 @@ services:
 
   client:
     hostname: client
-    image: enigmampc/client:latest
+    image: enigmampc/client:${DOCKER_TAG}
     stdin_open: true
     tty: true
     depends_on:
