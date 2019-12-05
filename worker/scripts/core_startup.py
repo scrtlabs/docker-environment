@@ -42,7 +42,10 @@ def main():
     parser = init_arg_parse()
     args = parser.parse_args()
 
-    config = Config(config_file=env_defaults[os.getenv('ENIGMA_ENV', 'COMPOSE')])
+    try:
+        config = Config(config_file=env_defaults[os.getenv('ENIGMA_ENV', 'COMPOSE')])
+    except (ValueError, IOError):
+        exit(-1)
 
     if not os.getenv('RUST_BACKTRACE'):
         if config['RUST_BACKTRACE'] != '0':

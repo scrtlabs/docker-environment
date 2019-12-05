@@ -7,6 +7,7 @@ client = cd client; docker build --build-arg branch=${BRANCH} -f gitclone_integr
 SGX_MODE ?= HW
 BRANCH ?= develop
 DEBUG ?= 0
+DOCKER_TAG ?= latest
 
 ifeq ($(SGX_MODE), HW)
 	ext := hw
@@ -39,27 +40,30 @@ clone-client:
 	${client}
 
 build:
-	cd worker; docker build --build-arg DEBUG=${DEBUG} --build-arg SGX_MODE=${SGX_MODE} -f worker.Dockerfile -t enigmampc/worker_${ext}:latest .
-	cd km; docker build --build-arg DEBUG=${DEBUG} --build-arg SGX_MODE=${SGX_MODE} -f km.Dockerfile -t enigmampc/key_management_${ext}:latest .
-	cd contract; docker build -f contract.Dockerfile -t enigmampc/contract:latest .
 	cd common_scripts; docker build -f common.Dockerfile -t enigma_common .
-	cd client; docker build -f client.Dockerfile -t enigmampc/client:latest .
+	cd worker; docker build --build-arg DEBUG=${DEBUG} --build-arg SGX_MODE=${SGX_MODE} -f worker.Dockerfile -t enigmampc/worker_${ext}:${DOCKER_TAG} .
+	cd km; docker build --build-arg DEBUG=${DEBUG} --build-arg SGX_MODE=${SGX_MODE} -f km.Dockerfile -t enigmampc/key_management_${ext}:${DOCKER_TAG} .
+	cd contract; docker build -f contract.Dockerfile -t enigmampc/contract:${DOCKER_TAG} .
+	cd client; docker build -f client.Dockerfile -t enigmampc/client:${DOCKER_TAG} .
 
 build-km:
-	cd km; docker build --build-arg DEBUG=${DEBUG} --build-arg SGX_MODE=${SGX_MODE} -f km.Dockerfile -t enigmampc/key_management_${ext}:latest .
+	cd common_scripts; docker build -f common.Dockerfile -t enigma_common .
+	cd km; docker build --build-arg DEBUG=${DEBUG} --build-arg SGX_MODE=${SGX_MODE} -f km.Dockerfile -t enigmampc/key_management_${ext}:${DOCKER_TAG} .
 
 build-contract:
-	cd contract; docker build -f contract.Dockerfile -t enigmampc/contract:latest .
+	cd common_scripts; docker build -f common.Dockerfile -t enigma_common .
+	cd contract; docker build -f contract.Dockerfile -t enigmampc/contract:${DOCKER_TAG} .
 
 build-worker:
-	cd worker; docker build --build-arg DEBUG=${DEBUG} --build-arg SGX_MODE=${SGX_MODE} -f worker.Dockerfile -t enigmampc/worker_${ext}:latest .
+	cd common_scripts; docker build -f common.Dockerfile -t enigma_common .
+	cd worker; docker build --build-arg DEBUG=${DEBUG} --build-arg SGX_MODE=${SGX_MODE} -f worker.Dockerfile -t enigmampc/worker_${ext}:${DOCKER_TAG} .
 
 build-runtime-base:
-	cd worker; docker build -f runtime_base.Dockerfile -t enigmampc/core-runtime-base:latest .
+	cd worker; docker build -f runtime_base.Dockerfile -t enigmampc/core-runtime-base:${DOCKER_TAG} .
 
 build-compile-base:
-	cd worker; docker build -f compile_base.Dockerfile -t enigmampc/core-compile-base:latest .
+	cd worker; docker build -f compile_base.Dockerfile -t enigmampc/core-compile-base:${DOCKER_TAG} .
 
 build-client:
 	cd common_scripts; docker build -f common.Dockerfile -t enigma_common .
-	cd client; docker build -f client.Dockerfile -t enigmampc/client:latest .
+	cd client; docker build -f client.Dockerfile -t enigmampc/client:${DOCKER_TAG} .

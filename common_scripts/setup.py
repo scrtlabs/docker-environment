@@ -16,7 +16,7 @@ if os.path.isfile(requirementPath):
 
 setup(
     name='enigma_docker_common',
-    version='0.2.2',
+    version='0.2.6',
     description='Scripts for Enigma Docker Images',
     long_description=long_description,
     long_description_content_type="text/markdown",
