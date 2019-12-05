@@ -1,16 +1,5 @@
 version: "3"
 
-volumes:
-  esdata01:
-    driver: local
-
-networks:
-  backend:
-  frontend:
-    driver: bridge # use the bridge driver
-    ipam:
-      driver: default
-
 services:
   bootstrap:
     hostname: bootstrap
