@@ -1,1 +1,2 @@
-az group create --location eastus --name enigma-external-worker
+LOCATION=eastus
+az group create --location $LOCATION --name enigma-external-worker
