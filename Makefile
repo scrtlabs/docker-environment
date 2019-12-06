@@ -39,6 +39,9 @@ clone-client:
 	${contract}
 	${client}
 
+clone-client-solo:
+	${client}
+
 build:
 	cd common_scripts; docker build -f common.Dockerfile -t enigma_common .
 	cd worker; docker build --build-arg DEBUG=${DEBUG} --build-arg SGX_MODE=${SGX_MODE} -f worker.Dockerfile -t enigmampc/worker_${ext}:${DOCKER_TAG} .
