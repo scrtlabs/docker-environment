@@ -1,16 +1,5 @@
 version: "3"
 
-volumes:
-  esdata01:
-    driver: local
-
-networks:
-  backend:
-  frontend:
-    driver: bridge # use the bridge driver
-    ipam:
-      driver: default
-
 services:
   bootstrap:
     hostname: bootstrap
@@ -24,12 +13,13 @@ services:
       - SGX_MODE
       - MIN_CONFIRMATIONS
       - BOOTSTRAP="TRUE"
+      - BOOTSTRAP_ID=B1
     expose:
       - "10300" # libp2p port
       - "8080"  # what is this?
     ports:
-      - "3346:3346"
-      - "9229:9229"
+      - "3346:3346" # gateway port
+      - "9229:9229" # nodejs debugger
 
   worker:
     hostname: worker
@@ -43,9 +33,8 @@ services:
       - MIN_CONFIRMATIONS
       # FORCE_NEW_ETH_ADDR: "true"
     expose:
-      - "8080" # what is this?
-      - "9229"
-      - "3346"
+      - "9229" # nodejs debugger
+      - "3346" # gateway port
       - "10300" # libp2p
 
   contract:
@@ -70,10 +59,10 @@ services:
     environment:
       - ENIGMA_ENV
       - SGX_MODE
-      - CONFIRMATIONS
+      - MIN_CONFIRMATIONS
     expose:
       - "3040" # JSON RPC port
-      - "8081"
+      - "8081" # KM address discovery
 
   client:
     hostname: client
