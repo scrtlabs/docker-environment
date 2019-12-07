@@ -73,18 +73,6 @@ def save_to_path(path, file):
         f.write(file)
 
 
-def map_log_level_to_exec_flags(loglevel: str) -> str:
-    level = loglevel.upper()
-    if level == "DEBUG":
-        return '-vvv'
-    if level == "INFO":
-        return '-vv'
-    if level == "WARNING":
-        return '-v'
-    else:
-        return ''
-
-
 if __name__ == '__main__':
     # parse arguments
     logger.info('STARTING KEY MANAGEMENT.....')
@@ -175,6 +163,9 @@ if __name__ == '__main__':
         if config['RUST_BACKTRACE'] != '0':
             os.environ["RUST_BACKTRACE"] = config['RUST_BACKTRACE']
 
-    debug_trace_flags = map_log_level_to_exec_flags(config.get('LOG_LEVEL', 'INFO'))
+    log_flag = ''  # this is here just for compatibility with versions that don't support the -l flag
+    log_level = config.get('LOG_LEVEL', '').lower()
+    if log_level:
+        log_flag = '-l'
 
-    subprocess.call([f'{executable}', f'{debug_trace_flags}', f'--principal-config', f'{config["TEMP_CONFIG_PATH"]}'])
+    subprocess.call([f'{executable}', f'{log_flag}', f'{log_level}', f'--principal-config', f'{config["TEMP_CONFIG_PATH"]}'])

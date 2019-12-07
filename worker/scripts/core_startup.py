@@ -26,18 +26,6 @@ def init_arg_parse() -> argparse.ArgumentParser:
     return p
 
 
-def map_log_level_to_exec_flags(loglevel: str) -> str:
-    level = loglevel.upper()
-    if level == "DEBUG":
-        return '-vvv'
-    if level == "INFO":
-        return '-vv'
-    if level == "WARNING":
-        return '-v'
-    else:
-        return ''
-
-
 def main():
     parser = init_arg_parse()
     args = parser.parse_args()
@@ -51,7 +39,11 @@ def main():
         if config['RUST_BACKTRACE'] != '0':
             os.environ["RUST_BACKTRACE"] = config['RUST_BACKTRACE']
 
-    debug_trace_flags = map_log_level_to_exec_flags(config.get('LOG_LEVEL', 'INFO'))
+    log_flag = ''  # this is here just for compatibility with versions that don't support the -l flag
+    log_level = config.get('LOG_LEVEL', '').lower()
+    if log_level:
+        log_flag = '-l'
+
     spid = config['SPID']
     port = config['PORT']
     attestation_retries = config['ATTESTATION_RETRIES']
@@ -61,7 +53,8 @@ def main():
     time.sleep(2)
     env = os.environ.copy()
     logger.debug(f'Environment: {env}')
-    subprocess.call([f'{args.executable}', f'{debug_trace_flags}',
+    subprocess.call([f'{args.executable}',
+                     f'{log_flag}', f'{log_level}',
                      '-p', f'{port}',
                      '--spid', f'{spid}',
                      '-r', f'{attestation_retries}'], env=env)
