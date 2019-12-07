@@ -163,9 +163,11 @@ if __name__ == '__main__':
         if config['RUST_BACKTRACE'] != '0':
             os.environ["RUST_BACKTRACE"] = config['RUST_BACKTRACE']
 
-    log_flag = ''  # this is here just for compatibility with versions that don't support the -l flag
+    exec_args = [f'{executable}', f'--principal-config', f'{config["TEMP_CONFIG_PATH"]}']
+
     log_level = config.get('LOG_LEVEL', '').lower()
     if log_level:
-        log_flag = '-l'
+        exec_args.append('-l')
+        exec_args.append('log_level')
 
-    subprocess.call([f'{executable}', f'{log_flag}', f'{log_level}', f'--principal-config', f'{config["TEMP_CONFIG_PATH"]}'])
+    subprocess.call(exec_args)

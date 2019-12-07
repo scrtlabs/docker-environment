@@ -53,11 +53,18 @@ def main():
     time.sleep(2)
     env = os.environ.copy()
     logger.debug(f'Environment: {env}')
-    subprocess.call([f'{args.executable}',
-                     f'{log_flag}', f'{log_level}',
-                     '-p', f'{port}',
-                     '--spid', f'{spid}',
-                     '-r', f'{attestation_retries}'], env=env)
+
+    exec_args = [f'{args.executable}',
+                 '-p', f'{port}',
+                 '--spid', f'{spid}',
+                 '-r', f'{attestation_retries}']
+
+    log_level = config.get('LOG_LEVEL', '').lower()
+    if log_level:
+        exec_args.append('-l')
+        exec_args.append('log_level')
+
+    subprocess.call(exec_args, env=env)
 
 
 if __name__ == '__main__':
