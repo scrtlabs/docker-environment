@@ -11,7 +11,7 @@ from enigma_docker_common.config import Config
 from enigma_docker_common.provider import Provider
 from enigma_docker_common.logger import get_logger
 from enigma_docker_common.crypto import open_eth_keystore
-from enigma_docker_common.blockchain import get_initial_coins
+from enigma_docker_common.faucet_api import get_initial_coins
 
 logger = get_logger('key_management.startup')
 
