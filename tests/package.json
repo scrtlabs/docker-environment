@@ -1,0 +1,7 @@
+{
+  "name": "tests",
+  "version": "1.0.0",
+  "dependencies": {
+    "docker-compose": "^0.23.1"
+  }
+}
