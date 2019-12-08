@@ -157,12 +157,9 @@ class Provider:
             time.sleep(1)
         return False
 
-    def _get_contract_address(self, contract_name):
+    def _deployed_contract_address(self, contract_name):
         fs = self.contract_strategy[os.getenv('ENIGMA_ENV', 'COMPOSE')]
         return fs[contract_name]
-
-    def _deployed_contract_address(self, contract_name):
-        return self._get_contract_address(contract_name)
 
     @staticmethod
     def _unzip_bytes(file_bytes: bytes, file_name: str) -> bytes:

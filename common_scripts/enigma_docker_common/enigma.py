@@ -4,7 +4,7 @@ import web3
 
 from .logger import get_logger
 
-logger = get_logger('eng_common.enigma')
+logger = get_logger('enigma_common.enigma')
 
 
 class EnigmaTokenContract:
