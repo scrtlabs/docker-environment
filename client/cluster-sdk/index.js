@@ -1,5 +1,7 @@
+const Promise = require('bluebird');
 const _ = require('lodash');
 const yaml = require('js-yaml');
+const axios = require('axios');
 const fs = require('fs');
 const path = require('path');
 const { argv } = require('yargs');
@@ -26,7 +28,7 @@ const DEBUG = argv.debug || process.env.DEBUG || false;
 
 const Applications = {
     'WORKER': 'WORKER',
-    'BOOTSTRAPPER': 'BOOTSTRAPPER',
+    'BOOTSTRAP': 'BOOTSTRAP',
     'KM': 'KM',
     'CORE': 'CORE',
     'P2P': 'P2P',
@@ -47,7 +49,7 @@ function getServiceName({ name, index }) {
     return `${getDeploymentName({ name, index })}-service`;
 }
 
-function loadTemplateDeploymentFile(_app) {
+function loadTemplateManifest(_app) {
     const app = _.toLower(_app);
     const path = `../k8s-configuration/deployments/${app}/${app}.yaml`;
     const arr = yaml.safeLoadAll(fs.readFileSync(path));
@@ -96,7 +98,7 @@ async function getNextWorkerIndex({ namespace }) {
 }
 
 async function createWorkerInstance({ namespace, index }) {
-    const { dp: deployment, svc: service } = loadTemplateDeploymentFile(Applications.WORKER);
+    let { dp: deployment, svc: service } = loadTemplateManifest(Applications.WORKER);
 
     const app = `${_.toLower(Applications.WORKER)}-${index}`;
     // Manipulate Service
@@ -108,6 +110,11 @@ async function createWorkerInstance({ namespace, index }) {
     deployment.metadata.labels.app = app;
     deployment.spec.selector.matchLabels.app = app;
     deployment.spec.template.metadata.labels.app = app;
+
+    deployment = await manipulateDeploymentDueSgxMode({ namespace, deployment });
+    
+    const bootstrapAddress = await getBootstrapConnectionString({ namespace });
+    deployment = await setEnvironmentVariableToDeployment({ deployment, key: 'BOOTSTRAP_ADDRESS', value: bootstrapAddress })
 
     if (DEBUG) {
         const tmpDir = fs.mkdtempSync(`${app}-`);
@@ -205,7 +212,7 @@ async function restartKeyManagement({ namespace }) {
 }
 
 async function turnOnKeyManagement({ namespace }) {
-    const { dp } = loadTemplateDeploymentFile(Applications.KM);
+    const { dp } = loadTemplateManifest(Applications.KM);
     await client.apis.apps.v1.namespaces(namespace).deployments.post({ body: dp });
 }
 
@@ -266,7 +273,7 @@ async function stopWorkerProcess({ namespace, index, name }) {
     await execOnPod({ namespace, pod, cmd });
 }
 
-async function startWorkerProcess({ namespace, index, name}) {
+async function startWorkerProcess({ namespace, index, name }) {
     if (!index) {
         index = await pickRandomWorkerIndex({ namespace });
         log.info(index);
@@ -293,6 +300,7 @@ async function enableCache({ namespace }) {
     Intervals[namespace] = handle;
 }
 
+
 function disableCache({ namespace }) {
     const handle = Intervals[namespace];
     if (handle) {
@@ -315,6 +323,18 @@ function getSgxMode({ namespace }) {
     return SgxModeStatus[namespace] || SgxModes.SW;
 }
 
+function setEnvironmentVariableToDeployment({ deployment, key, value }) {
+    const env = deployment.spec.template.spec.containers[0].env;
+    const index = _.findIndex(env, x => x.name === key);
+    if (index > 0) {
+        env[index] = { name: key, value };
+    } else {
+        env.push({ name: key, value });
+    }
+    deployment.spec.template.spec.containers[0].env = env;
+    return deployment;
+}
+
 function manipulateDeploymentDueSgxMode({ namespace, deployment }) {
     const DEFAULT_IMAGE_SGX_MODE = '_sw:';
     const currentImage = deployment.spec.template.spec.containers[0].image;
@@ -322,48 +342,151 @@ function manipulateDeploymentDueSgxMode({ namespace, deployment }) {
         const newImage = _.replace(currentImage, DEFAULT_IMAGE_SGX_MODE, _.toLower(`_${getSgxMode({ namespace })}:`));
         deployment.spec.template.spec.containers[0].image = newImage;
     }
+    // Env var
+    const key = 'SGX_MODE';
+    const value = getSgxMode({ namespace });
+    deployment = setEnvironmentVariableToDeployment({ deployment, key, value });
 
-    const keyName = 'SGX_MODE';
-    const env = deployment.spec.template.spec.containers[0].env;
-    const index = _.findIndex(env, x => x.name === keyName);
-    if (index > 0) {
-        env[index] = { name: keyName, value: getSgxMode({ namespace })};
-        deployment.spec.template.spec.containers[0].env = env;
+    // Agent pool - what kind of machine it will run on
+    const agentPool = value === SgxModes.HW ? 'sgxpool' : 'regularpool';
+    _.set(deployment.spec.template.spec, 'nodeSelector.agentpool', agentPool);
+
+    // Remove volume device in SW mode
+    if (value === SgxModes.SW) {
+        const volumes = deployment.spec.template.spec.volumes;
+        _.remove(volumes , x => x.name === 'dev-sgx');
+        const volumeMounts = deployment.spec.template.spec.containers[0].volumeMounts;
+        _.remove(volumeMounts, x => x.name === 'dev-sgx');
     }
-
-
-    let i = 9;
     return deployment;
 }
 
-// Deploys contract, KM and Bootstrappers
-async function createEnvironment({ namespace }) {
+// Deploys contract, KM and Bootstraps
+async function createEnvironment({ namespace, minutesToSleep = 0 }) {
     await createNamespace({ namespace });
 
-    const contractManifests = loadTemplateDeploymentFile(Applications.CONTRACT);
+    const contractManifests = loadTemplateManifest(Applications.CONTRACT);
     const newContractDp = manipulateDeploymentDueSgxMode({ namespace, deployment: contractManifests.dp });
     await createDeployment({ namespace, deployment: newContractDp });
     await createService({ namespace, service: contractManifests.svc });
 
-    const minutesToSleep = 3;
-    log.info(`Sleeping for ${minutesToSleep} minutes so the contract will be up and running`);
-    await sleep(minutesToSleep * 60 * 1000);
+    if (minutesToSleep > 0) {
+        log.info(`Sleeping for ${minutesToSleep} minutes so the contract will be up and running`);
+        await sleep(minutesToSleep * 60 * 1000);
+    }
 
-    const kmManifests = loadTemplateDeploymentFile(Applications.KM);
+    const kmManifests = loadTemplateManifest(Applications.KM);
     const newKmDp = manipulateDeploymentDueSgxMode({ namespace, deployment: kmManifests.dp });
     await createDeployment({ namespace, deployment: newKmDp });
     await createService({ namespace, service: kmManifests.svc });
 
-    // TODO multi!!
-    const btsManifests = loadTemplateDeploymentFile(Applications.BOOTSTRAPPER);
-    const newBtsDp = manipulateDeploymentDueSgxMode({ namespace, deployment: btsManifests.dp });
-    await createDeployment({ namespace, deployment: newBtsDp });
-    await createService({ namespace, service: btsManifests.svc });
+    await createBootstraps({ namespace });
 }
 
-async function deleteEnvironment({ namespace }) {
-    // Namespace will be deleted, all sub-objects will be cascaded
-    return deleteNamespace({ namespace });
+const NUM_OF_BOOTSTRAPS = 3;
+const BOOTSTRAP_PORT = 10300;
+const BOOTSTRAP_ADDRESSES_URL = `https://objectstorage2.blob.core.windows.net/bootstrap-public/bootstrap_addresses.json`;
+
+
+
+
+async function createBootstraps({ namespace }) {
+    const btsManifests = loadTemplateManifest(Applications.BOOTSTRAP);
+    const appName =Applications.BOOTSTRAP.toLowerCase();
+    const svc = btsManifests.svc;
+    for (const index of _.range(1, NUM_OF_BOOTSTRAPS + 1)) {
+        const svcName = getServiceName({ name: appName, index });
+        const dpName = getDeploymentName({ name: appName, index });
+        svc.metadata.name = svcName;
+        svc.spec.selector.app = dpName;
+        await createService({ namespace, service: btsManifests.svc });
+    }
+
+    let retreivedExternalAddresses = false;
+    let map;
+    do {
+        const services = _(await getServices({ namespace })).filter(x => _.startsWith(x.metadata.name, appName)).value();
+        map = _.map(services, x => {
+            return {
+                index: _.toInteger(_.split(x.metadata.name, '-')[1]),
+                address: _.get(x, 'status.loadBalancer.ingress[0].ip')
+            }
+        });
+        if (_.every(map, x => !!x.address)) {
+            retreivedExternalAddresses = true;
+        } else {
+            const ms = 10 * 1000;
+            log.info(`sleeping for ${ms}ms until all bootstraps will have a public address`);
+            await sleep(ms);
+        }
+
+    } while (!retreivedExternalAddresses);
+
+    const { data } = await axios.get(BOOTSTRAP_ADDRESSES_URL);
+    const p2pAddresses = _(data).split(',').map(x => _.trim(x)).value();
+
+    for (const index of _.range(1, NUM_OF_BOOTSTRAPS + 1)) {
+        const obj = _.find(map, x => x.index === index);
+        const bootstrapId = `B${obj.index}`;
+        const srcConnStr = p2pAddresses[index - 1];
+        const p2pPublicId = _(srcConnStr).split('/').compact().last();
+        const bootstrapAddress = `/ip4/${obj.address}/tcp/${BOOTSTRAP_PORT}/ipfs/${p2pPublicId}`;
+        let deployment = manipulateDeploymentDueSgxMode({ namespace, deployment: btsManifests.dp });
+        deployment = setEnvironmentVariableToDeployment({ deployment, key: 'BOOTSTRAP_ID', value: bootstrapId });
+        deployment = setEnvironmentVariableToDeployment({ deployment, key: 'BOOTSTRAP_ADDRESS', value: bootstrapAddress });
+        const dpName = getDeploymentName({ name: appName, index });
+        deployment.metadata.name = dpName;
+        deployment.metadata.labels.app = dpName;
+        deployment.spec.selector.matchLabels.app = dpName;
+        deployment.spec.template.metadata.labels.app = dpName;
+        await createDeployment({ namespace, deployment });
+    }
+}
+
+async function environmentExists({ namespace }) {
+    const namespaces = await getNamespaces();
+    const names = _.map(namespaces, x => _.get(x, 'metadata.name'));
+    return _.includes(names, namespace);
+}
+
+async function deleteEnvironment({ namespace, shouldDeleteServices }) {
+    const deployments = await getDeployments({ namespace });
+    await Promise.map(deployments, x => deleteDeployment({ namespace, name: x.metadata.name }), { concurrency: 3 });
+
+    if (shouldDeleteServices) {
+        const services = await getServices({ namespace });
+        await Promise.map(services, x => deleteService({ namespace, name: x.metadata.name }), { concurrency: 3 });
+        await deleteNamespace({ namespace });
+    }
+}
+
+async function recreateEnvironment({ namespace }) {
+    if (await environmentExists({ namespace })) {
+        log.info(`Deleting environment ${namespace}`);
+        await deleteEnvironment({ namespace });
+        log.info(`Waiting until environment ${namespace} will be fully deleted`);
+        while (await environmentExists({ namespace })) {
+            await sleep(10 * 1000);
+        }
+    }
+    log.info(`Creating environment ${namespace}`);
+    await createEnvironment({ namespace });
+}
+
+async function getBootstrapConnectionString({ namespace }) {
+    const key = 'BOOTSTRAP_ADDRESS';
+    const dps = _(await getDeployments({ namespace }))
+        .filter(x => x.metadata.name.startsWith(Applications.BOOTSTRAP.toLowerCase()))
+        .value();
+    const arr = _.map(dps, deployment => {
+        const env = deployment.spec.template.spec.containers[0].env;
+        const index = _.findIndex(env, x => x.name === key);
+        const val = env[index].value;
+        return val;
+    });
+    const connStr = _.join(arr, ',');
+    // log.info(`${key}=${connStr}`);
+    return connStr;
 }
 
 module.exports = {
@@ -383,7 +506,9 @@ module.exports = {
     stopWorkerProcess,
     createEnvironment,
     deleteEnvironment,
+    recreateEnvironment,
     setSgxMode,
     getSgxMode,
+    createBootstraps,
 };
 

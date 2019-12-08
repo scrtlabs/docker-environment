@@ -1,5 +1,6 @@
 const { KubeConfig, Client } = require('kubernetes-client');
 const Request = require('kubernetes-client/backends/request');
+const _ = require('lodash');
 const { argv } = require('yargs');
 
 const region = argv.region || process.env.REGION || 'eastus';
@@ -64,6 +65,8 @@ async function getServices({ namespace }) {
 async function createService({ namespace, service }) {
     const name = service.metadata.name;
     try {
+        service.spec.clusterIP = undefined;
+        service.metadata.resourceVersion = undefined;
         const create = await client.api.v1.namespaces(namespace).services.post({ body: service });
         // log.info('Create:', create);
     } catch (err) {

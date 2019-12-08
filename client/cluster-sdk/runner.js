@@ -14,14 +14,24 @@ const {
     setSgxMode,
     createEnvironment,
     deleteEnvironment,
+    recreateEnvironment,
+    createBootstraps,
 } = require('./index');
+const { argv } = require('yargs');
 const log = console;
 
+
+
+
+
 async function run() {
-    const namespace = 'sw';
-    const sgxMode = SgxModes.SW;
-    await setSgxMode({ namespace, sgxMode });
-    // await initialEnvironmentSetup({ namespace });
+    const namespace = 'app';
+    // const sgxMode = SgxModes.SW;
+    // await setSgxMode({ namespace, sgxMode });
+    // await deleteEnvironment({ namespace });
+    //await createEnvironment({ namespace });
+    // await createBootstraps({ namespace });
+    await scaleWorkers({ namespace, targetNum: 25 });
     // const namespaces = await getNamespaces();
     // const pods = await getPods({ namespace });
     // const deployments = await getDeployments({ namespace });
@@ -32,8 +42,8 @@ async function run() {
     //log.info(index);
     //const x = await createWorkerInstance({ namespace, index });
     //log.info(await getNumberOfWorkers({ namespace }));
-    // await scaleWorkers({ namespace, targetNum: 5 });
-    await deleteEnvironment({ namespace });
+   
+    // await deleteEnvironment({ namespace });
     //await deleteWorker({ namespace, index: 5 });
     //await restartWorker({ namespace, index: 1});
     // await restartKeyManagement({ namespace });
