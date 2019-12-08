@@ -13,10 +13,10 @@ write_files:
       services:
         worker:
           hostname: worker
-          image: enigmampc/worker_sw:0.0.1
+          image: enigmampc/worker_hw:testnet
           environment:
-            - ENIGMA_ENV=K8S
-            - SGX_MODE=SW
+            - ENIGMA_ENV=TESTNET
+            - SGX_MODE=HW
             - CONTRACT_DISCOVERY_ADDRESS=http://contract.app.services.enigma.co:8081
             - ETH_NODE_ADDRESS=http://contract.app.services.enigma.co:9545
             - FAUCET_URL=http://contract.app.services.enigma.co:8001
