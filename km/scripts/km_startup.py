@@ -94,50 +94,42 @@ if __name__ == '__main__':
 
     if not os.path.exists(keypair) or not os.path.exists(public):
         generate_keypair(executable, keypair, public, config['DEFAULT_CONFIG_PATH'])
-        # make sure key generation worked
 
-    thread1 = threading.Thread(target=run, args=(int(config.get('ADDRESS_DISCOVERY_PORT', 8081)), ))
-    thread1.start()
 
-    # # get Keypair file -- environment variable STORAGE_CONNECTION_STRING must be set
-    # if SGX_MODE == 'SW':
-    #     sealed_km = provider.get_file(config['KEYPAIR_STORAGE_DIRECTORY'], config['KEYPAIR_FILE_NAME_SW'])
-    # else:
-    #     sealed_km = provider.get_file(config['KEYPAIR_STORAGE_DIRECTORY'], config['KEYPAIR_FILE_NAME'])
-    # save_to_path(keypair, sealed_km)
-    #
-    # # get public key file
 
-    # public_key = provider.principal_address
-
-    # save_to_path(public, public_key)
-
-    # keystore_dir = config['KEYSTORE_DIRECTORY'] or pathlib.Path.home()
-    # private, eth_address = open_eth_keystore(keystore_dir, config, create=True)
+    try:
+        with open('/root/.enigma/principal-sign-addr.txt') as f:
+            signing_address = f.read()
+            logger.info(f'Found Signing address: {signing_address}')
+    except FileNotFoundError:
+        logger.critical('Signing address not found. Please restart or check configuration')
+        exit(-1)
 
     try:
         with open('/root/.enigma/ethereum-account-addr.txt') as f:
             eth_address = f.read()
-            logger.info(f'Found Ethereum-address: {eth_address}')
+            logger.info(f'Found Ethereum address: {eth_address}')
             config['ACCOUNT_ADDRESS'] = eth_address[2:]
-
-        get_initial_coins(eth_address, 'ETH', config)
-        get_initial_coins(eth_address, 'ENG', config)
-
     except FileNotFoundError:
         logger.warning('Ethereum address not found, continuing from defaults')
-    except RuntimeError as e:
-        logger.critical(f'Failed to get enough ETH or ENG to start - {e}')
-        exit(-2)
-    except ConnectionError as e:
-        logger.critical(f'Failed to connect to remote address: {e}')
-        exit(-1)
 
-    # eth_address = '062B3e365052A92bcf3cC9E54a63c5078caC4eCC'
-    # set the URL of the ethereum node we're going to use -- this will be picked up by the application config
+    #  KM address discovery mechanism for testing environments
+    if env in ['COMPOSE', 'K8S']:
+        thread1 = threading.Thread(target=run, args=(int(config.get('ADDRESS_DISCOVERY_PORT', 8081)), ))
+        thread1.start()
 
-    logger.info(f'Waiting for enigma-contract @ '
-                f'{config["CONTRACT_DISCOVERY_ADDRESS"]}')
+    #  will not try a faucet if we're in mainnet or testnet
+    if env in ['COMPOSE', 'K8S']:
+        try:
+            get_initial_coins(eth_address, 'ETH', config)
+        except RuntimeError as e:
+            logger.critical(f'Failed to get enough ETH or ENG to start - {e}')
+            exit(-2)
+        except ConnectionError as e:
+            logger.critical(f'Failed to connect to remote address: {e}')
+            exit(-1)
+
+    logger.info(f'Getting enigma-contract...')
     enigma_address = provider.enigma_contract_address
     logger.info(f'Got address {enigma_address} for enigma contract')
 
