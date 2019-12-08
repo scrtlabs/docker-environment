@@ -46,6 +46,10 @@ def generate_config_file(app_config: dict, default_config_path: str, config_file
                  else app_config.get(k.upper(), v)
                  for k, v in default_config.items()}
 
+    # Changing the name so it's consistent with the one in p2p
+    temp_conf['CONFIRMATIONS'] = int(app_config['MIN_CONFIRMATIONS']) if 'MIN_CONFIRMATIONS' in app_config \
+        else temp_conf['CONFIRMATIONS']
+
     logger.debug(f'Running with config file at {config_file_path} with parameters: {temp_conf}')
 
     with open(config_file_path, 'w') as f:
@@ -67,18 +71,6 @@ def save_to_path(path, file):
     os.makedirs(os.path.dirname(path), exist_ok=True)
     with open(path, 'wb+') as f:
         f.write(file)
-
-
-def map_log_level_to_exec_flags(loglevel: str) -> str:
-    level = loglevel.upper()
-    if level == "DEBUG":
-        return '-vvv'
-    if level == "INFO":
-        return '-vv'
-    if level == "WARNING":
-        return '-v'
-    else:
-        return ''
 
 
 if __name__ == '__main__':
@@ -171,6 +163,11 @@ if __name__ == '__main__':
         if config['RUST_BACKTRACE'] != '0':
             os.environ["RUST_BACKTRACE"] = config['RUST_BACKTRACE']
 
-    debug_trace_flags = map_log_level_to_exec_flags(config.get('LOG_LEVEL', 'INFO'))
+    exec_args = [f'{executable}', f'--principal-config', f'{config["TEMP_CONFIG_PATH"]}']
 
-    subprocess.call([f'{executable}', f'{debug_trace_flags}', f'--principal-config', f'{config["TEMP_CONFIG_PATH"]}'])
+    log_level = config.get('LOG_LEVEL', '').lower()
+    if log_level:
+        exec_args.append('-l')
+        exec_args.append('log_level')
+
+    subprocess.call(exec_args)

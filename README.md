@@ -76,7 +76,7 @@ docker-compose up
 
 Hardware mode:
 ```
-docker-compose -f docker-compose_hw.yml up
+docker-compose -f docker-compose.yml -f docker-compose.hw.yml up
 ```
 
 ** Current develop is still kind of bugged, so it won't actually run all the tests successfully 
