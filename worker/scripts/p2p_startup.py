@@ -119,59 +119,70 @@ def main():
                                          provider.token_contract_address,
                                          json.loads(provider.enigma_token_abi)['abi'])
 
+    #  will not try a faucet if we're in mainnet - also, it should be logged inside
     if env in ['COMPOSE', 'K8S']:
+
+        staking_key_dir = config.get('STAKE_KEY_PATH', pathlib.Path.home())
+        staking_key, staking_address = open_eth_keystore(staking_key_dir, config, password=password, create=True)
 
         try:
             get_initial_coins(eth_address, 'ETH', config)
-            get_initial_coins(eth_address, 'ENG', config)
+            get_initial_coins(staking_address, 'ETH', config)
         except RuntimeError as e:
-            logger.critical(f'Failed to get enough ETH or ENG to start - {e}')
+            logger.critical(f'Failed to get enough ETH to start - {e}')
             exit(-2)
         except ConnectionError as e:
             logger.critical(f'Failed to connect to remote address: {e}')
+            exit(-1)
+
+        try:
+            get_initial_coins(staking_address, 'ENG', config)
+        except RuntimeError as e:
+            logger.critical(f'Failed to get enough ENG for staking address - Error: {e}')
+            exit(-2)
+        except ConnectionError as e:
+            logger.critical(f'Failed to connect to remote address: Error: {e}')
             exit(-1)
 
         # tell the p2p to automatically log us in and do the deposit for us
         login_and_deposit = True
 
         # todo: when we switch this key to be inside the enclave, or encrypted, modify this
-        erc20_contract.approve(eth_address,
+        erc20_contract.approve(staking_address,
                                provider.enigma_contract_address,
                                deposit_amount,
-                               key=bytes.fromhex(private_key[2:]))
+                               key=bytes.fromhex(staking_key[2:]))
 
-        val = erc20_contract.check_allowance(eth_address, provider.enigma_contract_address)
-        logger.info(f'Current allowance for {provider.enigma_contract_address}, from {eth_address}: {val} ENG')
+        val = erc20_contract.check_allowance(staking_address, provider.enigma_contract_address)
+        logger.info(f'Current allowance for {provider.enigma_contract_address}, from {staking_address}: {val} ENG')
+
+        # temp for now till staking address is integrated:
+        eth_address = staking_address
+        private_key = staking_key
 
     check_eth_limit(eth_address, float(config["MINIMUM_ETHER_BALANCE"]), ethereum_node)
+
+    kwargs = {'ethereum_key': private_key,
+              'public_address': eth_address,
+              'ether_node': ethereum_node,
+              'abi_path': enigma_abi_path,
+              'key_mgmt_node': config["KEY_MANAGEMENT_ADDRESS"],
+              'deposit_amount': deposit_amount,
+              'bootstrap_address': bootstrap_address,
+              'contract_address': eng_contract_addr,
+              'login_and_deposit': login_and_deposit,
+              'health_check_port': config["HEALTH_CHECK_PORT"],
+              'min_confirmations': config["MIN_CONFIRMATIONS"]}
 
     if is_bootstrap:
         p2p_runner = P2PNode(bootstrap=True,
                              bootstrap_id=bootstrap_id,
-                             ethereum_key=private_key,
-                             contract_address=eng_contract_addr,
-                             public_address=eth_address,
-                             ether_node=ethereum_node,
-                             abi_path=enigma_abi_path,
                              bootstrap_path=bootstrap_path,
                              bootstrap_port=bootstrap_port,
-                             bootstrap_address=bootstrap_address,
-                             key_mgmt_node=config["KEY_MANAGEMENT_ADDRESS"],
-                             deposit_amount=deposit_amount,
-                             login_and_deposit=login_and_deposit,
-                             min_confirmations=config["MIN_CONFIRMATIONS"])
+                             **kwargs)
     else:
         p2p_runner = P2PNode(bootstrap=False,
-                             ethereum_key=private_key,
-                             contract_address=eng_contract_addr,
-                             public_address=eth_address,
-                             ether_node=ethereum_node,
-                             key_mgmt_node=config["KEY_MANAGEMENT_ADDRESS"],
-                             abi_path=enigma_abi_path,
-                             bootstrap_address=bootstrap_address,
-                             deposit_amount=deposit_amount,
-                             login_and_deposit=login_and_deposit,
-                             min_confirmations=config["MIN_CONFIRMATIONS"])
+                             **kwargs)
 
     # Setting workdir to the base path of the executable, because everything is fragile
     os.chdir(pathlib.Path(executable).parent)
