@@ -22,7 +22,7 @@ required = [  # global environment setting
               'CONTRACT_DISCOVERY_ADDRESS', 'KEY_MANAGEMENT_DISCOVERY',
               # defaults in local config file
               'ETH_NODE_ADDRESS', 'CONTRACTS_FOLDER', 'DEFAULT_CONFIG_PATH', 'FAUCET_URL',
-              'KEYPAIR_FILE_NAME', 'TEMP_CONFIG_PATH', "MINIMUM_ETHER_BALANCE", "MINIMUM_ENG_BALANCE",
+              'TEMP_CONFIG_PATH', "MINIMUM_ETHER_BALANCE", "MINIMUM_ENG_BALANCE",
 ]
 
 env_defaults = {'K8S': './config/k8s_config.json',
@@ -75,8 +75,8 @@ def save_to_path(path, file):
 
 if __name__ == '__main__':
     # parse arguments
-    logger.info('STARTING KEY MANAGEMENT.....')
-    logger.info(f'Enviroment: {env}')
+    logger.info('STARTING KEY MANAGEMENT')
+    logger.info(f'Environment: {env}')
 
     config = Config(required=required, config_file=env_defaults[env])
     provider = Provider(config=config)
@@ -136,10 +136,12 @@ if __name__ == '__main__':
     # engima_contract_address is passed to km application without 0x
     config['ENIGMA_CONTRACT_ADDRESS'] = enigma_address[2:]
 
+    logger.info(f'Getting contract ABI..')
     enigma_contract_abi = provider.key_management_abi
-
+    logger.info(f'Done!')
     # this name doesn't actually matter, since we're just pointing the config file here
     contract_target = config['CONTRACTS_FOLDER']+'Enigma.json'
+    logger.debug(f'Saving contract to: {contract_target}')
     save_to_path(contract_target, enigma_contract_abi)
     if not os.path.exists(contract_target):
         logger.critical(f'Contract ABI file doesn\'t exist @ {contract_target} -- initializing must have failed')
