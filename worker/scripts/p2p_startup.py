@@ -159,7 +159,8 @@ def main():
         # temp for now till staking address is integrated:
         eth_address = staking_address
         private_key = staking_key
-    else:
+
+    if env in ['TESTNET', 'MAINNET']:
         staking_address = config["STAKING_ADDRESS"]
 
     check_eth_limit(eth_address, float(config["MINIMUM_ETHER_BALANCE"]), ethereum_node)
