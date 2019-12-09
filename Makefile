@@ -3,6 +3,7 @@ km = cd worker; docker build --build-arg branch=${BRANCH} -f gitclone_core.Docke
 contract = cd contract; docker build --build-arg branch=${BRANCH} -f gitclone_contract.Dockerfile -t gitclone_contract .
 p2p = cd worker; docker build --build-arg branch=${BRANCH} -f gitclone_p2p.Dockerfile -t gitclone_p2p .
 client = cd client; docker build --build-arg branch=${BRANCH} -f gitclone_integration.Dockerfile -t gitclone_integration .
+salad = cd salad; docker build --build-arg branch=${BRANCH} -f gitclone_salad.Dockerfile -t gitclone_salad .
 
 SGX_MODE ?= HW
 BRANCH ?= develop
@@ -38,6 +39,9 @@ clone-client:
 	${contract}
 	${client}
 
+clone-salad:
+	${salad}
+
 build:
 	cd worker; docker build --build-arg DEBUG=${DEBUG} -f 01_core_base.Dockerfile -t enigmampc/core-base:latest .
 	cd worker; docker build --build-arg DEBUG=${DEBUG} --build-arg SGX_MODE=${SGX_MODE} -f 02_core_and_p2p.Dockerfile -t enigmampc/worker_${ext}:latest .
@@ -60,3 +64,9 @@ build-worker:
 build-client:
 	cd common_scripts; docker build -f common.Dockerfile -t enigma_common .
 	cd client; docker build -f client.Dockerfile -t enigmampc/client:latest .
+
+build-salad-operator:
+	cd salad/operator; docker build -f salad_client.Dockerfile -t enigma_salad_client .
+
+build-salad-client:
+	cd salad/client; docker build -f operator.Dockerfile -t enigma_salad_operator .
