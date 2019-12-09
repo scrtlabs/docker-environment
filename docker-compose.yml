@@ -31,7 +31,7 @@ services:
       - ENIGMA_ENV
       - SGX_MODE
       - MIN_CONFIRMATIONS
-      # FORCE_NEW_ETH_ADDR: "true"
+
     expose:
       - "9229" # nodejs debugger
       - "3346" # gateway port

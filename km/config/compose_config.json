@@ -8,8 +8,6 @@
  "MINIMUM_ETHER_BALANCE": "0.1",
  "MINIMUM_ENG_BALANCE": "10",
  "BALANCE_WAIT_TIME": 1800,
- "KEYPAIR_FILE_NAME": "km_keypair.sealed",
- "KEYPAIR_FILE_NAME_SW": "km_keypair_sw.sealed",
  "KEYPAIR_STORAGE_DIRECTORY": "kmfiles",
  "RUST_BACKTRACE": "1",
  "EXECUTABLE_PATH": "/root/bin/enigma-principal-app",

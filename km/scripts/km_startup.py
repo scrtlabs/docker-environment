@@ -11,7 +11,7 @@ from enigma_docker_common.config import Config
 from enigma_docker_common.provider import Provider
 from enigma_docker_common.logger import get_logger
 from enigma_docker_common.crypto import open_eth_keystore
-from enigma_docker_common.blockchain import get_initial_coins
+from enigma_docker_common.faucet_api import get_initial_coins
 
 logger = get_logger('key_management.startup')
 
@@ -22,7 +22,7 @@ required = [  # global environment setting
               'CONTRACT_DISCOVERY_ADDRESS', 'KEY_MANAGEMENT_DISCOVERY',
               # defaults in local config file
               'ETH_NODE_ADDRESS', 'CONTRACTS_FOLDER', 'DEFAULT_CONFIG_PATH', 'FAUCET_URL',
-              'KEYPAIR_FILE_NAME', 'TEMP_CONFIG_PATH', "MINIMUM_ETHER_BALANCE", "MINIMUM_ENG_BALANCE",
+              'TEMP_CONFIG_PATH', "MINIMUM_ETHER_BALANCE", "MINIMUM_ENG_BALANCE",
 ]
 
 env_defaults = {'K8S': './config/k8s_config.json',
@@ -75,8 +75,8 @@ def save_to_path(path, file):
 
 if __name__ == '__main__':
     # parse arguments
-    logger.info('STARTING KEY MANAGEMENT.....')
-    logger.info(f'Enviroment: {env}')
+    logger.info('STARTING KEY MANAGEMENT')
+    logger.info(f'Environment: {env}')
 
     config = Config(required=required, config_file=env_defaults[env])
     provider = Provider(config=config)
@@ -94,60 +94,54 @@ if __name__ == '__main__':
 
     if not os.path.exists(keypair) or not os.path.exists(public):
         generate_keypair(executable, keypair, public, config['DEFAULT_CONFIG_PATH'])
-        # make sure key generation worked
 
-    thread1 = threading.Thread(target=run, args=(int(config.get('ADDRESS_DISCOVERY_PORT', 8081)), ))
-    thread1.start()
 
-    # # get Keypair file -- environment variable STORAGE_CONNECTION_STRING must be set
-    # if SGX_MODE == 'SW':
-    #     sealed_km = provider.get_file(config['KEYPAIR_STORAGE_DIRECTORY'], config['KEYPAIR_FILE_NAME_SW'])
-    # else:
-    #     sealed_km = provider.get_file(config['KEYPAIR_STORAGE_DIRECTORY'], config['KEYPAIR_FILE_NAME'])
-    # save_to_path(keypair, sealed_km)
-    #
-    # # get public key file
 
-    # public_key = provider.principal_address
-
-    # save_to_path(public, public_key)
-
-    # keystore_dir = config['KEYSTORE_DIRECTORY'] or pathlib.Path.home()
-    # private, eth_address = open_eth_keystore(keystore_dir, config, create=True)
+    try:
+        with open('/root/.enigma/principal-sign-addr.txt') as f:
+            signing_address = f.read()
+            logger.info(f'Found Signing address: {signing_address}')
+    except FileNotFoundError:
+        logger.critical('Signing address not found. Please restart or check configuration')
+        exit(-1)
 
     try:
         with open('/root/.enigma/ethereum-account-addr.txt') as f:
             eth_address = f.read()
-            logger.info(f'Found Ethereum-address: {eth_address}')
+            logger.info(f'Found Ethereum address: {eth_address}')
             config['ACCOUNT_ADDRESS'] = eth_address[2:]
-
-        get_initial_coins(eth_address, 'ETH', config)
-        get_initial_coins(eth_address, 'ENG', config)
-
     except FileNotFoundError:
         logger.warning('Ethereum address not found, continuing from defaults')
-    except RuntimeError as e:
-        logger.critical(f'Failed to get enough ETH or ENG to start - {e}')
-        exit(-2)
-    except ConnectionError as e:
-        logger.critical(f'Failed to connect to remote address: {e}')
-        exit(-1)
 
-    # eth_address = '062B3e365052A92bcf3cC9E54a63c5078caC4eCC'
-    # set the URL of the ethereum node we're going to use -- this will be picked up by the application config
+    #  KM address discovery mechanism for testing environments
+    if env in ['COMPOSE', 'K8S']:
+        thread1 = threading.Thread(target=run, args=(int(config.get('ADDRESS_DISCOVERY_PORT', 8081)), ))
+        thread1.start()
 
-    logger.info(f'Waiting for enigma-contract @ '
-                f'{config["CONTRACT_DISCOVERY_ADDRESS"]}')
+    #  will not try a faucet if we're in mainnet or testnet
+    if env in ['COMPOSE', 'K8S']:
+        try:
+            get_initial_coins(eth_address, 'ETH', config)
+        except RuntimeError as e:
+            logger.critical(f'Failed to get enough ETH or ENG to start - {e}')
+            exit(-2)
+        except ConnectionError as e:
+            logger.critical(f'Failed to connect to remote address: {e}')
+            exit(-1)
+
+    logger.info(f'Getting enigma-contract...')
     enigma_address = provider.enigma_contract_address
     logger.info(f'Got address {enigma_address} for enigma contract')
 
     # engima_contract_address is passed to km application without 0x
     config['ENIGMA_CONTRACT_ADDRESS'] = enigma_address[2:]
 
+    logger.info(f'Getting contract ABI..')
     enigma_contract_abi = provider.key_management_abi
-
+    logger.info(f'Done!')
     # this name doesn't actually matter, since we're just pointing the config file here
     contract_target = config['CONTRACTS_FOLDER']+'Enigma.json'
+    logger.debug(f'Saving contract to: {contract_target}')
     save_to_path(contract_target, enigma_contract_abi)
     if not os.path.exists(contract_target):
         logger.critical(f'Contract ABI file doesn\'t exist @ {contract_target} -- initializing must have failed')

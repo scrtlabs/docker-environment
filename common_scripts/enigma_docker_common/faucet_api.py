@@ -4,7 +4,7 @@ from urllib.parse import urlparse
 import requests
 from .logger import get_logger
 
-logger = get_logger('eng_common.faucet')
+logger = get_logger('enigma_common.faucet')
 
 
 def _wait_till_open(url, timeout: int = 60) -> None:

@@ -4,13 +4,12 @@ import web3
 
 from .logger import get_logger
 
-logger = get_logger('eng_common.enigma')
+logger = get_logger('enigma_common.enigma')
 
 
 class EnigmaTokenContract:
     def __init__(self, eth_node, contract_address, contract_abi):
         """
-
         :param eth_node: address of ethereum node (example: http://localhost:8545)
         :param contract_address: erc20 token contract address
         :param contract_abi: erc20 token contract ABI

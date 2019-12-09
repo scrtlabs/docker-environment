@@ -22,6 +22,7 @@ class P2PNode(threading.Thread):
                  contract_address: str,
                  key_mgmt_node: str,
                  abi_path: str,
+                 staking_address: str = '',  # remove default value when staking address is added to p2p
                  proxy: int = 3346,
                  core_addr: str = 'localhost:5552',
                  peer_name: str = 'peer1',
@@ -55,6 +56,7 @@ class P2PNode(threading.Thread):
         self.auto_init = auto_init
         self.bootstrap = bootstrap
         self.abi_path = abi_path
+        self.staking_address = staking_address
         self.bootstrap_addr = bootstrap_address
         self.ether_public = public_address
         self.contract_addr = contract_address
@@ -64,8 +66,7 @@ class P2PNode(threading.Thread):
         self.bootstrap_id: str = bootstrap_id
         self.bootstrap_path: str = bootstrap_path
         self.bootstrap_port: str = bootstrap_port
-        self.min_confirmations = str(min_confirmations) if int(
-            min_confirmations) != 12 else None
+        self.min_confirmations = str(min_confirmations) if int(min_confirmations) != 12 else None
         self.health_check_port = health_check_port
         self.proc = None
         atexit.register(self.stop)
@@ -105,11 +106,13 @@ class P2PNode(threading.Thread):
                   'ethereum-contract-abi-path': self.abi_path,
                   'health': f'{self.health_check_port}'}
 
+        # optional values
+        if self.staking_address:
+            params.update({'staking-address': f'{self.staking_address}'})
         if self.min_confirmations:
             params.update({'min-confirmations': self.min_confirmations})
         if self.ethereum_key:
             params.update({'ethereum-key': self.ethereum_key})
-
         if self.login_and_deposit:
             params.update({'deposit-and-login': f'{self.deposit_amount}'})
 

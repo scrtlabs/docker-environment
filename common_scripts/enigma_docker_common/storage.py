@@ -1,5 +1,6 @@
 import socket
 import os
+import time
 
 from typing import AnyStr, Any
 from pathlib import Path
@@ -32,16 +33,28 @@ class AzureContainerFileService:
 
 
 class HttpFileService:
-    def __init__(self, url, namespace: str = 'contract'):
+    def __init__(self, url, namespace: str = 'contract', timeout: int = 60):
         p = urlparse(url)
         self.hostname = p.hostname
         self.port = p.port
+        self.timeout = timeout
         self.account_url = f'{url}/{namespace}/address?name='
         self.credential = os.getenv('STORAGE_CONNECTION_STRING')
+        self._connected = False
+
+    @property
+    def connected(self):
+        if not self._connected:
+            is_contract_ready = self._wait_till_open(timeout=self.timeout)
+            if not is_contract_ready:
+                raise TimeoutError(f'Timeout for server @ {self.account_url}')
+            self._connected = True
+        return self._connected
 
     def __getitem__(self, item):
-        addr = requests.get(f'{self.account_url}{item}')
-        return addr.json()
+        if self.connected:
+            addr = requests.get(f'{self.account_url}{item}')
+            return addr.json()
 
     def __setitem__(self, key: str, value: Any):
         if not self.credential:
@@ -52,6 +65,13 @@ class HttpFileService:
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         result = sock.connect_ex((self.hostname, self.port))
         return result == 0
+
+    def _wait_till_open(self, timeout: int = 60) -> bool:
+        for _ in range(timeout):
+            if self.is_ready():
+                return True
+            time.sleep(1)
+        return False
 
 
 class LocalStorage:
