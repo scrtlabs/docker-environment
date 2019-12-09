@@ -1,0 +1,1 @@
+ az vm delete -n enigma-external-worker -g enigma-external-worker -y
