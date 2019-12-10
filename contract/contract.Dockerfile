@@ -24,27 +24,8 @@ RUN apt-get update \
 
 RUN npm -g config set user root
 
-RUN npm install -g truffle ganache-cli
+RUN npm install -g truffle@5.1.2 ganache-cli
 
-######## Stage 4 - build python wheels
-
-FROM contract_base as pybuild
-
-WORKDIR /root
-
-# this is here first don't run it again unless we actually change the requirements
-COPY scripts/requirements.txt ./
-
-RUN apt-get update \
- && apt-get install -y --no-install-recommends \
-    python3-setuptools \
-    gcc \
-    python3.6-dev \
- && rm -rf /var/lib/apt/lists/*
-
-RUN pip3 install wheel
-
-RUN pip3 wheel --wheel-dir=/root/wheels -r requirements.txt -i http://pypi.keytango.io --trusted-host pypi.keytango.io
 
 ############ STAGE 2 -- compile smart contracts
 FROM contract_base as contract_compile
@@ -92,11 +73,11 @@ WORKDIR /root/enigma-contract
 RUN mkdir -p /root/.enigma
 RUN mkdir -p ./build/contracts/
 
-COPY --from=pybuild /root/wheels /root/enigma-contract/wheels
+COPY --from=enigma_common /root/wheels /root/wheels
 COPY scripts/requirements.txt .
 RUN pip3 install \
       --no-index \
-      --find-links=/root/enigma-contract/wheels \
+      --find-links=/root/wheels \
       -r requirements.txt
 
 COPY --from=contract_compile /root/enigma-contract/build/contracts /root/enigma-contract/build/contracts
@@ -111,8 +92,6 @@ COPY config ./config/
 RUN chmod +x ./scripts/contract_server.py && chmod +x ./scripts/migrate.sh && chmod +x ./scripts/faucet_service.py
 
 COPY devops/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
-
-# COPY truffle.js /root/enigma-contract/truffle.js
 
 EXPOSE 9545
 EXPOSE 8081
