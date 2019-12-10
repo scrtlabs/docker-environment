@@ -75,8 +75,8 @@ build-client:
 
 .PHONY: build-salad-operator
 build-salad-operator:
-	cd salad/operator; docker build -f salad_client.Dockerfile -t enigma_salad_client .
+	cd salad/operator; docker build -f operator.Dockerfile -t enigma_salad_operator .
 
 .PHONY: build-salad-client
 build-salad-client:
-	cd salad/client; docker build -f operator.Dockerfile -t enigma_salad_operator .
+	cd salad/client; docker build -f salad_client.Dockerfile -t enigma_salad_client .
