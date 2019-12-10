@@ -46,6 +46,10 @@ clone-client:
 	${contract}
 	${client}
 
+.PHONY: clone-client-solo
+clone-client-solo:
+	${client}
+
 .PHONY: clone-salad
 clone-salad:
 	${salad}
