@@ -85,7 +85,7 @@ services:
   salad_operator:
     hostname: salad_operator
     container_name: salad_operator
-    image: enigma_salad_operator:${DOCKER_TAG}
+    image: enigmampc/salad_operator:${DOCKER_TAG}
     tty: true
     expose:
       - "8080"
@@ -100,7 +100,7 @@ services:
 
   salad_client:
     hostname: salad_client
-    image: enigma_salad_client:${DOCKER_TAG}
+    image: enigmampc/salad_client:${DOCKER_TAG}
     tty: true
     depends_on:
       - salad_operator
