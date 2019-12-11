@@ -87,8 +87,8 @@ build-client: build-enigma-common
 
 .PHONY: build-salad-operator
 build-salad-operator:
-	cd salad/operator; docker build -f operator.Dockerfile -t enigma_salad_operator .
+	cd salad/operator; docker build -f operator.Dockerfile -t enigmampc/salad_operator:${DOCKER_TAG} .
 
 .PHONY: build-salad-client
 build-salad-client:
-	cd salad/client; docker build -f salad_client.Dockerfile -t enigma_salad_client .
+	cd salad/client; docker build -f salad_client.Dockerfile -t enigmampc/salad_client:${DOCKER_TAG} .
