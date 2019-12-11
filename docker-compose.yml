@@ -1,64 +1,52 @@
 version: "3"
 
-volumes:
-  esdata01:
-    driver: local
-
-
-networks:
-  backend:
-  frontend:
-    driver: bridge # use the bridge driver
-    ipam:
-      driver: default
-
 services:
   bootstrap:
     hostname: bootstrap
     container_name: bootstrap01
-    image: enigmampc/worker_sw:latest
+    image: enigmampc/worker_sw:${DOCKER_TAG}
     depends_on:
       - contract
       - km
     environment:
-      ENIGMA_ENV: COMPOSE
-      SGX_MODE: SW
-      BOOTSTRAP: "TRUE"
-      MIN_CONFIRMATIONS: 1
+      - ENIGMA_ENV
+      - SGX_MODE
+      - MIN_CONFIRMATIONS
+      - BOOTSTRAP="TRUE"
+      - BOOTSTRAP_ID=B1
     expose:
       - "10300" # libp2p port
       - "8080"  # what is this?
     ports:
-      - "3346:3346"
-      - "9229:9229"
+      - "3346:3346" # gateway port
+      - "9229:9229" # nodejs debugger
 
   worker:
     hostname: worker
-    image: enigmampc/worker_sw:latest
+    image: enigmampc/worker_sw:${DOCKER_TAG}
     depends_on:
       - contract
       - km
     environment:
-      ENIGMA_ENV: COMPOSE
-      SGX_MODE: SW
-      MIN_CONFIRMATIONS: 1
+      - ENIGMA_ENV
+      - SGX_MODE
+      - MIN_CONFIRMATIONS
       # FORCE_NEW_ETH_ADDR: "true"
     expose:
-      - "8080" # what is this?
-      - "9229"
-      - "3346"
+      - "9229" # nodejs debugger
+      - "3346" # gateway port
       - "10300" # libp2p
 
   contract:
     hostname: contract
     container_name: contract
-    image: enigmampc/contract:latest
+    image: enigmampc/contract:${DOCKER_TAG}
     environment:
-      SGX_MODE: SW
-      ENIGMA_ENV: COMPOSE
-      AUTO_MINER: "ON"
-      BLOCK_TIME: 0
-      TIME_BETWEEN_BLOCKS: 5
+      - SGX_MODE
+      - ENIGMA_ENV
+      - AUTO_MINER
+      - BLOCK_TIME
+      - TIME_BETWEEN_BLOCKS
     ports:
       - "8081:8081" # contract discovery service
       - "9545:9545" # ethereum node port
@@ -67,25 +55,25 @@ services:
   km:
     hostname: km
     container_name: km
-    image: enigmampc/key_management_sw:latest
+    image: enigmampc/key_management_sw:${DOCKER_TAG}
     environment:
-      ENIGMA_ENV: COMPOSE
-      SGX_MODE: SW
-      CONFIRMATIONS: 1
+      - ENIGMA_ENV
+      - SGX_MODE
+      - MIN_CONFIRMATIONS
     expose:
       - "3040" # JSON RPC port
-      - "8081"
+      - "8081" # KM address discovery
 
   client:
     hostname: client
-    image: enigmampc/client:latest
+    image: enigmampc/client:${DOCKER_TAG}
     stdin_open: true
     tty: true
     depends_on:
       - contract
     environment:
-      ENIGMA_ENV: K8S
-      SGX_MODE: SW
+      - ENIGMA_ENV
+      - SGX_MODE
       CONTRACT_DISCOVERY_ADDRESS: "contract"
       ETH_NODE_ADDRESS: "contract"
       FAUCET_URL: "http://contract:8001"

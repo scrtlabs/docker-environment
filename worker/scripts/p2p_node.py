@@ -30,6 +30,7 @@ class P2PNode(threading.Thread):
                  bootstrap: bool = False,
                  bootstrap_address: str = 'B1',
                  bootstrap_id: str = 'B1',
+                 health_check_port: int = 12345,
                  deposit_amount: int = 0,
                  login_and_deposit: bool = False,
                  ethereum_key: str = '',
@@ -63,7 +64,9 @@ class P2PNode(threading.Thread):
         self.bootstrap_id: str = bootstrap_id
         self.bootstrap_path: str = bootstrap_path
         self.bootstrap_port: str = bootstrap_port
-        self.min_confirmations = str(min_confirmations) if int(min_confirmations) != 12 else None
+        self.min_confirmations = str(min_confirmations) if int(
+            min_confirmations) != 12 else None
+        self.health_check_port = health_check_port
         self.proc = None
         atexit.register(self.stop)
         signal.signal(signal.SIGINT, self._kill)
@@ -99,10 +102,11 @@ class P2PNode(threading.Thread):
                   'ethereum-address': f'{self.ether_public}',
                   'principal-node': f'{self.km_node}',
                   'ethereum-contract-address': f'{self.contract_addr}',
-                  'ethereum-contract-abi-path': self.abi_path}
+                  'ethereum-contract-abi-path': self.abi_path,
+                  'health': f'{self.health_check_port}'}
 
         if self.min_confirmations:
-            params.update({'min_confirmations': self.min_confirmations})
+            params.update({'min-confirmations': self.min_confirmations})
         if self.ethereum_key:
             params.update({'ethereum-key': self.ethereum_key})
 
