@@ -25,7 +25,7 @@ WORKDIR /root/salad
 
 RUN : \
     && yarn install --production \
-    && yarn add truffle --ignore-workspace-root-check
+    && yarn add truffle@5.1.2 --ignore-workspace-root-check
 
 ##########################
 
