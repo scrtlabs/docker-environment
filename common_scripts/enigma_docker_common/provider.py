@@ -46,8 +46,8 @@ class Provider:
         self.contract_strategy = {"COMPOSE": storage.HttpFileService(self.CONTRACT_DISCOVERY_ADDRESS),
                                   "COMPOSE_DEV": storage.HttpFileService(self.CONTRACT_DISCOVERY_ADDRESS),
                                   "K8S": storage.HttpFileService(self.CONTRACT_DISCOVERY_ADDRESS),
-                                  "TESTNET": storage.HttpFileService(self.CONTRACT_DISCOVERY_ADDRESS),
-                                  "MAINNET": storage.HttpFileService(self.CONTRACT_DISCOVERY_ADDRESS)}
+                                  "TESTNET": storage.AzureContainerFileService('contract'),
+                                  "MAINNET": storage.AzureContainerFileService('contract')}
 
         self.key_management_discovery = {"COMPOSE": storage.HttpFileService(self.KM_DISCOVERY_ADDRESS, namespace='km'),
                                         "COMPOSE_DEV": storage.HttpFileService(self.KM_DISCOVERY_ADDRESS, namespace='km'),
@@ -157,19 +157,9 @@ class Provider:
             time.sleep(1)
         return False
 
-    def _get_contract_address(self, contract_name):
+    def _deployed_contract_address(self, contract_name):
         fs = self.contract_strategy[os.getenv('ENIGMA_ENV', 'COMPOSE')]
         return fs[contract_name]
-
-    def _deployed_contract_address(self, contract_name):
-        logger.debug(f'Waiting for enigma-contract @ http://{self.CONTRACT_DISCOVERY_ADDRESS} for enigma contract')
-        timeout = self.config.get("CONTRACT_TIMEOUT", 60)
-        # wait for contract to be ready
-        is_contract_ready = self._wait_till_open(timeout=timeout)
-        if not is_contract_ready:
-            logger.error(f'Contract address wasn\'t ready before timeout ({timeout}s) expired')
-            raise TimeoutError(f'Timeout for server @ {self.CONTRACT_DISCOVERY_ADDRESS}')
-        return self._get_contract_address(contract_name)
 
     @staticmethod
     def _unzip_bytes(file_bytes: bytes, file_name: str) -> bytes:

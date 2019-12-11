@@ -3,10 +3,9 @@ import os
 from collections import UserDict
 from .logger import get_logger
 
-logger = get_logger('config')
+logger = get_logger('pycommon.config')
 
 DEFAULT_CONF_PATH = "/conf/"
-
 
 global_config_paths = {"DEV": "dev_config.json",
                        "COMPOSE": "compose_config.json",
@@ -30,17 +29,6 @@ class Config(UserDict):
         self.required = [] if required is None else required
 
         super().__init__()
-        # don't need global config yet
-        # try:
-        #     with open(global_config_paths[os.getenv('ENIGMA_ENV', 'COMPOSE')]) as f:
-        #         conf_file = json.load(f)
-        #         super().__init__(conf_file)
-        # except IOError:
-        #     logger.critical("there was a problem opening the config file")
-        #     raise
-        # except json.JSONDecodeError:
-        #     logger.critical("global config file isn't valid json")
-        #     raise
 
         if config_file:
             logger.info(f'Loading custom configuration: {config_file}')

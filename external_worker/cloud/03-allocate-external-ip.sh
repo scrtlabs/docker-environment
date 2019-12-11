@@ -1,0 +1,1 @@
+az network public-ip create --resource-group enigma-external-worker --name enigma-external-worker-ip --allocation-method static

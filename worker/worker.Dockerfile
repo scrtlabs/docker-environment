@@ -54,38 +54,19 @@ COPY --from=gitclone_p2p /enigma-p2p/src ./src/
 COPY --from=gitclone_p2p /enigma-p2p/configs ./configs
 COPY --from=gitclone_p2p /enigma-p2p/test/testUtils ./test/testUtils
 
-######## Stage 4 - build python wheels
-
-FROM enigmampc/core-runtime-base:latest as pybuild
-
-WORKDIR /root
-
-RUN apt-get update \
- && apt-get install -y --no-install-recommends \
-    python3-setuptools \
-    gcc \
-    python3.6-dev \
- && rm -rf /var/lib/apt/lists/*
-
-RUN pip3 install wheel
-
-COPY scripts/requirements.txt ./
-
-RUN pip3 wheel --wheel-dir=/root/wheels -r requirements.txt -i http://pypi.keytango.io --trusted-host pypi.keytango.io
-
-####### Stage 6 - add p2p folder and compiled core together
+####### Stage 4 - add p2p folder and compiled core together
 
 FROM p2p_base
 
 WORKDIR /root
 
-COPY --from=pybuild /root/wheels /root/core/wheels
+COPY --from=enigma_common /root/wheels /root/wheels
 
 COPY scripts/requirements.txt .
 
 RUN pip3 install \
       --no-index \
-      --find-links=/root/core/wheels \
+      --find-links=/root/wheels \
       -r requirements.txt
 
 COPY --from=core-build /root/enigma-core/bin/ /root/core/bin/
