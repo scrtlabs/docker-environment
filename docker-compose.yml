@@ -87,8 +87,6 @@ services:
     container_name: salad_operator
     image: enigmampc/salad_operator:${DOCKER_TAG}
     tty: true
-    expose:
-      - "8080"
     ports:
       - "8080:8080"
     depends_on:
