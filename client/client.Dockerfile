@@ -49,7 +49,6 @@ WORKDIR /root/enigma-contract/enigma-js
 COPY enigma-js/jest.init.js /root/enigma-contract/enigma-js/
 COPY enigma-js/test /root/enigma-contract/enigma-js/test
 COPY enigma-js/src /root/enigma-contract/enigma-js/src
-COPY enigma-js/Makefile /root/enigma-contract/enigma-js/Makefile
 
 RUN mkdir -p /root/.enigma/
 

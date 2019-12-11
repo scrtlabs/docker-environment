@@ -74,10 +74,6 @@ services:
     environment:
       - ENIGMA_ENV
       - SGX_MODE
-      CONTRACT_DISCOVERY_ADDRESS: "contract"
-      ETH_NODE_ADDRESS: "contract"
-      FAUCET_URL: "http://contract:8001"
-      WORKER_URL: "http://bootstrap"
 #  client:
 #    hostname: client
 #    image: enigmampc/client:latest
