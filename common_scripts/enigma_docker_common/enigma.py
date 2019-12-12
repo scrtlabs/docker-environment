@@ -25,7 +25,7 @@ class Contract:
         self.w3 = web3.Web3(self.w3provider)
         self.contract = self.w3.eth.contract(contract_address, abi=contract_abi)
 
-        self._gasprice = self.w3.eth.estimateG
+        self._gasprice = self.max_gas_price
 
     @staticmethod
     def _sign(raw_tx, key: bytes) -> dict:
@@ -41,20 +41,21 @@ class Contract:
     @property
     def gasprice(self):
         est = self.w3.eth.generateGasPrice()
-        if est > self.max_gas_price:
-            return self.max_gas_price
-        return est
+        if est:
+            self._gasprice = max(int(est), self.max_gas_price)
+        return self._gasprice
 
     def transact(self, sending_address, key, func, *args):
         csum_addr = self.w3.toChecksumAddress(sending_address)
-        nonce = self.w3.eth.getTransactionCount(self.w3.toChecksumAddress(csum_addr), 'pending')
-        transaction = getattr(self.contract.functions, func)(csum_addr, *args).buildTransaction(
+        nonce = self.w3.eth.getTransactionCount(csum_addr, 'pending')
+        transaction = getattr(self.contract.functions, func)(*args).buildTransaction(
             {'from': csum_addr,
              'gasPrice': self.gasprice,
              'nonce': nonce})
 
         signed_tx = self._sign(transaction, key)
         self._send_and_wait(signed_tx)
+
 
 class EnigmaTokenContract(Contract):
     def __init__(self, eth_node, contract_address, contract_abi):
@@ -88,7 +89,7 @@ class EnigmaTokenContract(Contract):
     def check_allowance(self, approver, to):
         approver = self.w3.toChecksumAddress(approver)
         to = self.w3.toChecksumAddress(to)
-        val = self.erc20.functions.allowance(approver, to).call()
+        val = self.contract.functions.allowance(approver, to).call()
         return val
 
 

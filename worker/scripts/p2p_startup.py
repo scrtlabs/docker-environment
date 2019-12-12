@@ -23,10 +23,10 @@ required = [  # required by provider AND locally
               'ETH_NODE_ADDRESS', 'ENIGMA_CONTRACT_FILE_NAME', 'CORE_ADDRESS', 'CORE_PORT', 'CONTRACTS_FOLDER',
               'KEY_MANAGEMENT_ADDRESS', 'FAUCET_URL', 'MINIMUM_ETHER_BALANCE', 'BALANCE_WAIT_TIME', 'MIN_CONFIRMATIONS']
 
-env_defaults = {'K8S': './p2p/config/k8s_config.json',
-                'TESTNET': './p2p/config/testnet_config.json',
-                'MAINNET': './p2p/config/mainnet_config.json',
-                'COMPOSE': './p2p/config/compose_config.json'}
+env_defaults = {'K8S': '/root/p2p/config/k8s_config.json',
+                'TESTNET': '/root/p2p/config/testnet_config.json',
+                'MAINNET': '/root/p2p/config/mainnet_config.json',
+                'COMPOSE': '/root/p2p/config/compose_config.json'}
 
 env = os.getenv('ENIGMA_ENV', 'COMPOSE')
 
@@ -152,8 +152,8 @@ def main():
             exit(-1)
 
         # temp for now till staking address is integrated:
-        eth_address = staking_address
-        private_key = staking_key
+        # eth_address = staking_address
+        # private_key = staking_key
 
     # load staking key from configuration -- used in testnet to automatically perform staking for bootstrap nodes
     if is_bootstrap and env in ['COMPOSE', 'TESTNET', 'MAINNET']:
@@ -162,20 +162,19 @@ def main():
             staking_address = address_from_private(staking_key)
             logger.info(f'Loaded staking private key. Staking address is: {staking_address}')
             # we write to this file as a flag that we don't need to do this again
-            save_to_path(staking_key_dir+config['STAKE_KEY_NAME'], staking_address)
+            save_to_path(staking_key_dir+config['STAKE_KEY_NAME'], staking_address, flags="w+")
 
     # perform deposit
     if env in ['TESTNET', 'K8S', 'COMPOSE']:
         """ Logic for deposit is:
-        
+
         Staking address                             Operating address 
-                                       
+
+                     <--------------register--------------
+
                      --------setOperatingAddress---------> 
-                                       
-                     <--------------register-------------- 
-                     
                      ---------------deposit-------------->
-                     
+
                      <-----------------login--------------                                       
         """
         # tell the p2p to automatically log us in and do the deposit for us
@@ -199,7 +198,8 @@ def main():
 
     check_eth_limit(eth_address, float(config["MINIMUM_ETHER_BALANCE"]), ethereum_node)
 
-    kwargs = {'ethereum_key': private_key,
+    kwargs = {'staking_address': staking_address,
+              'ethereum_key': private_key,
               'public_address': eth_address,
               'ether_node': ethereum_node,
               'abi_path': enigma_abi_path,
@@ -231,6 +231,9 @@ def main():
     time.sleep(30)
 
     p2p_runner.register()
+
+    # for now lets sleep instead of getting confirmations till we move it to web
+    time.sleep(10)
 
     # we perform auto-deposit in testing environment
     if env in ['TESTNET', 'K8S', 'COMPOSE']:

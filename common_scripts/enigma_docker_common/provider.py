@@ -29,16 +29,16 @@ class Provider:
         self._enigma_contract_abi_directory = config.get('ENIGMA_CONTRACT_ABI_DIRECTORY', 'contract')
 
         self._km_abi_directory = config.get('PRINCIPAL_ADDRESS_DIRECTORY', 'contract')
-        self._km_abi_filename = config.get('PRINCIPAL_ADDRESS_FILENAME', 'IEnigma.json')
+        self._km_abi_filename = config.get('PRINCIPAL_ADDRESS_FILENAME', 'IEnigma_v2.json')
 
         if os.getenv('SGX_MODE', 'HW') == 'SW':
             self._enigma_contract_abi_filename = config.get('ENIGMA_CONTRACT_ABI_FILENAME_SW',
                                                             'EnigmaSimulation.json')
             self._enigma_contract_abi_filename_zip = config.get('ENIGMA_CONTRACT_ABI_FILENAME_ZIPPED_SW',
-                                                                'EnigmaSimulation.zip')
+                                                                'EnigmaSimulation_v2.zip')
         else:
             self._enigma_contract_abi_filename = config.get('ENIGMA_CONTRACT_ABI_FILENAME', 'Enigma.json')
-            self._enigma_contract_abi_filename_zip = config.get('ENIGMA_CONTRACT_ABI_FILENAME_ZIPPED', 'Enigma.zip')
+            self._enigma_contract_abi_filename_zip = config.get('ENIGMA_CONTRACT_ABI_FILENAME_ZIPPED', 'Enigma_v2.zip')
 
         # strategy for information we get from enigma-contract
         contract_timeout = self.config.get("CONTRACT_TIMEOUT", 120)
