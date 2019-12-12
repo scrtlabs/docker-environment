@@ -64,6 +64,16 @@ services:
       - "3040" # JSON RPC port
       - "8081" # KM address discovery
 
+#  client:
+#    hostname: client
+#    image: enigmampc/client:${DOCKER_TAG}
+#    stdin_open: true
+#    tty: true
+#    depends_on:
+#      - contract
+#    environment:
+#      - ENIGMA_ENV
+#      - SGX_MODE
   client:
     hostname: client
     image: enigmampc/client:${DOCKER_TAG}
@@ -72,5 +82,10 @@ services:
     depends_on:
       - contract
     environment:
-      - ENIGMA_ENV
-      - SGX_MODE
+      ENIGMA_ENV: K8S
+      SGX_MODE: SW
+      CONTRACT_DISCOVERY_ADDRESS: "http://contract.app.services.enigma.co:8081"
+      ETH_NODE_ADDRESS: "http://contract.app.services.enigma.co:9545"
+      FAUCET_URL: "http://contract.app.services.enigma.co:8001"
+      WORKER_URL: "http://bootstrap-1.app.services.enigma.co"
+      KEY_MANAGEMENT_DISCOVERY: "km.app.services.enigma.co"

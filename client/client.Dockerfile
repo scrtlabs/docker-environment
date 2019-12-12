@@ -36,6 +36,7 @@ COPY --from=enigmampc/contract /root/enigma-contract/build /root/build
 
 WORKDIR /root/integration-tests
 RUN yarn install
+RUN cd cluster-sdk && yarn
 
 RUN mkdir -p /root/.enigma/
 
@@ -43,6 +44,7 @@ COPY config config
 COPY scripts/tests_setup.py .
 COPY scripts/startup.sh .
 COPY scripts/Makefile .
+COPY kubeconfig.eastus.json /root/k8s-deployment/_output/enigma-cluster/kubeconfig/kubeconfig.eastus.json
 
 RUN chmod +x startup.sh && chmod +x tests_setup.py
 
