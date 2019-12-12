@@ -83,17 +83,28 @@ class P2PNode(threading.Thread):
     def _kill(self, signum, frame):
         if self.proc:
             logger.info('Logging out...')
+            self.proc.send_signal(signal.SIGINT)
+            self.proc.wait(timeout=10)
+            del self.proc
+            logger.info('Killed p2p cli')
+
+    def register(self):
+        if self.proc:
+            logger.debug('Passing register to P2P')
+            self.proc.stdin.write(b'register\n')
+            self.proc.stdin.flush()
+
+    def login(self):
+        if self.proc:
+            logger.debug('Passing login to P2P')
+            self.proc.stdin.write(b'login\n')
+            self.proc.stdin.flush()
+
+    def logout(self):
+        if self.proc:
+            logger.debug('Passing logout to P2P')
             self.proc.stdin.write(b'logout\n')
             self.proc.stdin.flush()
-            time.sleep(2)
-            self.proc.send_signal(signal.SIGINT)
-            time.sleep(2)
-            self.proc.terminate()
-            self.proc.wait(timeout=0.2)
-            del self.proc
-            self.proc = None
-            self.kill_now = True
-            logger.info('Killed p2p cli')
 
     def _map_params_to_exec(self) -> List[str]:
         """ build executable params -- if cli params change just change the keys and everything should still work """

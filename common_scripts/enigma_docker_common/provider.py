@@ -11,8 +11,8 @@ class Provider:
     def __init__(self, config: dict):
         self.config = config
 
-        self.CONTRACT_DISCOVERY_ADDRESS = config['CONTRACT_DISCOVERY_ADDRESS']
-        self.KM_DISCOVERY_ADDRESS = config['KEY_MANAGEMENT_DISCOVERY']
+        self.CONTRACT_DISCOVERY_ADDRESS = config.get('CONTRACT_DISCOVERY_ADDRESS', '')
+        self.KM_DISCOVERY_ADDRESS = config.get('KEY_MANAGEMENT_DISCOVERY', '')
 
         self._enigma_contract_filename = config.get('ENIGMA_CONTRACT_FILENAME', 'enigmacontract.txt')
         self._token_contract_filename = config.get('TOKEN_CONTRACT_FILENAME', 'enigmatokencontract.txt')
@@ -125,20 +125,6 @@ class Provider:
                                file_name=self._enigma_token_abi_filename_zip)
 
         return self._unzip_bytes(zipped, self._enigma_token_abi_filename)
-
-    @property
-    @functools.lru_cache()
-    def voting_abi(self):
-        zipped = self.get_file(directory_name=self._voting_abi_directory,
-                               file_name=self._voting_abi_filename_zip)
-        return self._unzip_bytes(zipped, self._voting_abi_filename)
-
-    @property
-    @functools.lru_cache()
-    def sample_abi(self):
-        zipped = self.get_file(directory_name=self._sample_abi_directory,
-                               file_name=self._sample_abi_filename_zip)
-        return self._unzip_bytes(zipped, self._sample_abi_filename)
 
     def get_file(self, directory_name: str, file_name) -> bytes:
         fs = self.backend_strategy[os.getenv('ENIGMA_ENV', 'COMPOSE')](directory_name)

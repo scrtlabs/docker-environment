@@ -8,10 +8,11 @@ from bootstrap_loader import BootstrapLoader
 from enigma_docker_common.config import Config
 from enigma_docker_common.provider import Provider
 from enigma_docker_common.logger import get_logger
-from enigma_docker_common.crypto import open_eth_keystore
+from enigma_docker_common.utils import remove_0x
+from enigma_docker_common.crypto import open_eth_keystore, address_from_private
 from enigma_docker_common.ethereum import EthereumGateway
 from enigma_docker_common.faucet_api import get_initial_coins
-from enigma_docker_common.enigma import EnigmaTokenContract
+from enigma_docker_common.enigma import EnigmaTokenContract, EnigmaContract
 
 logger = get_logger('worker.p2p-startup')
 
@@ -68,6 +69,13 @@ def main():
     logger.info('Setting up worker...')
     logger.info(f'Running for environment: {env}')
 
+    staking_key_dir = config.get('STAKE_KEY_PATH', pathlib.Path.home())
+
+    staking_key = ''
+    staking_address = ''
+    auto_init = True
+    eng_contract: EnigmaContract = None
+
     provider = Provider(config=config)
 
     ethereum_node = config["ETH_NODE_ADDRESS"]
@@ -119,20 +127,19 @@ def main():
                                          provider.token_contract_address,
                                          json.loads(provider.enigma_token_abi)['abi'])
 
-    #  will not try a faucet if we're in mainnet - also, it should be logged inside
+    #  will not try a faucet if we're in a testing environment
     if env in ['COMPOSE', 'K8S']:
 
-        staking_key_dir = config.get('STAKE_KEY_PATH', pathlib.Path.home())
         staking_key, staking_address = open_eth_keystore(staking_key_dir, config, password=password, create=True)
 
         try:
             get_initial_coins(eth_address, 'ETH', config)
             get_initial_coins(staking_address, 'ETH', config)
         except RuntimeError as e:
-            logger.critical(f'Failed to get enough ETH to start - {e}')
+            logger.critical(f'Failed to get enough ETH from faucet to start. Error: {e}')
             exit(-2)
         except ConnectionError as e:
-            logger.critical(f'Failed to connect to remote address: {e}')
+            logger.critical(f'Failed to connect to faucet address. Exiting...')
             exit(-1)
 
         try:
@@ -141,27 +148,54 @@ def main():
             logger.critical(f'Failed to get enough ENG for staking address - Error: {e}')
             exit(-2)
         except ConnectionError as e:
-            logger.critical(f'Failed to connect to remote address: Error: {e}')
+            logger.critical(f'Failed to connect to faucet address. Exiting...')
             exit(-1)
-
-        # tell the p2p to automatically log us in and do the deposit for us
-        login_and_deposit = True
-
-        # todo: when we switch this key to be inside the enclave, or encrypted, modify this
-        erc20_contract.approve(staking_address,
-                               provider.enigma_contract_address,
-                               deposit_amount,
-                               key=bytes.fromhex(staking_key[2:]))
-
-        val = erc20_contract.check_allowance(staking_address, provider.enigma_contract_address)
-        logger.info(f'Current allowance for {provider.enigma_contract_address}, from {staking_address}: {val} ENG')
 
         # temp for now till staking address is integrated:
         eth_address = staking_address
         private_key = staking_key
 
-    if env in ['TESTNET', 'MAINNET']:
-        staking_address = config["STAKING_ADDRESS"]
+    # load staking key from configuration -- used in testnet to automatically perform staking for bootstrap nodes
+    if is_bootstrap and env in ['COMPOSE', 'TESTNET', 'MAINNET']:
+        if not pathlib.Path(staking_key_dir+config['STAKE_KEY_NAME']).is_file():
+            staking_key = config["STAKING_PRIVATE_KEY"]
+            staking_address = address_from_private(staking_key)
+            logger.info(f'Loaded staking private key. Staking address is: {staking_address}')
+            # we write to this file as a flag that we don't need to do this again
+            save_to_path(staking_key_dir+config['STAKE_KEY_NAME'], staking_address)
+
+    # perform deposit
+    if env in ['TESTNET', 'K8S', 'COMPOSE']:
+        """ Logic for deposit is:
+        
+        Staking address                             Operating address 
+                                       
+                     --------setOperatingAddress---------> 
+                                       
+                     <--------------register-------------- 
+                     
+                     ---------------deposit-------------->
+                     
+                     <-----------------login--------------                                       
+        """
+        # tell the p2p to automatically log us in and do the deposit for us
+        # login_and_deposit = False
+        auto_init = True
+
+        eng_contract = EnigmaContract(config["ETH_NODE_ADDRESS"],
+                                      provider.enigma_contract_address,
+                                      json.loads(provider.enigma_abi)['abi'])
+
+        eng_contract.transact(staking_address, staking_key, 'setOperatingAddress', eth_address)
+
+        #  todo: when we switch this key to be inside the enclave, or encrypted, modify this
+        erc20_contract.approve(staking_address,
+                               provider.enigma_contract_address,
+                               deposit_amount,
+                               key=bytes.fromhex(remove_0x(staking_key)))
+
+        val = erc20_contract.check_allowance(staking_address, provider.enigma_contract_address)
+        logger.info(f'Current allowance for {provider.enigma_contract_address}, from {staking_address}: {val} ENG')
 
     check_eth_limit(eth_address, float(config["MINIMUM_ETHER_BALANCE"]), ethereum_node)
 
@@ -175,7 +209,8 @@ def main():
               'contract_address': eng_contract_addr,
               'login_and_deposit': login_and_deposit,
               'health_check_port': config["HEALTH_CHECK_PORT"],
-              'min_confirmations': config["MIN_CONFIRMATIONS"]}
+              'min_confirmations': config["MIN_CONFIRMATIONS"],
+              'auto_init': auto_init}
 
     if is_bootstrap:
         p2p_runner = P2PNode(bootstrap=True,
@@ -191,6 +226,16 @@ def main():
     os.chdir(pathlib.Path(executable).parent)
     import time
     p2p_runner.start()
+
+    # let the p2p worker start and stuff
+    time.sleep(30)
+
+    p2p_runner.register()
+
+    # we perform auto-deposit in testing environment
+    if env in ['TESTNET', 'K8S', 'COMPOSE']:
+        eng_contract.transact(staking_address, staking_key, 'deposit', eth_address, deposit_amount)
+
     while not p2p_runner.kill_now:
         time.sleep(2)
         # add cleanup here if necessary
