@@ -10,7 +10,7 @@
  "MINIMUM_ETHER_BALANCE": "0.1",
  "MINIMUM_ENG_BALANCE": "10",
  "DEPOSIT_AMOUNT": 10,
- "ETH_KEY_PATH": "/root/p2p/",
+ "ETH_KEY_PATH": "/root/.engima/",
  "BOOTSTRAP_PORT": "10300",
  "BOOTSTRAP_PATH": "/root/p2p/scripts/bootstrap/",
  "PEER_NAME": "peer1",
