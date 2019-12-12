@@ -31,6 +31,7 @@ env_defaults = {'K8S': '/root/p2p/config/k8s_config.json',
 env = os.getenv('ENIGMA_ENV', 'COMPOSE')
 
 is_bootstrap = os.getenv('BOOTSTRAP', '')
+log_level = os.getenv('LOG_LEVEL', 'info')
 
 try:
     config = Config(required=required, config_file=env_defaults[os.getenv('ENIGMA_ENV', 'COMPOSE')])
@@ -206,6 +207,7 @@ def main():
               'contract_address': eng_contract_addr,
               'health_check_port': config["HEALTH_CHECK_PORT"],
               'min_confirmations': config["MIN_CONFIRMATIONS"],
+              'log_level': log_level,
               'auto_init': auto_init}
 
     if is_bootstrap:
