@@ -124,8 +124,6 @@ class P2PNode(threading.Thread):
             params.update({'min-confirmations': self.min_confirmations})
         if self.ethereum_key:
             params.update({'ethereum-key': self.ethereum_key})
-        if self.login_and_deposit:
-            params.update({'deposit-and-login': f'{self.deposit_amount}'})
 
         if self.bootstrap:
             params.update({

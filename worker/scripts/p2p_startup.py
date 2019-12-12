@@ -1,7 +1,7 @@
 import os
 import json
 import pathlib
-
+import time
 from p2p_node import P2PNode
 from bootstrap_loader import BootstrapLoader
 
@@ -151,18 +151,21 @@ def main():
             logger.critical(f'Failed to connect to faucet address. Exiting...')
             exit(-1)
 
-        # temp for now till staking address is integrated:
-        # eth_address = staking_address
-        # private_key = staking_key
-
     # load staking key from configuration -- used in testnet to automatically perform staking for bootstrap nodes
-    if is_bootstrap and env in ['COMPOSE', 'TESTNET', 'MAINNET']:
+    if is_bootstrap and env in ['TESTNET', 'MAINNET']:
         if not pathlib.Path(staking_key_dir+config['STAKE_KEY_NAME']).is_file():
             staking_key = config["STAKING_PRIVATE_KEY"]
             staking_address = address_from_private(staking_key)
+            staking_address = erc20_contract.w3.toChecksumAddress(staking_address)
             logger.info(f'Loaded staking private key. Staking address is: {staking_address}')
             # we write to this file as a flag that we don't need to do this again
             save_to_path(staking_key_dir+config['STAKE_KEY_NAME'], staking_address, flags="w+")
+
+        try:
+            get_initial_coins(staking_address, 'ENG', config)
+        except RuntimeError as e:
+            logger.critical(f'Failed to get enough ENG for staking address - Error: {e}')
+            exit(-2)
 
     # perform deposit
     if env in ['TESTNET', 'K8S', 'COMPOSE']:
@@ -180,12 +183,6 @@ def main():
         # tell the p2p to automatically log us in and do the deposit for us
         # login_and_deposit = False
         auto_init = True
-
-        eng_contract = EnigmaContract(config["ETH_NODE_ADDRESS"],
-                                      provider.enigma_contract_address,
-                                      json.loads(provider.enigma_abi)['abi'])
-
-        eng_contract.transact(staking_address, staking_key, 'setOperatingAddress', eth_address)
 
         #  todo: when we switch this key to be inside the enclave, or encrypted, modify this
         erc20_contract.approve(staking_address,
@@ -207,7 +204,6 @@ def main():
               'deposit_amount': deposit_amount,
               'bootstrap_address': bootstrap_address,
               'contract_address': eng_contract_addr,
-              'login_and_deposit': login_and_deposit,
               'health_check_port': config["HEALTH_CHECK_PORT"],
               'min_confirmations': config["MIN_CONFIRMATIONS"],
               'auto_init': auto_init}
@@ -224,24 +220,34 @@ def main():
 
     # Setting workdir to the base path of the executable, because everything is fragile
     os.chdir(pathlib.Path(executable).parent)
-    import time
     p2p_runner.start()
 
-    # let the p2p worker start and stuff
-    time.sleep(30)
-
-    p2p_runner.register()
+    eng_contract = EnigmaContract(config["ETH_NODE_ADDRESS"],
+                                  provider.enigma_contract_address,
+                                  json.loads(provider.enigma_abi)['abi'])
 
     # for now lets sleep instead of getting confirmations till we move it to web
     time.sleep(10)
 
+    logger.info(f'Attempting to set operating address -- staking:{staking_address} operating: {eth_address}')
+    eng_contract.transact(staking_address, staking_key, 'setOperatingAddress',
+                          eng_contract.w3.toChecksumAddress(eth_address))
+
+    logger.info('Set operating address successfully!')
+
     # we perform auto-deposit in testing environment
     if env in ['TESTNET', 'K8S', 'COMPOSE']:
-        eng_contract.transact(staking_address, staking_key, 'deposit', eth_address, deposit_amount)
+        logger.error(f'Attempting deposit from {staking_address} on behalf of worker {eth_address}')
+        eng_contract.transact(staking_address, staking_key, 'deposit',
+                              eng_contract.w3.toChecksumAddress(staking_address), deposit_amount)
+        logger.info(f'Successfully deposited!')
+
+    # login the worker (hopefully this works)
+    p2p_runner.login()
 
     while not p2p_runner.kill_now:
+        # snooze
         time.sleep(2)
-        # add cleanup here if necessary
 
 
 if __name__ == '__main__':

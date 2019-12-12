@@ -10,6 +10,7 @@ logger = get_logger('enigma_common.enigma')
 class Contract:
 
     max_gas_price = 20000000000
+    gas_default = 300000
 
     def __init__(self, eth_node, contract_address, contract_abi):
         """
@@ -51,6 +52,7 @@ class Contract:
         transaction = getattr(self.contract.functions, func)(*args).buildTransaction(
             {'from': csum_addr,
              'gasPrice': self.gasprice,
+             'gas': self.gas_default,
              'nonce': nonce})
 
         signed_tx = self._sign(transaction, key)
