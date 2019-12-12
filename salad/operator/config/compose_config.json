@@ -1,0 +1,15 @@
+{
+ "CONTRACT_DISCOVERY_PORT": "8081",
+ "CONTRACT_DISCOVERY_ADDRESS": "http://contract:8081",
+ "ETH_NODE_ADDRESS": "contract",
+ "ETH_NODE_PORT": "9545",
+ "ENG_NODE_ADDRESS": "worker",
+ "ENG_NODE_PORT": "3346",
+ "MONGO_URL": "mongodb://localhost:27017",
+ "CONTRACTS_FOLDER": "/root/build/contracts/",
+ "ENIGMA_CONTRACT_FILE_NAME": "Enigma.json",
+ "WORKER_URL": "http://bootstrap",
+ "PROXY_PORT": 3346,
+ "KEY_MANAGEMENT_DISCOVERY": "THIS IS REDUNDANT FOR SALAD OPERATOR, REMOVE IN THE FUTURE",
+ "DB_NAME": "salad"
+}

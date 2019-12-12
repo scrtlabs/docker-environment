@@ -29,19 +29,31 @@ RUN : \
 
 ##########################
 
-FROM node:10-buster
+FROM jonathanabila/python-nodejs
+
+ENV DEBIAN_FRONTEND=noninteractive
+WORKDIR /root/salad
 
 RUN : \
     && apt-get update \
-    && apt-get install -y --no-install-recommends netcat
+    && apt-get install -y --no-install-recommends \
+        netcat \
+        python3-pip \
+    && pip3 install --upgrade pip
+
+COPY --from=enigma_common /root/wheels /root/wheels
+COPY scripts/requirements.txt .
+
+RUN pip3.6 install \
+    --no-index \
+    --find-links=/root/wheels \
+    -r requirements.txt
 
 COPY --from=gitclone_salad /root/salad /root/salad
 COPY --from=node_modules_build /root/salad/node_modules /root/salad/node_modules
 COPY --from=node_modules_build /root/salad/client/node_modules /root/salad/client/node_modules
 COPY --from=node_modules_build /root/salad/operator/node_modules /root/salad/operator/node_modules
 COPY --from=secret_contract_build /root/salad/secret_contracts/salad/target/wasm32-unknown-unknown/release/contract.wasm /root/salad/salad.wasm
-
-WORKDIR /root/salad
 
 ARG SGX_MODE=SW
 ENV SGX_MODE $SGX_MODE
@@ -50,6 +62,7 @@ RUN : \
     && yarn configure \
     && npx truffle compile
 
-COPY scripts ./scripts/
+COPY config/ config/
+COPY scripts/ scripts/
 
 CMD ./scripts/run.sh
