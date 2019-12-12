@@ -229,7 +229,7 @@ def main():
                                   json.loads(provider.enigma_abi)['abi'])
 
     # for now lets sleep instead of getting confirmations till we move it to web
-    time.sleep(10)
+    time.sleep(30)
 
     logger.info(f'Attempting to set operating address -- staking:{staking_address} operating: {eth_address}')
     eng_contract.transact(staking_address, staking_key, 'setOperatingAddress',
