@@ -11,8 +11,8 @@ class Provider:
     def __init__(self, config: dict):
         self.config = config
 
-        self.CONTRACT_DISCOVERY_ADDRESS = config['CONTRACT_DISCOVERY_ADDRESS']
-        self.KM_DISCOVERY_ADDRESS = config['KEY_MANAGEMENT_DISCOVERY']
+        self.CONTRACT_DISCOVERY_ADDRESS = config.get('CONTRACT_DISCOVERY_ADDRESS', '')
+        self.KM_DISCOVERY_ADDRESS = config.get('KEY_MANAGEMENT_DISCOVERY', '')
 
         self._enigma_contract_filename = config.get('ENIGMA_CONTRACT_FILENAME', 'enigmacontract.txt')
         self._token_contract_filename = config.get('TOKEN_CONTRACT_FILENAME', 'enigmatokencontract.txt')
@@ -20,10 +20,8 @@ class Provider:
         self._sample_contract_filename = config.get('TOKEN_CONTRACT_FILENAME', 'samplecontract.txt')
 
         self._principal_address_directory = config.get('PRINCIPAL_ADDRESS_DIRECTORY', 'public')
-        # if os.getenv('SGX_MODE', 'HW') == 'SW':
-        #     self._principal_address_filename = config.get('PRINCIPAL_ADDRESS_FILENAME', 'principal-sign-addr_sw.txt')
-        # else:
         self._principal_address_filename = config.get('PRINCIPAL_ADDRESS_FILENAME', 'principal-sign-addr.txt')
+
         self._enigma_token_abi_directory = config.get('TOKEN_CONTRACT_ABI_DIRECTORY', 'contract')
         self._enigma_token_abi_filename = config.get('TOKEN_CONTRACT_ABI_FILENAME', 'EnigmaToken.json')
         self._enigma_token_abi_filename_zip = config.get('ENIGMA_CONTRACT_ABI_FILENAME_ZIPPED', 'EnigmaToken.zip')
@@ -31,29 +29,40 @@ class Provider:
         self._enigma_contract_abi_directory = config.get('ENIGMA_CONTRACT_ABI_DIRECTORY', 'contract')
 
         self._km_abi_directory = config.get('PRINCIPAL_ADDRESS_DIRECTORY', 'contract')
-        self._km_abi_filename = config.get('PRINCIPAL_ADDRESS_FILENAME', 'IEnigma.json')
+        self._km_abi_filename = config.get('PRINCIPAL_ADDRESS_FILENAME', 'IEnigma_v2.json')
 
         if os.getenv('SGX_MODE', 'HW') == 'SW':
             self._enigma_contract_abi_filename = config.get('ENIGMA_CONTRACT_ABI_FILENAME_SW',
                                                             'EnigmaSimulation.json')
             self._enigma_contract_abi_filename_zip = config.get('ENIGMA_CONTRACT_ABI_FILENAME_ZIPPED_SW',
-                                                                'EnigmaSimulation.zip')
+                                                                'EnigmaSimulation_v2.zip')
         else:
             self._enigma_contract_abi_filename = config.get('ENIGMA_CONTRACT_ABI_FILENAME', 'Enigma.json')
-            self._enigma_contract_abi_filename_zip = config.get('ENIGMA_CONTRACT_ABI_FILENAME_ZIPPED', 'Enigma.zip')
+            self._enigma_contract_abi_filename_zip = config.get('ENIGMA_CONTRACT_ABI_FILENAME_ZIPPED', 'Enigma_v2.zip')
 
         # strategy for information we get from enigma-contract
-        self.contract_strategy = {"COMPOSE": storage.HttpFileService(self.CONTRACT_DISCOVERY_ADDRESS),
-                                  "COMPOSE_DEV": storage.HttpFileService(self.CONTRACT_DISCOVERY_ADDRESS),
-                                  "K8S": storage.HttpFileService(self.CONTRACT_DISCOVERY_ADDRESS),
+        contract_timeout = self.config.get("CONTRACT_TIMEOUT", 120)
+        self.contract_strategy = {"COMPOSE": storage.HttpFileService(self.CONTRACT_DISCOVERY_ADDRESS,
+                                                                     timeout=contract_timeout),
+                                  "COMPOSE_DEV": storage.HttpFileService(self.CONTRACT_DISCOVERY_ADDRESS,
+                                                                         timeout=contract_timeout),
+                                  "K8S": storage.HttpFileService(self.CONTRACT_DISCOVERY_ADDRESS,
+                                                                 timeout=contract_timeout),
                                   "TESTNET": storage.AzureContainerFileService('contract'),
                                   "MAINNET": storage.AzureContainerFileService('contract')}
 
-        self.key_management_discovery = {"COMPOSE": storage.HttpFileService(self.KM_DISCOVERY_ADDRESS, namespace='km'),
-                                        "COMPOSE_DEV": storage.HttpFileService(self.KM_DISCOVERY_ADDRESS, namespace='km'),
-                                        "K8S": storage.HttpFileService(self.KM_DISCOVERY_ADDRESS, namespace='km'),
-                                        "TESTNET": storage.HttpFileService(self.KM_DISCOVERY_ADDRESS, namespace='km'),
-                                        "MAINNET": storage.HttpFileService(self.KM_DISCOVERY_ADDRESS, namespace='km')}
+        timeout = self.config.get("KEY_MANAGEMENT_TIMEOUT", 120)
+        self.key_management_discovery = {"COMPOSE": storage.HttpFileService(self.KM_DISCOVERY_ADDRESS,
+                                                                            namespace='km',
+                                                                            timeout=timeout),
+                                         "COMPOSE_DEV": storage.HttpFileService(self.KM_DISCOVERY_ADDRESS,
+                                                                                namespace='km',
+                                                                                timeout=timeout),
+                                         "K8S": storage.HttpFileService(self.KM_DISCOVERY_ADDRESS,
+                                                                        namespace='km',
+                                                                        timeout=timeout),
+                                         "TESTNET": storage.AzureContainerFileService('public'),
+                                         "MAINNET": storage.AzureContainerFileService('public')}
 
         # information stored in global storage
         self.backend_strategy = {"COMPOSE": storage.AzureContainerFileService,
@@ -99,11 +108,6 @@ class Provider:
     @functools.lru_cache()
     def principal_address(self):
         fs = self.key_management_discovery[os.getenv('ENIGMA_ENV', 'COMPOSE')]
-        timeout = self.config.get("KEY_MANAGEMENT_TIMEOUT", 120)
-        is_contract_ready = self._wait_till_open(timeout=timeout, fs=fs)
-        if not is_contract_ready:
-            logger.error(f'Key management address wasn\'t ready before timeout (120s) expired')
-            raise TimeoutError(f'Timeout for server @ {self.KM_DISCOVERY_ADDRESS}')
         return fs[self._principal_address_filename]
 
     @property
@@ -121,20 +125,6 @@ class Provider:
                                file_name=self._enigma_token_abi_filename_zip)
 
         return self._unzip_bytes(zipped, self._enigma_token_abi_filename)
-
-    @property
-    @functools.lru_cache()
-    def voting_abi(self):
-        zipped = self.get_file(directory_name=self._voting_abi_directory,
-                               file_name=self._voting_abi_filename_zip)
-        return self._unzip_bytes(zipped, self._voting_abi_filename)
-
-    @property
-    @functools.lru_cache()
-    def sample_abi(self):
-        zipped = self.get_file(directory_name=self._sample_abi_directory,
-                               file_name=self._sample_abi_filename_zip)
-        return self._unzip_bytes(zipped, self._sample_abi_filename)
 
     def get_file(self, directory_name: str, file_name) -> bytes:
         fs = self.backend_strategy[os.getenv('ENIGMA_ENV', 'COMPOSE')](directory_name)

@@ -92,10 +92,25 @@ if __name__ == '__main__':
     executable = config['EXECUTABLE_PATH']
     os.chdir(pathlib.Path(executable).parent)
 
+    # get Keypair file -- environment variable STORAGE_CONNECTION_STRING must be set
+
+    # If we're in testnet or mainnet try and download the key file
+    if env in ['TESTNET', 'MAINNET']:
+        sealed_km = provider.get_file(config['KEYPAIR_STORAGE_DIRECTORY'], config['KEYPAIR_FILE_NAME'])
+        save_to_path(keypair, sealed_km)
+
+        # get public key file
+
+        public_key = provider.principal_address
+
+        save_to_path(public, public_key)
+
+        keystore_dir = config['KEYSTORE_DIRECTORY'] or pathlib.Path.home()
+
     if not os.path.exists(keypair) or not os.path.exists(public):
+        if env in ['TESTNET', 'MAINNET']:
+            logger.error('Keypair or public not found -- generating new address')
         generate_keypair(executable, keypair, public, config['DEFAULT_CONFIG_PATH'])
-
-
 
     try:
         with open('/root/.enigma/principal-sign-addr.txt') as f:

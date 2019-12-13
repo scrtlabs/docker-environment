@@ -28,6 +28,7 @@ class P2PNode(threading.Thread):
                  peer_name: str = 'peer1',
                  random_db: bool = True,
                  auto_init: bool = True,
+                 log_level: str = 'info',
                  bootstrap: bool = False,
                  bootstrap_address: str = 'B1',
                  bootstrap_id: str = 'B1',
@@ -54,6 +55,7 @@ class P2PNode(threading.Thread):
         self.name = peer_name
         self.random_db = random_db
         self.auto_init = auto_init
+        self.log_level = log_level
         self.bootstrap = bootstrap
         self.abi_path = abi_path
         self.staking_address = staking_address
@@ -83,17 +85,28 @@ class P2PNode(threading.Thread):
     def _kill(self, signum, frame):
         if self.proc:
             logger.info('Logging out...')
+            self.proc.send_signal(signal.SIGINT)
+            self.proc.wait(timeout=10)
+            del self.proc
+            logger.info('Killed p2p cli')
+
+    def register(self):
+        if self.proc:
+            logger.debug('Passing register to P2P')
+            self.proc.stdin.write(b'register\n')
+            self.proc.stdin.flush()
+
+    def login(self):
+        if self.proc:
+            logger.debug('Passing login to P2P')
+            self.proc.stdin.write(b'login\n')
+            self.proc.stdin.flush()
+
+    def logout(self):
+        if self.proc:
+            logger.debug('Passing logout to P2P')
             self.proc.stdin.write(b'logout\n')
             self.proc.stdin.flush()
-            time.sleep(2)
-            self.proc.send_signal(signal.SIGINT)
-            time.sleep(2)
-            self.proc.terminate()
-            self.proc.wait(timeout=0.2)
-            del self.proc
-            self.proc = None
-            self.kill_now = True
-            logger.info('Killed p2p cli')
 
     def _map_params_to_exec(self) -> List[str]:
         """ build executable params -- if cli params change just change the keys and everything should still work """
@@ -104,7 +117,8 @@ class P2PNode(threading.Thread):
                   'principal-node': f'{self.km_node}',
                   'ethereum-contract-address': f'{self.contract_addr}',
                   'ethereum-contract-abi-path': self.abi_path,
-                  'health': f'{self.health_check_port}'}
+                  'health': f'{self.health_check_port}',
+                  'log-level': f'{self.log_level}'}
 
         # optional values
         if self.staking_address:
@@ -113,8 +127,6 @@ class P2PNode(threading.Thread):
             params.update({'min-confirmations': self.min_confirmations})
         if self.ethereum_key:
             params.update({'ethereum-key': self.ethereum_key})
-        if self.login_and_deposit:
-            params.update({'deposit-and-login': f'{self.deposit_amount}'})
 
         if self.bootstrap:
             params.update({

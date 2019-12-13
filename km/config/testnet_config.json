@@ -6,6 +6,7 @@
  "TEMP_CONFIG_PATH": "/tmp/config.json",
  "FAUCET_URL": "",
  "KEYPAIR_STORAGE_DIRECTORY": "kmfiles",
+ "KEYPAIR_FILE_NAME": "km_keypair.sealed",
  "MINIMUM_ETHER_BALANCE": "0.1",
  "MINIMUM_ENG_BALANCE": "10",
  "BALANCE_WAIT_TIME": 1800,
