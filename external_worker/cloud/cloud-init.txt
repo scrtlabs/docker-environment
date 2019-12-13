@@ -4,10 +4,11 @@ packages:
   - git
 
 runcmd:
+  - cd "/home/enigma"
   - git clone --depth 1 -b develop https://github.com/enigmampc/docker-environment.git
-  - cd docker-environment/external_worker/local
-  - pushd scripts
+  - cd "docker-environment/external_worker/local"
+  - cd "scripts"
   - ./install-sgx-driver.sh
   - ./install-docker-dependencies.sh
-  - popd
+  - cd ".."
   - docker-compose up -d
