@@ -69,4 +69,4 @@ build-compile-base:
 
 build-client:
 	cd common_scripts; docker build -f common.Dockerfile -t enigma_common .
-	cd client; docker build -f client.Dockerfile -t enigmampc/client:${DOCKER_TAG} .
+	cd client; docker build -f client.Dockerfile --build-arg DOCKER_TAG=${DOCKER_TAG} -t enigmampc/client:${DOCKER_TAG} .
