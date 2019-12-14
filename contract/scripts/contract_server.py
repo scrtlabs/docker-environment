@@ -53,6 +53,27 @@ class GetAddress(Resource):
             return abort(500)
 
 
+@contract_ns.route("/abi")
+class GetAddress(Resource):
+    """ Will return a contract ABI from the build/contracts folder """
+    @contract_ns.param('name', 'contract name -- Must be a single json file', 'query')
+    def get(self):
+        contract_name: str = request.args.get('name')
+        try:
+            if not contract_name.endswith('.json'):
+                logger.error(f'Tried to retrieve file which was not in allowed file names: {contract_name}')
+                return abort(404)
+            contract_filename = f'{config["BUILT_CONTRACT_FOLDER"]}{contract_name}'
+            with open(contract_filename, 'r+') as f:
+                return f.read()
+        except FileNotFoundError as e:
+            logger.error(f'File not found: {e}')
+            return abort(404)
+        except json.JSONDecodeError as e:
+            logger.error(f'Error decoding config file. Is it valid JSON? {e}')
+            return abort(500)
+
+
 def run(port):
     logger.debug("using port:"+str(port))
     application.run(host='0.0.0.0', port=port, debug=False)

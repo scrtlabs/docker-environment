@@ -65,11 +65,11 @@ class Provider:
                                          "MAINNET": storage.AzureContainerFileService('public')}
 
         # information stored in global storage
-        self.backend_strategy = {"COMPOSE": storage.AzureContainerFileService,
-                                 "COMPOSE_DEV": storage.HttpFileService(self.CONTRACT_DISCOVERY_ADDRESS),
-                                 "K8S": storage.AzureContainerFileService,
-                                 "TESTNET": storage.AzureContainerFileService,
-                                 "MAINNET": storage.AzureContainerFileService}
+        self.backend_strategy = {"COMPOSE": storage.HttpFileService(self.CONTRACT_DISCOVERY_ADDRESS, directory='abi'),
+                                 "COMPOSE_DEV": storage.HttpFileService(self.CONTRACT_DISCOVERY_ADDRESS, directory='abi'),
+                                 "K8S": storage.HttpFileService(self.CONTRACT_DISCOVERY_ADDRESS, directory='abi'),
+                                 "TESTNET": storage.AzureContainerFileService(self._km_abi_directory),
+                                 "MAINNET": storage.AzureContainerFileService(self._km_abi_directory)}
 
         self._enigma_abi = None
         self._enigma_token_abi = None
@@ -81,8 +81,7 @@ class Provider:
     @property
     @functools.lru_cache()
     def key_management_abi(self):
-        return self.get_file(directory_name=self._km_abi_directory,
-                             file_name=self._km_abi_filename)
+        return self.get_file(file_name=self._km_abi_filename)
 
     @property
     @functools.lru_cache()
@@ -113,21 +112,27 @@ class Provider:
     @property
     @functools.lru_cache()
     def enigma_abi(self):
-        zipped = self.get_file(directory_name=self._enigma_contract_abi_directory,
-                               file_name=self._enigma_contract_abi_filename_zip)
-
-        return self._unzip_bytes(zipped, self._enigma_contract_abi_filename)
+        filename = self._enigma_contract_abi_filename if os.getenv('ENIGMA_ENV', '') in ['COMPOSE', 'K8S'] \
+            else self._enigma_contract_abi_filename_zip
+        file = self.get_file(file_name=filename)
+        try:
+            return self._unzip_bytes(file, self._enigma_contract_abi_filename)
+        except Exception:
+            return file
 
     @property
     @functools.lru_cache()
     def enigma_token_abi(self):
-        zipped = self.get_file(directory_name=self._enigma_token_abi_directory,
-                               file_name=self._enigma_token_abi_filename_zip)
+        filename = self._enigma_token_abi_filename if os.getenv('ENIGMA_ENV', '') in ['COMPOSE', 'K8S'] \
+            else self._enigma_token_abi_filename_zip
+        file = self.get_file(file_name=filename)
+        try:
+            return self._unzip_bytes(file, self._enigma_token_abi_filename)
+        except Exception:
+            return file
 
-        return self._unzip_bytes(zipped, self._enigma_token_abi_filename)
-
-    def get_file(self, directory_name: str, file_name) -> bytes:
-        fs = self.backend_strategy[os.getenv('ENIGMA_ENV', 'COMPOSE')](directory_name)
+    def get_file(self, file_name) -> bytes:
+        fs = self.backend_strategy[os.getenv('ENIGMA_ENV', 'COMPOSE')]
         try:
             return fs[file_name]
         except PermissionError as e:

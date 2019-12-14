@@ -36,12 +36,12 @@ class AzureContainerFileService:
 
 
 class HttpFileService:
-    def __init__(self, url, namespace: str = 'contract', timeout: int = 60):
+    def __init__(self, url, namespace: str = 'contract', directory='address', timeout: int = 60):
         p = urlparse(url)
         self.hostname = p.hostname
         self.port = p.port
         self.timeout = timeout
-        self.account_url = f'{url}/{namespace}/address?name='
+        self.account_url = f'{url}/{namespace}/{directory}?name='
         self.credential = os.getenv('STORAGE_CONNECTION_STRING')
         self._connected = False
 
