@@ -64,7 +64,7 @@ class GetAddress(Resource):
                 logger.error(f'Tried to retrieve file which was not in allowed file names: {contract_name}')
                 return abort(404)
             contract_filename = f'{config["BUILT_CONTRACT_FOLDER"]}{contract_name}'
-            with open(contract_filename, 'r+') as f:
+            with open(contract_filename, 'r') as f:
                 return f.read()
         except FileNotFoundError as e:
             logger.error(f'File not found: {e}')
