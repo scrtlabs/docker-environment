@@ -12,6 +12,8 @@ from enigma_docker_common.provider import Provider
 from enigma_docker_common.logger import get_logger
 from enigma_docker_common.crypto import open_eth_keystore
 from enigma_docker_common.faucet_api import get_initial_coins
+from enigma_docker_common.storage import AzureContainerFileService
+
 
 logger = get_logger('key_management.startup')
 
@@ -81,6 +83,8 @@ if __name__ == '__main__':
     config = Config(required=required, config_file=env_defaults[env])
     provider = Provider(config=config)
 
+    km_key_storage = AzureContainerFileService(config['KEYPAIR_STORAGE_DIRECTORY'])
+
     keypair = config['KEYPAIR_PATH']
     public = config['KEYPAIR_PUBLIC_PATH']
     config['URL'] = f'{config["ETH_NODE_ADDRESS"]}'
@@ -96,7 +100,7 @@ if __name__ == '__main__':
 
     # If we're in testnet or mainnet try and download the key file
     if env in ['TESTNET', 'MAINNET']:
-        sealed_km = provider.get_file(config['KEYPAIR_STORAGE_DIRECTORY'], config['KEYPAIR_FILE_NAME'])
+        sealed_km = km_key_storage[config['KEYPAIR_FILE_NAME']]
         save_to_path(keypair, sealed_km)
 
         # get public key file

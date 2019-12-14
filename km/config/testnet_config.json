@@ -1,7 +1,7 @@
 {"ENIGMA_ENV" : "TESTNET",
  "CONTRACT_DISCOVERY_ADDRESS" : "",
  "KEY_MANAGEMENT_DISCOVERY": "",
- "ETH_NODE_ADDRESS" : "http://contract:9545",
+ "ETH_NODE_ADDRESS": "",
  "CONTRACTS_FOLDER" : "/tmp/contracts/",
  "TEMP_CONFIG_PATH": "/tmp/config.json",
  "FAUCET_URL": "",

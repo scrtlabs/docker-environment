@@ -2,6 +2,7 @@ import os
 import json
 import pathlib
 import time
+from typing import Union
 from p2p_node import P2PNode
 from bootstrap_loader import BootstrapLoader
 
@@ -63,6 +64,12 @@ def check_eth_limit(account: str,
     #                 f' Please transfer currency to the worker account: {account}')
 
 
+def address_as_string(addr: Union[bytes, str]) -> str:
+    if isinstance(addr, bytes):
+        addr = addr.decode()
+    return addr
+
+
 def main():
     # todo: unhardcode this
     executable = '/root/p2p/src/cli/cli_app.js'
@@ -114,7 +121,8 @@ def main():
     # Load Enigma.json ABI
     save_to_path(enigma_abi_path, provider.enigma_abi)
 
-    eng_contract_addr = provider.enigma_contract_address
+    eng_contract_addr = address_as_string(provider.enigma_contract_address)
+
     logger.info(f'Got address {eng_contract_addr} for enigma contract')
 
     login_and_deposit = False
@@ -122,10 +130,14 @@ def main():
     keystore_dir = config.get('ETH_KEY_PATH', pathlib.Path.home())
     password = config.get('PASSWORD', 'cupcake')  # :)
     private_key, eth_address = open_eth_keystore(keystore_dir, config, password=password, create=True)
+    logger.error(f'private_key= {private_key}')
+    logger.error(f'public_key={eth_address}')
     #  will not try a faucet if we're in mainnet - also, it should be logged inside
 
+    token_contract_addr = address_as_string(provider.token_contract_address)
+
     erc20_contract = EnigmaTokenContract(config["ETH_NODE_ADDRESS"],
-                                         provider.token_contract_address,
+                                         token_contract_addr,
                                          json.loads(provider.enigma_token_abi)['abi'])
 
     #  will not try a faucet if we're in a testing environment
@@ -161,12 +173,6 @@ def main():
             logger.info(f'Loaded staking private key. Staking address is: {staking_address}')
             # we write to this file as a flag that we don't need to do this again
             save_to_path(staking_key_dir+config['STAKE_KEY_NAME'], staking_address, flags="w+")
-
-        try:
-            get_initial_coins(staking_address, 'ENG', config)
-        except RuntimeError as e:
-            logger.critical(f'Failed to get enough ENG for staking address - Error: {e}')
-            exit(-2)
 
     # perform deposit
     if env in ['TESTNET', 'K8S', 'COMPOSE']:
