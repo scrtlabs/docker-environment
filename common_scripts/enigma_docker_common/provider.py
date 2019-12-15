@@ -30,7 +30,7 @@ class Provider:
 
         self._km_abi_directory = config.get('PRINCIPAL_ADDRESS_DIRECTORY', 'contract')
         self._km_abi_filename = config.get('PRINCIPAL_ADDRESS_FILENAME', 'IEnigma_v2.json')
-
+        self._km_abi_filename_local = config.get('PRINCIPAL_ADDRESS_FILENAME', 'IEnigma.json')
         if os.getenv('SGX_MODE', 'HW') == 'SW':
             self._enigma_contract_abi_filename = config.get('ENIGMA_CONTRACT_ABI_FILENAME_SW',
                                                             'EnigmaSimulation.json')
@@ -81,7 +81,9 @@ class Provider:
     @property
     @functools.lru_cache()
     def key_management_abi(self):
-        return self.get_file(file_name=self._km_abi_filename)
+        filename = self._km_abi_filename_local if os.getenv('ENIGMA_ENV', '') in ['COMPOSE', 'K8S'] \
+            else self._km_abi_filename
+        return self.get_file(file_name=filename)
 
     @property
     @functools.lru_cache()
@@ -134,7 +136,10 @@ class Provider:
     def get_file(self, file_name) -> bytes:
         fs = self.backend_strategy[os.getenv('ENIGMA_ENV', 'COMPOSE')]
         try:
-            return fs[file_name]
+            file = fs[file_name]
+            if isinstance(file, str):
+                return file.encode()
+            return file
         except PermissionError as e:
             logger.critical(f'Failed to get file, probably missing credentials. {e}')
         except ValueError as e:  # not sure what Exceptions right now
