@@ -25,6 +25,7 @@ WORKDIR /root/salad
 
 # Install required dependencies + yarn and then clean the node_modules directory
 RUN : \
+    && rm -rf operator/node_modules client/node_modules \
     && yarn install --production \
     && yarn add truffle@5.1.2 --ignore-workspace-root-check \
     && npm install -g modclean \
