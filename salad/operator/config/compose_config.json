@@ -5,7 +5,7 @@
  "ETH_NODE_PORT": "9545",
  "ENG_NODE_ADDRESS": "worker",
  "ENG_NODE_PORT": "3346",
- "MONGO_URL": "mongodb://localhost:27017",
+ "MONGO_URL": "mongodb://mongo:27017",
  "CONTRACTS_FOLDER": "/root/build/contracts/",
  "ENIGMA_CONTRACT_FILE_NAME": "Enigma.json",
  "WORKER_URL": "http://bootstrap",
