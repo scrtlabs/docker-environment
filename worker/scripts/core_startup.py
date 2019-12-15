@@ -57,7 +57,7 @@ def main():
     log_level = config.get('LOG_LEVEL', '').lower()
     if log_level:
         exec_args.append('-l')
-        exec_args.append('log_level')
+        exec_args.append(log_level)
 
     subprocess.call(exec_args, env=env)
 
