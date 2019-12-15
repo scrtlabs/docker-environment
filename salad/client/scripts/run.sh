@@ -2,15 +2,9 @@
 
 set -e
 
-export OPERATOR_HOST='salad_operator'
 
-sed -i -e 's/ETH_HOST=localhost/ETH_HOST=contract/g' .env
-sed -i -e 's/ENIGMA_HOST=localhost/ENIGMA_HOST=worker/g' .env
-sed -i -e 's/ENIGMA_PORT=3333/ENIGMA_PORT=3346/g' .env
-sed -i -e 's/MONGO_HOST=localhost/MONGO_HOST=mongo/g' .env
-sed -i -e 's/OPERATOR_HOST=localhost/OPERATOR_HOST=salad_operator/g' .env
-
-./scripts/wait_for_network.sh
+# TODO modify the docker file for salad client to install the python libraries.
+./scripts/configure.py
 
 echo 'You may start running tests.'
 
