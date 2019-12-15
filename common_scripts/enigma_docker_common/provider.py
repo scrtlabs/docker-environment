@@ -159,7 +159,10 @@ class Provider:
 
     def _deployed_contract_address(self, contract_name):
         fs = self.contract_strategy[os.getenv('ENIGMA_ENV', 'COMPOSE')]
-        return fs[contract_name]
+        address = fs[contract_name]
+        if isinstance(address, bytes):
+            return address.decode()
+        return address
 
     @staticmethod
     def _unzip_bytes(file_bytes: bytes, file_name: str) -> bytes:

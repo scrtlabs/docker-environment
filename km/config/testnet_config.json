@@ -1,7 +1,7 @@
 {"ENIGMA_ENV" : "TESTNET",
  "CONTRACT_DISCOVERY_ADDRESS" : "",
  "KEY_MANAGEMENT_DISCOVERY": "",
- "ETH_NODE_ADDRESS" : "http://contract:9545",
+ "ETH_NODE_ADDRESS": "http://kovan.infura.io/v3/fb658f0feb274180a5b6556c77dd1b67",
  "CONTRACTS_FOLDER" : "/tmp/contracts/",
  "TEMP_CONFIG_PATH": "/tmp/config.json",
  "FAUCET_URL": "",
