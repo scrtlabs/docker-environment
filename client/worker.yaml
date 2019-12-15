@@ -1,0 +1,114 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: worker
+  labels:
+    app: worker
+spec:
+  replicas: 1
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 50%
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      app: worker
+  template:
+    metadata:
+      labels:
+        app: worker
+    spec:
+      volumes:
+        - name: logs-dir
+          emptyDir: {}
+        - name: dev-sgx
+          hostPath:
+            path: /dev/sgx
+            type: CharDevice
+      containers:
+        - name: service
+          image: enigmampc/worker_sw:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 3346
+            - containerPort: 9229
+            - containerPort: 10300
+            - containerPort: 12345
+          env:
+            - name: enigma_service
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: enigma_namespace
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: enigma_zone
+              value: east-us
+            - name: enigma_instance_name
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: ENIGMA_ENV
+              value: K8S
+            - name: BOOTSTRAP_ADDRESS
+              value: '/dnsaddr/bootstrap-service/tcp/10300/ipfs/QmcrQZ6RJdpYuGvZqD5QEHAv6qX4BrQLJLQPQUrTrzdcgm'
+            - name: SGX_MODE
+              value: SW
+          volumeMounts:
+            - name: logs-dir
+              mountPath: /opt/logs
+            - name: dev-sgx
+              mountPath: /dev/sgx
+          securityContext:
+            privileged: true
+          readinessProbe:
+            httpGet:
+              path: /healthcheck
+              port: 12345
+            initialDelaySeconds: 60
+            periodSeconds: 10
+            successThreshold: 1
+            failureThreshold: 2
+          livenessProbe:
+            httpGet:
+              path: /healthcheck
+              port: 12345
+            initialDelaySeconds: 60
+            periodSeconds: 10
+            successThreshold: 1
+            failureThreshold: 2
+          resources:
+            requests:
+              memory: 512Mi
+              cpu: 400m
+            limits:
+              memory: 2048Mi
+              cpu: 1000m
+      imagePullSecrets:
+        - name: docker-enigmampc-secret
+      nodeSelector:
+        agentpool: "sgxpool"
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: worker-service
+spec:
+  type: ClusterIP
+  selector:
+    app: worker
+  ports:
+  - name: "json-rpc"
+    protocol: TCP
+    port: 3346
+    targetPort: 3346
+  - name: "nodejs-debug"
+    protocol: TCP
+    port: 9229
+    targetPort: 9229
+  - name: "p2p"
+    protocol: TCP
+    port: 10300
+    targetPort: 10300

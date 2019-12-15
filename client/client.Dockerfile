@@ -45,6 +45,7 @@ COPY scripts/tests_setup.py .
 COPY scripts/startup.sh .
 COPY scripts/Makefile .
 COPY kubeconfig.eastus.json /root/k8s-deployment/_output/enigma-cluster/kubeconfig/kubeconfig.eastus.json
+COPY worker.yaml /root/k8s-configuration/templates/worker/worker.yaml
 
 RUN chmod +x startup.sh && chmod +x tests_setup.py
 
