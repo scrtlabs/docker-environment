@@ -44,20 +44,20 @@ class Provider:
 
         # strategy for information we get from enigma-contract
         self.contract_strategy = {"COMPOSE": storage.HttpFileService(self.CONTRACT_DISCOVERY_ADDRESS),
-                                  "COMPOSE_DEV": storage.HttpFileService(self.CONTRACT_DISCOVERY_ADDRESS),
+                                  "CLUSTER": storage.HttpFileService(self.CONTRACT_DISCOVERY_ADDRESS),
                                   "K8S": storage.HttpFileService(self.CONTRACT_DISCOVERY_ADDRESS),
                                   "TESTNET": storage.AzureContainerFileService('contract'),
                                   "MAINNET": storage.AzureContainerFileService('contract')}
 
         self.key_management_discovery = {"COMPOSE": storage.HttpFileService(self.KM_DISCOVERY_ADDRESS, namespace='km'),
-                                        "COMPOSE_DEV": storage.HttpFileService(self.KM_DISCOVERY_ADDRESS, namespace='km'),
+                                        "CLUSTER": storage.HttpFileService(self.KM_DISCOVERY_ADDRESS, namespace='km'),
                                         "K8S": storage.HttpFileService(self.KM_DISCOVERY_ADDRESS, namespace='km'),
                                         "TESTNET": storage.HttpFileService(self.KM_DISCOVERY_ADDRESS, namespace='km'),
                                         "MAINNET": storage.HttpFileService(self.KM_DISCOVERY_ADDRESS, namespace='km')}
 
         # information stored in global storage
         self.backend_strategy = {"COMPOSE": storage.AzureContainerFileService,
-                                 "COMPOSE_DEV": storage.HttpFileService(self.CONTRACT_DISCOVERY_ADDRESS),
+                                 "CLUSTER": storage.AzureContainerFileService,
                                  "K8S": storage.AzureContainerFileService,
                                  "TESTNET": storage.AzureContainerFileService,
                                  "MAINNET": storage.AzureContainerFileService}

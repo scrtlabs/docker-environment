@@ -1,0 +1,13 @@
+{
+  "CONTRACT_DISCOVERY_PORT": "8081",
+  "CONTRACT_DISCOVERY_ADDRESS": "http://137.117.105.103:8081",
+  "ETH_NODE_ADDRESS": "137.117.105.103",
+  "ETH_NODE_PORT": "9545",
+  "CONTRACTS_FOLDER": "/home/avishai/WebstormProjects/enigma-contract/build/contracts/",
+  "ENIGMA_CONTRACT_FILE_NAME": "/home/avishai/WebstormProjects/enigma-contract/build/contracts/Enigma.json",
+  "FAUCET_URL": "http://137.117.105.103:8001",
+  "MINIMUM_ETHER_BALANCE": "0.001",
+  "WORKER_URL": "http://104.41.135.96",
+  "PROXY_PORT": 3346,
+  "KEY_MANAGEMENT_DISCOVERY": "km.app.services.enigma.co"
+}

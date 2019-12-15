@@ -21,7 +21,8 @@ KEY_PAIR_PATH = os.path.dirname(os.path.dirname(__file__))
 env_defaults = {'K8S': './config/k8s_config.json',
                 'TESTNET': './config/testnet_config.json',
                 'MAINNET': './config/mainnet_config.json',
-                'COMPOSE': './config/compose_config.json'}
+                'COMPOSE': './config/compose_config.json',
+                'CLUSTER': './config/cluster_config.json'}
 
 
 def save_to_path(path, file):
