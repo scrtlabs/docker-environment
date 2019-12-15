@@ -52,13 +52,15 @@ def save_to_path(path, file, flags='wb+'):
 
 def check_eth_limit(account: str,
                     min_ether: float,
-                    eth_node: str):
+                    eth_node: str) -> bool:
     eth_gateway = EthereumGateway(eth_node)
     cur_balance = float(eth_gateway.balance(account))
     if min_ether > cur_balance:
         logger.info(f'Ethereum balance {cur_balance} is less than the minimum amount {min_ether} ETH required to start '
                     f'the worker. Please transfer currency to the worker account: {account} and restart the worker')
-        exit(0)
+        # exit(0)
+        return False
+    return True
     # if allowance_limit > float(erc20.check_allowance(enigma_contract_address, account)):
     #     logger.info(f'{currency} balance is less than the minimum amount {min_ether}ETH required to start the worker'
     #                 f' Please transfer currency to the worker account: {account}')
@@ -200,7 +202,8 @@ def main():
         val = erc20_contract.check_allowance(staking_address, provider.enigma_contract_address)
         logger.info(f'Current allowance for {provider.enigma_contract_address}, from {staking_address}: {val} ENG')
 
-    check_eth_limit(eth_address, float(config["MINIMUM_ETHER_BALANCE"]), ethereum_node)
+    while not check_eth_limit(eth_address, float(config["MINIMUM_ETHER_BALANCE"]), ethereum_node):
+        time.sleep(5)
 
     kwargs = {'staking_address': staking_address,
               'ethereum_key': private_key,
