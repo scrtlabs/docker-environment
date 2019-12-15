@@ -52,17 +52,16 @@ RUN : \
 # Install the python framework
 COPY --from=enigma_common /root/wheels /root/wheels
 COPY scripts/requirements.txt .
-RUN : \
-    pip3 install \
-        --no-index \
-        --find-links=/root/wheels \
-        -r requirements.txt
+
+RUN pip3 install \
+    --no-index \
+    --find-links=/root/wheels \
+    -r requirements.txt
 
 COPY --from=gitclone_salad /root/salad/operator /root/salad/operator
 COPY --from=gitclone_salad /root/salad/client /root/salad/client
 COPY --from=gitclone_salad /root/salad/smart_contracts /root/salad/smart_contracts
 COPY --from=gitclone_salad /root/salad/migrations /root/salad/migrations
-COPY --from=gitclone_salad /root/salad/scripts /root/salad/scripts
 COPY --from=gitclone_salad /root/salad/package.json /root/salad/
 COPY --from=gitclone_salad /root/salad/truffle.js /root/salad/
 COPY --from=gitclone_salad /root/salad/.env.template /root/salad/
@@ -72,10 +71,11 @@ COPY --from=node_modules_build /root/salad/client/node_modules /root/salad/clien
 COPY --from=node_modules_build /root/salad/operator/node_modules /root/salad/operator/node_modules
 COPY --from=secret_contract_build /root/salad/secret_contracts/salad/target/wasm32-unknown-unknown/release/contract.wasm /root/salad/salad.wasm
 
-# Set up the environment variable defaults
+# Set up the environment variable defaults and compile the smart contracts
 RUN : \
     && cp '.env.template' '.env'\
-    && cp 'operator/.env.template' 'operator/.env'
+    && cp 'operator/.env.template' 'operator/.env' \
+    && npx truffle compile
 
 COPY config/ config/
 COPY scripts/ scripts/

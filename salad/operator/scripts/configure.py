@@ -16,17 +16,14 @@ logger = get_logger('operator-startup')
 # required configuration parameters -- these can all be overridden as environment variables
 required = [  # required by provider AND locally
     # defaults in local config file
-    'ENG_NODE_ADDRESS',
-    'ENIGMA_CONTRACT_FILE_NAME',
     'CONTRACT_DISCOVERY_ADDRESS',
+    'ENG_NODE_ADDRESS',
     'ENG_NODE_PORT',
-    'CONTRACT_DISCOVERY_PORT',
-    'WORKER_URL',
-    'PROXY_PORT',
-    'MONGO_URL',
     'ETH_NODE_PORT',
     'ETH_NODE_ADDRESS',
-    'CONTRACTS_FOLDER',
+    'MONGO_URL',
+    'DB_NAME',
+    'KEY_MANAGEMENT_DISCOVERY',
 ]
 
 env_defaults = {
