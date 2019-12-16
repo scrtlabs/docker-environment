@@ -51,6 +51,6 @@ class WorkerInterface:
             async with session.get(f'{self.worker_config["MGMT_URL"]}connections') as response:
                 resp = await response.text()
                 if response.status == 200:
-                    return int(resp)
+                    return resp
                 else:
                     return 0

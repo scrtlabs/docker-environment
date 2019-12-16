@@ -56,7 +56,8 @@ ethereum = EthereumGateway(config['ETH_NODE_ADDRESS'])
 
 # noinspection PyUnboundLocalVariable
 worker_if = WorkerInterface(config=config)
-
+peers = Buffer()
+peers.text = "0"
 ethereum_address = Buffer()  # Editable buffer.
 staking_address = Buffer()
 balance_buff = Buffer()
@@ -91,7 +92,7 @@ def get_title_text():
 
 
 body = ConditionalContainer(VSplit([
-    enigma_window(node_status_buf),
+    enigma_window(node_status_buf, peers),
 
     # A vertical line in the middle. We explicitly specify the width, to
     # make sure that the layout engine will not try to divide the whole
@@ -101,16 +102,24 @@ body = ConditionalContainer(VSplit([
 
     ethereum_window(balance_buff, ethereum_address),
     # Window(content=BufferControl(buffer=buffer1)),
+
 ]), filter=Condition(lambda: staking_address.text != 'N/A'))
 
 completer = ["help", "exit", "register", "login", "logout"]
-help_text = """
-Welcome to the Enigma Management Tool! Available commands: help, exit, register
-"""
+
+
+def get_help_text():
+    if staking_address.text == 'N/A':
+        help_text = """
+        Welcome to the Enigma Management Tool! To initiate the node, use the "setup" command. 
+        """
+    else:
+        help_text = f'Welcome to the Enigma Management Tool! Try one of our commands: {completer}'
+    return help_text
 
 search_field = SearchToolbar()  # For reverse search.
 
-output_field = TextArea(style="class:output-field", text=help_text)
+output_field = TextArea(style="class:output-field", text=get_help_text())
 input_field = TextArea(
     height=1,
     prompt=">>> ",
@@ -279,6 +288,18 @@ def do_get_balance():
         time.sleep(5)
 
 
+async def do_get_peers():
+    global peers
+    while True:
+        try:
+            connections = await worker_if.get_connections()
+            peers.text = connections[1:-1] + '/50 Peers'
+        except Exception as e:
+            peers.text = "0/50 Peers"
+            # output_field.text = str(e)
+        await asyncio.sleep(1)
+
+
 async def main():
     app = Application(layout=layout, full_screen=True, key_bindings=kb)
     worker = Thread(target=do_get_balance, args=(), daemon=True)
@@ -286,6 +307,7 @@ async def main():
     app.create_background_task(do_get_status())
     app.create_background_task(do_get_ethereum_address())
     app.create_background_task(do_get_staking_address())
+    app.create_background_task(do_get_peers())
     result = await app.run_async()
 
 
