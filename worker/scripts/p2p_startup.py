@@ -2,6 +2,7 @@ import os
 import json
 import pathlib
 import time
+from typing import Union
 from p2p_node import P2PNode
 from bootstrap_loader import BootstrapLoader
 
@@ -51,16 +52,24 @@ def save_to_path(path, file, flags='wb+'):
 
 def check_eth_limit(account: str,
                     min_ether: float,
-                    eth_node: str):
+                    eth_node: str) -> bool:
     eth_gateway = EthereumGateway(eth_node)
     cur_balance = float(eth_gateway.balance(account))
     if min_ether > cur_balance:
         logger.info(f'Ethereum balance {cur_balance} is less than the minimum amount {min_ether} ETH required to start '
                     f'the worker. Please transfer currency to the worker account: {account} and restart the worker')
-        exit(0)
+        # exit(0)
+        return False
+    return True
     # if allowance_limit > float(erc20.check_allowance(enigma_contract_address, account)):
     #     logger.info(f'{currency} balance is less than the minimum amount {min_ether}ETH required to start the worker'
     #                 f' Please transfer currency to the worker account: {account}')
+
+
+def address_as_string(addr: Union[bytes, str]) -> str:
+    if isinstance(addr, bytes):
+        addr = addr.decode()
+    return addr
 
 
 def main():
@@ -114,7 +123,8 @@ def main():
     # Load Enigma.json ABI
     save_to_path(enigma_abi_path, provider.enigma_abi)
 
-    eng_contract_addr = provider.enigma_contract_address
+    eng_contract_addr = address_as_string(provider.enigma_contract_address)
+
     logger.info(f'Got address {eng_contract_addr} for enigma contract')
 
     login_and_deposit = False
@@ -122,10 +132,14 @@ def main():
     keystore_dir = config.get('ETH_KEY_PATH', pathlib.Path.home())
     password = config.get('PASSWORD', 'cupcake')  # :)
     private_key, eth_address = open_eth_keystore(keystore_dir, config, password=password, create=True)
+    logger.error(f'private_key= {private_key}')
+    logger.error(f'public_key={eth_address}')
     #  will not try a faucet if we're in mainnet - also, it should be logged inside
 
+    token_contract_addr = address_as_string(provider.token_contract_address)
+
     erc20_contract = EnigmaTokenContract(config["ETH_NODE_ADDRESS"],
-                                         provider.token_contract_address,
+                                         token_contract_addr,
                                          json.loads(provider.enigma_token_abi)['abi'])
 
     #  will not try a faucet if we're in a testing environment
@@ -162,12 +176,6 @@ def main():
             # we write to this file as a flag that we don't need to do this again
             save_to_path(staking_key_dir+config['STAKE_KEY_NAME'], staking_address, flags="w+")
 
-        try:
-            get_initial_coins(staking_address, 'ENG', config)
-        except RuntimeError as e:
-            logger.critical(f'Failed to get enough ENG for staking address - Error: {e}')
-            exit(-2)
-
     # perform deposit
     if env in ['TESTNET', 'K8S', 'COMPOSE']:
         """ Logic for deposit is:
@@ -194,7 +202,8 @@ def main():
         val = erc20_contract.check_allowance(staking_address, provider.enigma_contract_address)
         logger.info(f'Current allowance for {provider.enigma_contract_address}, from {staking_address}: {val} ENG')
 
-    check_eth_limit(eth_address, float(config["MINIMUM_ETHER_BALANCE"]), ethereum_node)
+    while not check_eth_limit(eth_address, float(config["MINIMUM_ETHER_BALANCE"]), ethereum_node):
+        time.sleep(5)
 
     kwargs = {'staking_address': staking_address,
               'ethereum_key': private_key,
