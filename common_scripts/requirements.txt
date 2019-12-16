@@ -9,8 +9,3 @@ web3==5.3.1
 flask==1.1.1
 flask_cors==3.0.8
 flask_restplus==0.13.0
-
-prompt_toolkit==3.0.2
-aiofile
-aiohttp
-pyfiglet

@@ -62,12 +62,13 @@ WORKDIR /root
 
 COPY --from=enigma_common /root/wheels /root/wheels
 
-COPY scripts/requirements.txt .
-
 RUN pip3 install \
       --no-index \
       --find-links=/root/wheels \
-      -r requirements.txt
+      enigma_docker_common
+
+COPY scripts/requirements.txt .
+RUN pip3 install -r requirements.txt
 
 COPY --from=core-build /root/enigma-core/bin/ /root/core/bin/
 COPY --from=p2p_build /app ./p2p/
