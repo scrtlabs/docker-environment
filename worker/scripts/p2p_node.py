@@ -3,8 +3,9 @@ import signal
 import threading
 import atexit
 import subprocess
-
 from typing import List
+
+import requests
 
 from enigma_docker_common.logger import get_logger
 
@@ -91,22 +92,40 @@ class P2PNode(threading.Thread):
             logger.info('Killed p2p cli')
 
     def register(self):
-        if self.proc:
-            logger.debug('Passing register to P2P')
-            self.proc.stdin.write(b'register\n')
-            self.proc.stdin.flush()
+        try:
+            resp = requests.get('http://localhost:23456/mgmt/register')
+            if resp.status_code == 200:
+                return True
+            else:
+                return False
+        except Exception as e:
+            logger.error(f'Error with register: {e}')
+            return False
 
     def login(self):
-        if self.proc:
-            logger.debug('Passing login to P2P')
-            self.proc.stdin.write(b'login\n')
-            self.proc.stdin.flush()
+        try:
+            resp = requests.get('http://localhost:23456/mgmt/login')
+            if resp.status_code == 200:
+                return True
+            else:
+                return False
+        except Exception as e:
+            logger.error(f'Error with login: {e}')
+            return False
+            # logger.debug('Passing login to P2P')
+            # self.proc.stdin.write(b'login\n')
+            # self.proc.stdin.flush()
 
     def logout(self):
-        if self.proc:
-            logger.debug('Passing logout to P2P')
-            self.proc.stdin.write(b'logout\n')
-            self.proc.stdin.flush()
+        try:
+            resp = requests.get('http://localhost:23456/mgmt/logout')
+            if resp.status_code == 200:
+                return True
+            else:
+                return False
+        except Exception as e:
+            logger.error(f'Error with logout: {e}')
+            return False
 
     def _map_params_to_exec(self) -> List[str]:
         """ build executable params -- if cli params change just change the keys and everything should still work """

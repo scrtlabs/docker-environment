@@ -178,9 +178,9 @@ if __name__ == '__main__':
 
     exec_args = [f'{executable}', f'--principal-config', f'{config["TEMP_CONFIG_PATH"]}']
 
-    log_level = config.get('LOG_LEVEL', '').lower()
+    log_level = os.getenv('LOG_LEVEL_KM', '').lower() or os.getenv('LOG_LEVEL', 'info').lower()
     if log_level:
         exec_args.append('-l')
-        exec_args.append('log_level')
+        exec_args.append(log_level)
 
     subprocess.call(exec_args)
