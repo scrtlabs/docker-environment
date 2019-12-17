@@ -3,7 +3,7 @@
 ## Prerequisites
 
 ```bash
-sudo apt install docker.io
+sudo apt install -y docker.io
 git clone git@github.com:enigmampc/docker-environment.git
 cd docker-environment
 ```
@@ -70,3 +70,32 @@ Now while `docker-compose up` is running in the debug menu (Ctrl+Shift+D) choose
 Sources:
 
 - https://blog.risingstack.com/how-to-debug-a-node-js-app-in-a-docker-container/
+
+## enigma-p2p-monitor
+
+Currently `enigma-p2p-monitor` isn't a part of the `docker-environment`, so we must run it locally and make it connect to `docker-environment`.
+
+Prerequisite in order to parse `Enigma.json`:
+
+```bash
+sudo apt install -y jq
+```
+
+Terminal 1:
+
+```bash
+cd workspace/docker-environment
+docker-compose up
+```
+
+Terminal 2:
+
+```bash
+cd workspace/enigma-p2p-monitor
+node main.js --bootstrap "/ip4/127.0.0.1/tcp/10300/ipfs/QmcrQZ6RJdpYuGvZqD5QEHAv6qX4BrQLJLQPQUrTrzdcgm" --enigma-contract-address $(curl -s 'http://localhost:8081/contract/address?name=enigmacontract.txt' | tr -d \") --enigma-contract-json-path <(curl -s 'http://localhost:8081/contract/abi?name=Enigma.json' | jq '. | fromjson')
+```
+
+When debugging:
+
+- Get the `--enigma-contract-address` arg with `curl -s 'http://localhost:8081/contract/address?name=enigmacontract.txt' | tr -d \"`.
+- Get the `--enigma-contract-json-path` arg with `curl -s 'http://localhost:8081/contract/abi?name=Enigma.json' | jq '. | fromjson' > Enigma.json` and use like `--enigma-contract-json-path Enigma.json`.
