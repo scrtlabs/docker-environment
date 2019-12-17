@@ -1,5 +1,7 @@
+import asyncio
 import requests
 import aiohttp
+import subprocess
 from aiofile import AIOFile
 from enigma_docker_common import storage
 
@@ -9,9 +11,12 @@ class WorkerInterface:
     available_actions = ["register", "login", "logout"]
 
     def __init__(self, config):
-        staking_address = ''
         self.worker_config = config
         self.cli_config = storage.LocalStorage(directory=config["STAKE_KEY_PATH"], flags='+')
+
+    @staticmethod
+    def restart():
+        subprocess.Popen([f'supervisorctl', 'p2p', 'restart'])
 
     # http: // localhost: 23456 / mgmt /
     async def do_action(self, action: str):
@@ -19,9 +24,9 @@ class WorkerInterface:
             async with session.get(f'{self.worker_config["MGMT_URL"]}{action}') as response:
                 resp = await response.text()
                 if response.status == 200:
-                    return 'YAY great success!'
+                    return 'Success!'
                 else:
-                    return 'AWW it failed :('
+                    return 'Failed - See logs or something'
 
     async def get_status(self):
         filename = f'{self.worker_config["ETH_KEY_PATH"]}{self.worker_config["STATUS_FILENAME"]}'

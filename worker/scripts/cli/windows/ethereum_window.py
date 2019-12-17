@@ -15,7 +15,7 @@ def node_address(eth_address_txt: Buffer):
     return Window(content=BufferControl(buffer=eth_address_txt), align=WindowAlign.CENTER)
 
 
-def ethereum_window(balance_txt: Buffer, eth_address_txt: Buffer):
+def EthereumWindow(balance_txt: Buffer, eth_address_txt: Buffer):
     body = HSplit([
         Window(
             height=1,

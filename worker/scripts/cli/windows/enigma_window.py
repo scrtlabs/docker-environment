@@ -6,7 +6,6 @@ from prompt_toolkit.layout.containers import (
     ConditionalContainer,
 )
 
-
 def peers(peers_txt: Buffer):
     return Window(BufferControl(buffer=peers_txt), align=WindowAlign.CENTER)
 
@@ -15,19 +14,15 @@ def get_title_text():
     return 'Enigma Status'
 
 
-def connection_status(peers_txt: Buffer):
-    return
-
-
 def p2p_status(peers_buf: Buffer):
     return VSplit([
         ConditionalContainer(
-            Window(content=FormattedTextControl(text="Connected"), align=WindowAlign.CENTER),
+            Window(content=FormattedTextControl([("class:connected", "Connected"),]), align=WindowAlign.CENTER),
             filter=Condition(lambda: peers_buf.text != '0/50 Peers')
         ),
         ConditionalContainer(
-            Window(content=FormattedTextControl(text="Not Connected"), align=WindowAlign.CENTER),
-            filter=Condition(lambda: peers_buf.text == '0/50 Peers')
+            Window(content=FormattedTextControl([("class:error", "Not Connected"),]), align=WindowAlign.CENTER),
+            filter=Condition(lambda: peers_buf.text == '0/50 Peers',)
         ),
         # A vertical line in the middle. We explicitly specify the width, to
         # make sure that the layout engine will not try to divide the whole
@@ -41,8 +36,6 @@ def p2p_status(peers_buf: Buffer):
 
 def node_status(buff):
     return VSplit([
-
-        # Window(content=FormattedTextControl(text="Unregistered"), align=WindowAlign.CENTER),
         Window(BufferControl(buffer=buff), align=WindowAlign.CENTER)
         # A vertical line in the middle. We explicitly specify the width, to
         # make sure that the layout engine will not try to divide the whole
@@ -51,7 +44,7 @@ def node_status(buff):
 ])
 
 
-def enigma_window(buff: Buffer, peers_buff: Buffer):
+def EnigmaWindow(buff: Buffer, peers_buff: Buffer):
     body = HSplit([
         Window(
             height=1,

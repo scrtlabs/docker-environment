@@ -82,7 +82,7 @@ COPY scripts/core_startup.py ./core/
 COPY scripts ./p2p/scripts
 
 RUN chmod +x ./p2p/scripts/p2p_startup.py && chmod +x ./core/core_startup.py
-RUN chmod +x ./p2p/scripts/cli/prompt_toolkit_test.py
+RUN chmod +x ./p2p/scripts/cli/cli.py
 COPY devops/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
 ##### FOR NOW TILL I FIND A WAY TO SET THESE INSIDE PYTHON :'(
@@ -94,6 +94,6 @@ ENV PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/opt/sgxsd
 ENV LC_ALL=C.UTF-8
 ENV LANG=C.UTF-8
 
-RUN ln -s /root/p2p/scripts/cli/prompt_toolkit_test.py /usr/bin/cli
+RUN ln -s /root/p2p/scripts/cli/cli.py /usr/bin/cli
 
 CMD ["/usr/bin/python", "/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]

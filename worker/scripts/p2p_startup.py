@@ -85,6 +85,14 @@ def set_status(new_status: str) -> None:
         f.write(new_status)
 
 
+def get_status() -> str:
+    filename = f'{config["ETH_KEY_PATH"]}{config["STATUS_FILENAME"]}'
+    status = ''
+    with open(filename, 'r+') as f:
+        status = f.read()
+    return status
+
+
 def main():
     set_status('Down')
     # todo: unhardcode this
@@ -229,7 +237,7 @@ def main():
         logger.info(f'Current allowance for {provider.enigma_contract_address}, from {staking_address}: {val} ENG')
 
     while not check_eth_limit(eth_address, float(config["MINIMUM_ETHER_BALANCE"]), ethereum_node):
-        set_status('Ethereum balance too low...')
+        set_status('Waiting for ETH...')
         time.sleep(5)
 
     kwargs = {'staking_address': staking_address,
@@ -264,23 +272,28 @@ def main():
                                   provider.enigma_contract_address,
                                   json.loads(provider.enigma_abi)['abi'])
 
+    while True:
+        status = get_status()
+        if status.lower() == 'registered':
+            break
+        time.sleep(1)
     # for now lets sleep instead of getting confirmations till we move it to web
-    time.sleep(30)
-
+    set_status('Setting staking address...')
     logger.info(f'Attempting to set operating address -- staking:{staking_address} operating: {eth_address}')
     eng_contract.transact(staking_address, staking_key, 'setOperatingAddress',
                           eng_contract.w3.toChecksumAddress(eth_address))
-
     logger.info('Set operating address successfully!')
 
     # we perform auto-deposit in testing environment
     if env in ['TESTNET', 'K8S', 'COMPOSE']:
+        set_status('Depositing...')
         logger.info(f'Attempting deposit from {staking_address} on behalf of worker {eth_address}')
         eng_contract.transact(staking_address, staking_key, 'deposit',
                               eng_contract.w3.toChecksumAddress(staking_address), deposit_amount)
         logger.info(f'Successfully deposited!')
-
+    time.sleep(3)
     # login the worker (hopefully this works)
+    set_status('Logging in...')
     if p2p_runner.login():
         set_status('Running')
     else:

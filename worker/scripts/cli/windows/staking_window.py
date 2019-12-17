@@ -11,7 +11,7 @@ def staking_address(staking_address_txt: Buffer):
     return Window(content=BufferControl(buffer=staking_address_txt), align=WindowAlign.CENTER)
 
 
-def staking_window(staking_address_txt: Buffer):
+def StakingWindow(staking_address_txt: Buffer):
     body = VSplit([
         # todo: figure out how to pack
         Window(width=2, char='||'),

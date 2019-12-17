@@ -1,14 +1,15 @@
-from asyncio import Future, ensure_future
+from asyncio import Future
+
 from prompt_toolkit.application.current import get_app
+from prompt_toolkit.layout.containers import (
+    HSplit,
+)
+from prompt_toolkit.layout.dimension import D
 from prompt_toolkit.widgets import (
     Button,
     Dialog,
     Label,
     TextArea,
-)
-from prompt_toolkit.layout.dimension import D
-from prompt_toolkit.layout.containers import (
-    HSplit,
 )
 
 

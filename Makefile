@@ -55,7 +55,7 @@ build-km:
 
 build-contract:
 	cd common_scripts; docker build -f common.Dockerfile -t enigma_common .
-	cd contract; docker build -f contract.Dockerfile -t enigmampc/contract:testnet .
+	cd contract; docker build -f contract.Dockerfile -t enigmampc/contract:${DOCKER_TAG} .
 
 build-worker:
 	cd common_scripts; docker build -f common.Dockerfile -t enigma_common .
