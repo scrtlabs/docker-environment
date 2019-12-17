@@ -18,7 +18,10 @@ make build-local-core path=$HOME/workspace/enigma-core
 
 ### CLion
 
-(For further reading see: https://github.com/apache/incubator-teaclave-sgx-sdk/wiki/Debugging-a-local-Rust-SGX-enclave-in-docker-with-sgx-gdb)
+Sources:
+
+- https://github.com/apache/incubator-teaclave-sgx-sdk/wiki/Debugging-a-local-Rust-SGX-enclave-in-docker-with-sgx-gdb
+- https://medium.com/nearprotocol/remote-development-and-debugging-of-rust-with-clion-39c38ced7cc1
 
 ## enigma-p2p
 
@@ -39,7 +42,9 @@ make build-local-p2p path=$HOME/workspace/enigma-p2p
 
 Now while `docker-compose up` is running you can run the debugger with this new configuration.
 
-(For further reading see: https://www.jetbrains.com/help/webstorm/run-debug-configuration-node-js-remote-debug.html)
+Sources:
+
+- https://www.jetbrains.com/help/webstorm/run-debug-configuration-node-js-remote-debug.html
 
 ### vscode
 
@@ -62,4 +67,6 @@ Add this to `.vscode/launch.json` under `configurations`:
 
 Now while `docker-compose up` is running in the debug menu (Ctrl+Shift+D) choose `Attch to Remote` and press `F5`.
 
-(For further reading see: https://blog.risingstack.com/how-to-debug-a-node-js-app-in-a-docker-container/)
+Sources:
+
+- https://blog.risingstack.com/how-to-debug-a-node-js-app-in-a-docker-container/
