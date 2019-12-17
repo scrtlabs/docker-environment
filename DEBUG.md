@@ -8,6 +8,18 @@ git clone git@github.com:enigmampc/docker-environment.git
 cd docker-environment
 ```
 
+## enigma-core
+
+Build a docker image from the local version of `enigma-core`. E.g.:
+
+```bash
+make build-local-core path=$HOME/workspace/enigma-core
+```
+
+### CLion
+
+(For further reading see: https://github.com/apache/incubator-teaclave-sgx-sdk/wiki/Debugging-a-local-Rust-SGX-enclave-in-docker-with-sgx-gdb)
+
 ## enigma-p2p
 
 Build a docker image from the local version of `enigma-p2p`. E.g.:
