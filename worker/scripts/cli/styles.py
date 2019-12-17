@@ -1,14 +1,10 @@
 from prompt_toolkit.styles import Style
-from prompt_toolkit.formatted_text import ANSI
 
 example_style = Style.from_dict(
     {
         "connected": "#00ff00",
-#       "connected frame-label": "bg:#ffffff #000000",
-#       "connected.body": "bg:#000000 #00ff00",
-#       "connected shadow": "bg:#00aa00",
         "error": "#ff0000",
-        "logo": "#8844ff italic bold",
+        "logo": "#4444ff italic bold",
         "logo shadow": "bg:#00aa00"
     }
 )

@@ -86,9 +86,14 @@ class P2PNode(threading.Thread):
     def _kill(self, signum, frame):
         if self.proc:
             logger.info('Logging out...')
-            self.proc.send_signal(signal.SIGINT)
-            self.proc.wait(timeout=10)
-            del self.proc
+
+            self.logout()
+            try:
+                self.proc.send_signal(signal.SIGINT)
+                self.proc.wait(timeout=5)
+            except subprocess.TimeoutExpired:
+                self.proc.send_signal(signal.SIGTERM)
+            self.kill_now = True
             logger.info('Killed p2p cli')
 
     def register(self):

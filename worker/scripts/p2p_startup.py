@@ -117,7 +117,7 @@ def main():
                 staking_address = get_staking_key()
                 break
             except FileNotFoundError:
-                logger.info('Waiting for staking address..')
+                logger.info('Waiting for staking address... Set it up using the CLI')
                 set_status('Waiting for setup')
                 time.sleep(2)
 
@@ -302,7 +302,6 @@ def main():
     while not p2p_runner.kill_now:
         # snooze
         time.sleep(2)
-
     set_status('Down')
 
 

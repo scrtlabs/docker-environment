@@ -14,11 +14,13 @@ from components import (
 from enigma_docker_common.config import Config
 from ethereum import EthereumGateway
 from prompt_toolkit import Application
+from prompt_toolkit.completion import WordCompleter
 from prompt_toolkit.application.current import get_app
 from prompt_toolkit.buffer import Buffer
 from prompt_toolkit.document import Document
 from prompt_toolkit.filters import Condition
 from prompt_toolkit.key_binding import KeyBindings
+from prompt_toolkit.layout.menus import CompletionsMenu
 from prompt_toolkit.layout.containers import (
     ConditionalContainer,
     Float,
@@ -71,7 +73,9 @@ node_status_buf = Buffer()
 node_status_buf.text = "N/A"
 
 balance = 0
-completer = ["help", "exit", "register", "login", "logout"]
+commands = ["setup", "help", "exit", "register", "login", "logout", "restart"]
+command_completer = WordCompleter(commands, ignore_case=True)
+
 
 @kb.add('c-c')
 def exit_(event):
@@ -104,11 +108,10 @@ quis sodales maximus. """
 
 def get_help_text():
     if staking_address.text == 'N/A':
-        help_text = """
-        Welcome to the Enigma Management Tool! To initiate the node, use the "setup" command. 
+        help_text = """\n\nWelcome to the Enigma Management Tool!\n\nThis node is not yet configured with a staking address. To initiate the node, use the "setup" command. 
         """
     else:
-        help_text = f'Welcome to the Enigma Management Tool! Try one of our commands: {completer}'
+        help_text = f'Welcome to the Enigma Management Tool! Try one of our commands: {commands}'
     return help_text
 
 
@@ -143,7 +146,7 @@ input_field = TextArea(
     style="class:input-field",
     multiline=False,
     wrap_lines=False,
-    search_field=search_field,
+    completer=command_completer
 )
 
 
@@ -196,7 +199,7 @@ def accept(buff):
                     output = future.result()
 
             else:
-                output = f"\n\nunsupported + {input_field.text}"
+                output = f"\n\nCommand not recognized. Available commands: {commands}"
             # output = "\nIn:  {}\nOut: {}".format(
             #     input_field.text, eval(input_field.text)
             # )  # Don't do 'eval' in real code!
@@ -238,7 +241,13 @@ root_container = FloatContainer(
         input_field,
         output_field,
     ]),
-    floats=[]
+    floats=[
+        Float(
+            xcursor=True,
+            ycursor=True,
+            content=CompletionsMenu(max_height=16, scroll_offset=1),
+        )
+    ],
 )
 
 
@@ -257,19 +266,20 @@ def show_message(title, text):
 async def show_dialog_as_float(dialog):
     """Coroutine"""
     float_ = Float(content=dialog)
-    root_container.floats.insert(0, float_)
+    if len(root_container.floats) < 2:
+        root_container.floats.insert(0, float_)
 
-    app = get_app()
+        app = get_app()
 
-    focused_before = app.layout.current_window
-    app.layout.focus(dialog)
-    result = await dialog.future
-    app.layout.focus(focused_before)
+        focused_before = app.layout.current_window
+        app.layout.focus(dialog)
+        result = await dialog.future
+        app.layout.focus(focused_before)
 
-    if float_ in root_container.floats:
-        root_container.floats.remove(float_)
+        if float_ in root_container.floats:
+            root_container.floats.remove(float_)
 
-    return result
+        return result
 
 #  ************* Long lived actions ***************** #
 

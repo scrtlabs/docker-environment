@@ -16,7 +16,7 @@ class WorkerInterface:
 
     @staticmethod
     def restart():
-        subprocess.Popen([f'supervisorctl', 'p2p', 'restart'])
+        subprocess.Popen([f'supervisorctl', 'restart', 'p2p'], stderr=subprocess.DEVNULL, stdout=subprocess.DEVNULL)
 
     # http: // localhost: 23456 / mgmt /
     async def do_action(self, action: str):

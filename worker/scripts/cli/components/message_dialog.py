@@ -15,10 +15,13 @@ from prompt_toolkit.widgets import (
 class MessageDialog:
     def __init__(self, title, text, kb=KeyBindings()):
         self.future = Future()
+        self.close_once = False
 
         @kb.add('escape')
         def set_done(event=''):
-            self.future.set_result(None)
+            if not self.close_once:
+                self.close_once = True
+                self.future.set_result(None)
 
         ok_button = Button(text="OK", handler=(lambda: set_done()))
 
