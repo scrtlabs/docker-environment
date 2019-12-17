@@ -12,7 +12,9 @@ cd docker-environment
 
 Build a docker image from the local version of `enigma-p2p`. E.g.:
 
-`make build-local-p2p path=$HOME/workspace/enigma-p2p`
+```bash
+make build-local-p2p path=$HOME/workspace/enigma-p2p
+```
 
 ### WebStorm
 
