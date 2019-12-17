@@ -14,11 +14,9 @@ services:
       - MIN_CONFIRMATIONS
       - BOOTSTRAP="TRUE"
       - BOOTSTRAP_ID=B1
-    expose:
-      - "10300" # libp2p port
-      - "8080"  # what is this?
     ports:
-      - "3346:3346" # gateway port
+      - "10300:10300" # libp2p
+      - "3346:3346" # gateway
       - "9229:9229" # nodejs debugger
 
   worker:
@@ -31,11 +29,10 @@ services:
       - ENIGMA_ENV
       - SGX_MODE
       - MIN_CONFIRMATIONS
-
-    expose:
-      - "9229" # nodejs debugger
-      - "3346" # gateway port
-      - "10300" # libp2p
+    ports:
+      - "10299:10300" # libp2p
+      - "3347:3346" # gateway
+      - "9230:9229" # nodejs debugger
 
   contract:
     hostname: contract
