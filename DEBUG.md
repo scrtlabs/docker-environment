@@ -10,16 +10,42 @@ cd docker-environment
 
 ## enigma-p2p
 
-Go to [gitclone_p2p.Dockerfile](/worker/gitclone_p2p.Dockerfile).
+Build a docker image from the local version of `enigma-p2p`. E.g.:
 
-1. `ARG repo_src`:
-   - Set `repo_src` with the local path of `enigma-p2p` on your filesystem, e.g. `ARG repo_src=$HOME/workspace/enigma-p2p`.
-2. `ARG branch`:
-   - Remove the `branch` argument and `--branch ${branch}`, or set it to your desired local branch.
-   - By default `branch` is set to the local checked-out branch of `repo_src`.
-   - If `repo_src` is remote then the default branch is probably master.
-   - You can also go into the newly cloned repo and point it to a spesific commit you'd like to debug (using `git chechout`).
+`make build-local-p2p path=$HOME/workspace/enigma-p2p`
 
-(On debugging nodejs inside a container see: https://blog.risingstack.com/how-to-debug-a-node-js-app-in-a-docker-container/)
+### WebStorm
 
-### Bootstrap
+1. Go to `Run` -> `Edit Configurations` -> `+` (Alt+Insert) -> `Attach to Node.js/Chrome`.
+2. `Host`: Set to `localhost`.
+3. `Port`: Set to `9229` for bootstrap or `9230` for worker.
+4. `Attach to`: Select `Chrome or Node.js > 6.3 started with --inspect`.
+5. `Remote URLs of local files`: Set `/root/p2p` for the root folder (`/path/to/enigma-p2p`).
+6. `Ok`.
+
+Now while `docker-compose up` is running you can run the debugger with this new configuration.
+
+(For further reading see: https://www.jetbrains.com/help/webstorm/run-debug-configuration-node-js-remote-debug.html)
+
+### vscode
+
+Add this to `.vscode/launch.json` under `configurations`:
+
+```json
+{
+  "type": "node",
+  "request": "attach",
+  "name": "Attach to Remote",
+  "address": "localhost",
+  "port": 9229,
+  "localRoot": "${workspaceFolder}",
+  "remoteRoot": "/root/p2p",
+  "skipFiles": ["<node_internals>/**"]
+}
+```
+
+(`port`: Set to `9229` for bootstrap or `9230` for worker.)
+
+Now while `docker-compose up` is running in the debug menu (Ctrl+Shift+D) choose `Attch to Remote` and press `F5`.
+
+(For further reading see: https://blog.risingstack.com/how-to-debug-a-node-js-app-in-a-docker-container/)
