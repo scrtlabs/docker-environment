@@ -85,7 +85,7 @@ services:
       ENIGMA_ENV: K8S
       SGX_MODE: SW
       CONTRACT_DISCOVERY_ADDRESS: "http://contract.app.services.enigma.co:8081"
-      ETH_NODE_ADDRESS: "http://contract.app.services.enigma.co:9545"
+      ETH_NODE_ADDRESS: "contract.app.services.enigma.co"
       FAUCET_URL: "http://contract.app.services.enigma.co:8001"
       WORKER_URL: "http://bootstrap-1.app.services.enigma.co"
       KEY_MANAGEMENT_DISCOVERY: "km.app.services.enigma.co"
