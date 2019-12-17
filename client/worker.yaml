@@ -56,6 +56,8 @@ spec:
               value: '/dnsaddr/bootstrap-service/tcp/10300/ipfs/QmcrQZ6RJdpYuGvZqD5QEHAv6qX4BrQLJLQPQUrTrzdcgm'
             - name: SGX_MODE
               value: SW
+            - name: LOG_LEVEL
+              value: DEBUG
           volumeMounts:
             - name: logs-dir
               mountPath: /opt/logs
@@ -100,15 +102,15 @@ spec:
   selector:
     app: worker
   ports:
-  - name: "json-rpc"
-    protocol: TCP
-    port: 3346
-    targetPort: 3346
-  - name: "nodejs-debug"
-    protocol: TCP
-    port: 9229
-    targetPort: 9229
-  - name: "p2p"
-    protocol: TCP
-    port: 10300
-    targetPort: 10300
+    - name: "json-rpc"
+      protocol: TCP
+      port: 3346
+      targetPort: 3346
+    - name: "nodejs-debug"
+      protocol: TCP
+      port: 9229
+      targetPort: 9229
+    - name: "p2p"
+      protocol: TCP
+      port: 10300
+      targetPort: 10300
