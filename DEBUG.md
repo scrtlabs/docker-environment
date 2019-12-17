@@ -1,4 +1,4 @@
-# Using a debugger while working with `docker-compose`
+# Debugging while working with `docker-compose`
 
 ## Prerequisites
 
