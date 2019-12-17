@@ -92,7 +92,7 @@ Terminal 2:
 
 ```bash
 cd workspace/enigma-p2p-monitor
-node main.js --bootstrap "/ip4/127.0.0.1/tcp/10300/ipfs/QmcrQZ6RJdpYuGvZqD5QEHAv6qX4BrQLJLQPQUrTrzdcgm" --enigma-contract-address $(curl -s 'http://localhost:8081/contract/address?name=enigmacontract.txt' | tr -d \") --enigma-contract-json-path <(curl -s 'http://localhost:8081/contract/abi?name=Enigma.json' | jq '. | fromjson')
+node main.js --bootstrap "/ip4/127.0.0.1/tcp/10300/ipfs/Qma3GsJmB47xYuyahPZPSadh1avvxfyYQwk8R3UnFrQ6aP" --enigma-contract-address $(curl -s 'http://localhost:8081/contract/address?name=enigmacontract.txt' | tr -d \") --enigma-contract-json-path <(curl -s 'http://localhost:8081/contract/abi?name=Enigma.json' | jq '. | fromjson')
 ```
 
 When debugging:
