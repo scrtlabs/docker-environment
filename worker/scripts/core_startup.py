@@ -49,7 +49,9 @@ def main():
     env = os.environ.copy()
     logger.debug(f'Environment: {env}')
 
-    exec_args = [f'{args.executable}',
+    exec_args = ['gdbserver',
+                 'localhost:7777',
+                 f'{args.executable}',
                  '-p', f'{port}',
                  '--spid', f'{spid}',
                  '-r', f'{attestation_retries}']
