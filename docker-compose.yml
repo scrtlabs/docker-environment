@@ -18,6 +18,9 @@ services:
       - "10300:10300" # libp2p
       - "3346:3346" # gateway
       - "9229:9229" # nodejs debugger
+      - "7777:7777" # gdb server
+    cap_add:
+      - SYS_PTRACE
 
   worker:
     hostname: worker
