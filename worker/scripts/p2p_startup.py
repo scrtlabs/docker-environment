@@ -72,6 +72,13 @@ def address_as_string(addr: Union[bytes, str]) -> str:
     return addr
 
 
+def get_staking_key():
+    filename = f'{config["STAKE_KEY_PATH"]}{config["STAKE_KEY_NAME"]}'
+    with open(filename, 'r') as f:
+        staking_key = f.read()
+        return staking_key
+
+
 def main():
     # todo: unhardcode this
     executable = '/root/p2p/src/cli/cli_app.js'
@@ -127,13 +134,11 @@ def main():
 
     logger.info(f'Got address {eng_contract_addr} for enigma contract')
 
-    login_and_deposit = False
-
     keystore_dir = config.get('ETH_KEY_PATH', pathlib.Path.home())
     password = config.get('PASSWORD', 'cupcake')  # :)
     private_key, eth_address = open_eth_keystore(keystore_dir, config, password=password, create=True)
-    logger.error(f'private_key= {private_key}')
-    logger.error(f'public_key={eth_address}')
+    logger.info(f'private_key={private_key}')
+    logger.info(f'public_key={eth_address}')
     #  will not try a faucet if we're in mainnet - also, it should be logged inside
 
     token_contract_addr = address_as_string(provider.token_contract_address)
@@ -168,29 +173,27 @@ def main():
 
     # load staking key from configuration -- used in testnet to automatically perform staking for bootstrap nodes
     if is_bootstrap and env in ['TESTNET', 'MAINNET']:
-        if not pathlib.Path(staking_key_dir+config['STAKE_KEY_NAME']).is_file():
-            staking_key = config["STAKING_PRIVATE_KEY"]
-            staking_address = address_from_private(staking_key)
-            staking_address = erc20_contract.w3.toChecksumAddress(staking_address)
-            logger.info(f'Loaded staking private key. Staking address is: {staking_address}')
-            # we write to this file as a flag that we don't need to do this again
-            save_to_path(staking_key_dir+config['STAKE_KEY_NAME'], staking_address, flags="w+")
+        staking_key = config["STAKING_PRIVATE_KEY"]
+        staking_address = address_from_private(staking_key)
+        staking_address = erc20_contract.w3.toChecksumAddress(staking_address)
+        logger.info(f'Loaded staking private key. Staking address is: {staking_address}')
+        # we write to this file as a flag that we don't need to do this again
+        # save_to_path(staking_key_dir+config['STAKE_KEY_NAME'], staking_address, flags="w+")
 
     # perform deposit
-    if env in ['TESTNET', 'K8S', 'COMPOSE']:
+    if env in ['K8S', 'COMPOSE'] or (is_bootstrap and env == 'TESTNET'):
         """ Logic for deposit is:
 
         Staking address                             Operating address 
+                     --------setOperatingAddress---------> 
 
                      <--------------register--------------
 
-                     --------setOperatingAddress---------> 
                      ---------------deposit-------------->
 
                      <-----------------login--------------                                       
         """
-        # tell the p2p to automatically log us in and do the deposit for us
-        # login_and_deposit = False
+        # tell the p2p to automatically register -- mostly used for testing environments
         auto_init = True
 
         #  todo: when we switch this key to be inside the enclave, or encrypted, modify this
@@ -247,8 +250,8 @@ def main():
     logger.info('Set operating address successfully!')
 
     # we perform auto-deposit in testing environment
-    if env in ['TESTNET', 'K8S', 'COMPOSE']:
-        logger.error(f'Attempting deposit from {staking_address} on behalf of worker {eth_address}')
+    if env in ['K8S', 'COMPOSE'] or (is_bootstrap and env == 'TESTNET'):
+        logger.info(f'Attempting deposit from {staking_address} on behalf of worker {eth_address}')
         eng_contract.transact(staking_address, staking_key, 'deposit',
                               eng_contract.w3.toChecksumAddress(staking_address), deposit_amount)
         logger.info(f'Successfully deposited!')
