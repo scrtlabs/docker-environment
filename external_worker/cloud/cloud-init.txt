@@ -1,34 +1,14 @@
 #cloud-config
 package_upgrade: true
 packages:
-  - docker
-  - docker-compose
-  - nodejs
-  - npm
-write_files:
-  - owner: enigma:enigma
-    path: /home/enigma/docker-compose.yml
-    content: |
-      version: "2"
-      services:
-        worker:
-          hostname: worker
-          image: enigmampc/worker_hw:testnet
-          environment:
-            - ENIGMA_ENV=TESTNET
-            - SGX_MODE=HW
-            - CONTRACT_DISCOVERY_ADDRESS=http://contract.app.services.enigma.co:8081
-            - ETH_NODE_ADDRESS=http://contract.app.services.enigma.co:9545
-            - FAUCET_URL=http://contract.app.services.enigma.co:8001
-            - KEY_MANAGEMENT_ADDRESS=http://km.app.services.enigma.co:3040
-            - KEY_MANAGEMENT_DISCOVERY=http://km.app.services.enigma.co:8081
-            - BOOTSTRAP_ADDRESS=/dnsaddr/bootstrap-1.app.services.enigma.co/tcp/10300/ipfs/QmWWkYjEKrfxPcW9z3xWVpDh8DrwHZC7GLjkFkBvocUzZT,/dnsaddr/bootstrap-2.app.services.enigma.co/tcp/10300/ipfs/QmVzK7PgMLbafjVeLtL5QZ4iu1FnM9jPoNWywcWfhg8fJY,/dnsaddr/bootstrap-3.app.services.enigma.co/tcp/10300/ipfs/QmQzbNA7zX75z8gL1U2uKpRXbapnHogPf2jPCTazHBuoSK
-            # - MIN_CONFIRMATIONS=
-            # - FORCE_NEW_ETH_ADDR=true
-          ports:
-            - "3346:3346"   # Json RPC
-            - "10300:10300" # LibP2P
+  - git
 
 runcmd:
   - cd "/home/enigma"
+  - git clone --depth 1 -b develop https://github.com/enigmampc/docker-environment.git
+  - cd "docker-environment/external_worker/local"
+  - cd "scripts"
+  - ./install-sgx-driver.sh
+  - ./install-docker-dependencies.sh
+  - cd ".."
   - docker-compose up -d
