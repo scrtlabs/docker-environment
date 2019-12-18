@@ -79,6 +79,14 @@ def get_staking_key():
         return staking_key
 
 
+def get_status() -> str:
+    filename = f'{config["ETH_KEY_PATH"]}{config["STATUS_FILENAME"]}'
+    status = ''
+    with open(filename, 'r+') as f:
+        status = f.read()
+    return status
+
+
 def main():
     # todo: unhardcode this
     executable = '/root/p2p/src/cli/cli_app.js'
@@ -240,8 +248,13 @@ def main():
                                   provider.enigma_contract_address,
                                   json.loads(provider.enigma_abi)['abi'])
 
+    logger.info('Waiting for node to finish registering...')
     # for now lets sleep instead of getting confirmations till we move it to web
-    time.sleep(30)
+    while True:
+        status = get_status()
+        if status.lower() == 'registered':
+            break
+        time.sleep(1)
 
     logger.info(f'Attempting to set operating address -- staking:{staking_address} operating: {eth_address}')
     eng_contract.transact(staking_address, staking_key, 'setOperatingAddress',
