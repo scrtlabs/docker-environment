@@ -18,6 +18,16 @@ make build-local-core path=$HOME/workspace/enigma-core
 
 ### CLion
 
+1. Go to `Run` -> `Edit Configurations` -> `+` (Alt+Insert) -> `GDB Remote Debug`.
+2. `GDB`: Set to `Bundled GDB`.
+3. `'target remote' args`: Set to `tcp:localhost:7777`.
+4. `Symbolfile`: TODO.
+5. `Sysroot`: Leave empty.
+6. `Pathmappings`: TODO.
+7. `Ok`.
+
+Now while `docker-compose up` is running you can run the debugger with this new configuration.
+
 Sources:
 
 - https://github.com/apache/incubator-teaclave-sgx-sdk/wiki/Debugging-a-local-Rust-SGX-enclave-in-docker-with-sgx-gdb
@@ -25,7 +35,6 @@ Sources:
 - https://users.rust-lang.org/t/remote-docker-running-and-testing-with-clion/23420
 - https://users.rust-lang.org/t/clion-gdb-tests-and-path-mappings/23424
 - https://stackoverflow.com/questions/53871765/gdbserver-not-starting-or-listening-on-port-when-run-inside-of-docker/53874697#53874697
-- https://github.com/schickling/dockerfiles/tree/master/rust
 
 ## enigma-p2p
 
