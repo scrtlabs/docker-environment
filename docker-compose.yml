@@ -36,6 +36,7 @@ services:
       - "10299:10300" # libp2p
       - "3347:3346" # gateway
       - "9230:9229" # nodejs debugger
+      - "7778:7777" # gdb server
 
   contract:
     hostname: contract
