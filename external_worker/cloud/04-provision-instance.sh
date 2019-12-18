@@ -1,6 +1,6 @@
 RESOURCE_GROUP_NAME=enigma-external-worker
 VM_NAME=enigma-external-worker
-VM_IMAGE=microsoft-azure-compute:azureconfidentialcompute:acc-ubuntu-16:latest
+VM_IMAGE=microsoft-aks:aks:aks-ubuntu-1804-201911:2019.11.18
 VM_SIZE=Standard_DC2s
 
 az vm create -n $VM_NAME -g $RESOURCE_GROUP_NAME --image $VM_IMAGE   \
