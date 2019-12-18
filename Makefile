@@ -73,7 +73,7 @@ build-client:
 
 build-local-p2p:
 	rm -rf /tmp/enigma-p2p
-	git clone --single-branch $(path) /tmp/enigma-p2p
+	git clone --single-branch ${path} /tmp/enigma-p2p
 	echo "FROM alpine" > /tmp/enigma-p2p/clone.Dockerfile
 	echo "COPY . /enigma-p2p/" >> /tmp/enigma-p2p/clone.Dockerfile
 	echo "node_modules" > /tmp/enigma-p2p/.dockerignore
@@ -81,7 +81,7 @@ build-local-p2p:
 
 build-local-core:
 	rm -rf /tmp/enigma-core
-	git clone --single-branch $(path) /tmp/enigma-core
+	git clone --single-branch ${path} /tmp/enigma-core
 	echo "FROM alpine" > /tmp/enigma-core/clone.Dockerfile
 	echo "COPY . /enigma-core/" >> /tmp/enigma-core/clone.Dockerfile
 	echo "date" > /tmp/enigma-core/.dockerignore

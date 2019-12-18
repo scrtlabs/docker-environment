@@ -21,7 +21,7 @@ make build-local-core path=$HOME/workspace/enigma-core
 1. Go to `Run` -> `Edit Configurations` -> `+` (Alt+Insert) -> `GDB Remote Debug`.
 2. `GDB`: Set to `Bundled GDB`.
 3. `'target remote' args`: Set to `tcp:localhost:7777`.
-4. `Symbolfile`: TODO.
+4. `Symbolfile`: Get it with `docker cp bootstrap01:/root/core/bin/enigma-core-app /tmp/` and then set it to `/tmp/enigma-core-app`.
 5. `Sysroot`: Leave empty.
 6. `Pathmappings`: TODO.
 7. `Ok`.
