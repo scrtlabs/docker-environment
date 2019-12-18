@@ -3,7 +3,7 @@ import signal
 import threading
 import atexit
 import subprocess
-
+from urllib.parse import urlparse
 from typing import List
 
 from enigma_docker_common.logger import get_logger
@@ -44,12 +44,11 @@ class P2PNode(threading.Thread):
         self.exec_file = executable_name
         self.km_node = key_mgmt_node
 
-        # dirty hack because P2P CLI wants the address without prefix.. remove when that's fixed
-        if ether_node.startswith('https://'):
-            ether_node = ether_node[8:]
-        if ether_node.startswith('http://'):
-            ether_node = ether_node[7:]
-        self.ether_gateway = ether_node
+        # todo: fix assumption that ws is in http port + 1
+        p = urlparse(ether_node)
+        hostname = p.hostname
+        port = p.port
+        self.ether_gateway = f'ws://{hostname}:{port+1}'
         self.proxy = proxy
         self.core_addr = core_addr
         self.name = peer_name
@@ -111,7 +110,7 @@ class P2PNode(threading.Thread):
     def _map_params_to_exec(self) -> List[str]:
         """ build executable params -- if cli params change just change the keys and everything should still work """
         params = {'core': f'{self.core_addr}',
-                  'ethereum-websocket-provider': f'ws://{self.ether_gateway}',
+                  'ethereum-websocket-provider': f'{self.ether_gateway}',
                   'proxy': f'{self.proxy}',
                   'ethereum-address': f'{self.ether_public}',
                   'principal-node': f'{self.km_node}',

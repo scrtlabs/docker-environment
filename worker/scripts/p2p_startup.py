@@ -80,12 +80,15 @@ def get_staking_key():
 
 
 def get_status() -> str:
+
     filename = f'{config["ETH_KEY_PATH"]}{config["STATUS_FILENAME"]}'
     status = ''
-    with open(filename, 'r+') as f:
-        status = f.read()
-    return status
-
+    try:
+        with open(filename, 'r+') as f:
+            status = f.read()
+        return status
+    except FileNotFoundError:
+        return status
 
 def main():
     # todo: unhardcode this

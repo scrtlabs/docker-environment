@@ -4,9 +4,11 @@ import json
 import subprocess
 import pathlib
 import threading
+import time
 
 from km_address_server import run
 
+from enigma_docker_common.ethereum import EthereumGateway
 from enigma_docker_common.config import Config
 from enigma_docker_common.provider import Provider
 from enigma_docker_common.logger import get_logger
@@ -36,6 +38,19 @@ env = os.getenv('ENIGMA_ENV', 'COMPOSE')
 SGX_MODE = os.getenv('SGX_MODE', 'HW')
 
 
+def check_eth_limit(account: str,
+                    min_ether: float,
+                    eth_node: str) -> bool:
+    eth_gateway = EthereumGateway(eth_node)
+    cur_balance = float(eth_gateway.balance(account))
+    if min_ether > cur_balance:
+        logger.info(f'Ethereum balance {cur_balance} is less than the minimum amount {min_ether} ETH required to start '
+                    f'the worker. Please transfer currency to the worker account: {account} and restart the worker')
+        # exit(0)
+        return False
+    return True
+
+
 def generate_config_file(app_config: dict, default_config_path: str, config_file_path: str) -> None:
     """ Generates a configuration file based on environment variables set in env_map variable above """
     with open(default_config_path, 'r') as f:
@@ -48,9 +63,9 @@ def generate_config_file(app_config: dict, default_config_path: str, config_file
                  else app_config.get(k.upper(), v)
                  for k, v in default_config.items()}
 
+    temp_conf['with_private_key'] = True if app_config.get('WITH_PRIVATE_KEY', '') == "True" else temp_conf['with_private_key']
     # Changing the name so it's consistent with the one in p2p
-    temp_conf['CONFIRMATIONS'] = int(app_config['MIN_CONFIRMATIONS']) if 'MIN_CONFIRMATIONS' in app_config \
-        else temp_conf['CONFIRMATIONS']
+    temp_conf['confirmations'] = int(app_config.get('MIN_CONFIRMATIONS',temp_conf['CONFIRMATIONS']))
 
     logger.debug(f'Running with config file at {config_file_path} with parameters: {temp_conf}')
 
@@ -85,9 +100,12 @@ if __name__ == '__main__':
 
     km_key_storage = AzureContainerFileService(config['KEYPAIR_STORAGE_DIRECTORY'])
 
+    ethereum_node = config["ETH_NODE_ADDRESS"]
+
     keypair = config['KEYPAIR_PATH']
     public = config['KEYPAIR_PUBLIC_PATH']
-    config['URL'] = f'{config["ETH_NODE_ADDRESS"]}'
+    config['URL'] = ethereum_node
+
     # not sure we want to let people set the executable from outside, especially
     # since we're running as root atm O.o
     if 'EXECUTABLE_PATH' in os.environ:
@@ -182,5 +200,8 @@ if __name__ == '__main__':
     if log_level:
         exec_args.append('-l')
         exec_args.append(log_level)
+
+    while not check_eth_limit(eth_address, float(config["MINIMUM_ETHER_BALANCE"]), ethereum_node):
+        time.sleep(5)
 
     subprocess.call(exec_args)

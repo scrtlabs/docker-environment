@@ -59,7 +59,7 @@ build-contract:
 
 build-worker:
 	cd common_scripts; docker build -f common.Dockerfile -t enigma_common .
-	cd worker; docker build --build-arg DEBUG=${DEBUG} --build-arg SGX_MODE=${SGX_MODE} -f worker.Dockerfile -t enigmampc/worker_${ext}:${DOCKER_TAG} .
+	cd worker; docker build --build-arg DEBUG=${DEBUG} --build-arg SGX_MODE=${SGX_MODE} -f worker.Dockerfile -t enigmampc/worker_${ext}:testnet .
 
 build-runtime-base:
 	cd worker; docker build -f runtime_base.Dockerfile -t enigmampc/core-runtime-base:${DOCKER_TAG} .
