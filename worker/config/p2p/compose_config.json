@@ -10,17 +10,18 @@
  "MINIMUM_ETHER_BALANCE": "0.1",
  "MINIMUM_ENG_BALANCE": "10",
  "DEPOSIT_AMOUNT": 10,
- "ETH_KEY_PATH": "/root/p2p/",
- "STAKE_KEY_PATH": "/root/p2p/staking/",
+ "ETH_KEY_PATH": "/root/.enigma/",
+ "STAKE_KEY_PATH": "/root/.enigma/staking/",
  "LOCAL_LIBP2P_KEY_PATH": "/root/p2p/scripts/bootstrap/",
- "LIBP2P_KEY_PATH": "/root/p2p/libp2p/",
+ "LIBP2P_KEY_PATH": "/root/.enigma/libp2p/",
  "BOOTSTRAP_ID": "B1",
  "BOOTSTRAP_PORT": "10300",
  "BOOTSTRAP_PATH": "/root/p2p/scripts/bootstrap/",
- "PEER_NAME": "peer1",
  "BALANCE_WAIT_TIME": 1800,
  "MIN_CONFIRMATIONS": 12,
  "KEY_MANAGEMENT_TIMEOUT": 120,
  "CONTRACT_TIMEOUT": 3600,
- "HEALTH_CHECK_PORT": 12345
+ "HEALTH_CHECK_PORT": 12345,
+ "STAKE_KEY_NAME": "staking_address",
+ "STAKING_PRIVATE_KEY": "b0057716d5917badaf911b193b12b910811c1497b5bada8d7711f758981c3773"
 }
