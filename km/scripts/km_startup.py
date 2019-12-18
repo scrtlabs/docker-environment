@@ -201,6 +201,8 @@ if __name__ == '__main__':
         exec_args.append('-l')
         exec_args.append(log_level)
 
+    eth_address = '0x' + config['ACCOUNT_ADDRESS']
+
     while not check_eth_limit(eth_address, float(config["MINIMUM_ETHER_BALANCE"]), ethereum_node):
         time.sleep(5)
 
