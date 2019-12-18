@@ -16,7 +16,9 @@ RUN apt-get update && \
     python3-pip \
     supervisor \
     #### SGX installer dependencies ####
-    make libcurl4 libssl1.1 libprotobuf10 systemd-sysv && \
+    make libcurl4 libssl1.1 libprotobuf10 systemd-sysv \
+    #### GDBServer in order to debug core & km remotly
+    gdbserver && \
     rm -rf /var/lib/apt/lists/*
 
 WORKDIR /root

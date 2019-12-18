@@ -90,7 +90,4 @@ ENV PKG_CONFIG_PATH=:/opt/sgxsdk/pkgconfig:/opt/sgxsdk/pkgconfig
 ENV SGX_SDK=/opt/sgxsdk
 ENV PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/opt/sgxsdk/bin:/opt/sgxsdk/bin/x64:/opt/sgxsdk/bin:/opt/sgxsdk/bin/x64
 
-RUN apt-get update \
- && apt-get install -y --no-install-recommends gdbserver
-
 CMD ["/usr/bin/python", "/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
