@@ -74,6 +74,7 @@ def main():
             'ETH_PORT': 'ETH_NODE_PORT',
             'ENIGMA_PORT': 'ENG_NODE_PORT',
             'DB_NAME': 'DB_NAME',
+            'SECRET_CONTRACT_BUILD_FOLDER': 'SECRET_CONTRACT_BUILD_FOLDER',
         }.items():
             env_vars[env_var] = config[config_var]
 
