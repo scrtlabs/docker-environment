@@ -65,7 +65,7 @@ def generate_config_file(app_config: dict, default_config_path: str, config_file
 
     temp_conf['with_private_key'] = True if app_config.get('WITH_PRIVATE_KEY', '') == "True" else temp_conf['with_private_key']
     # Changing the name so it's consistent with the one in p2p
-    temp_conf['confirmations'] = int(app_config.get('MIN_CONFIRMATIONS',temp_conf['CONFIRMATIONS']))
+    temp_conf['confirmations'] = int(app_config.get('MIN_CONFIRMATIONS', temp_conf['confirmations']))
 
     logger.debug(f'Running with config file at {config_file_path} with parameters: {temp_conf}')
 
