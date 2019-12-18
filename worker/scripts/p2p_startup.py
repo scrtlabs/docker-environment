@@ -139,22 +139,20 @@ def main():
     save_to_path(enigma_abi_path, provider.enigma_abi)
 
     eng_contract_addr = address_as_string(provider.enigma_contract_address)
-
     logger.info(f'Got address {eng_contract_addr} for enigma contract')
 
-    keystore_dir = config.get('ETH_KEY_PATH', pathlib.Path.home())
-    password = config.get('PASSWORD', 'cupcake')  # :)
-    private_key, eth_address = open_eth_keystore(keystore_dir, config, password=password, create=True)
-    logger.info(f'private_key={private_key}')
-    logger.info(f'public_key={eth_address}')
-    #  will not try a faucet if we're in mainnet - also, it should be logged inside
-
     token_contract_addr = address_as_string(provider.token_contract_address)
+    logger.info(f'Got address {token_contract_addr} for token contract')
 
     erc20_contract = EnigmaTokenContract(config["ETH_NODE_ADDRESS"],
                                          token_contract_addr,
                                          json.loads(provider.enigma_token_abi)['abi'])
 
+    keystore_dir = config.get('ETH_KEY_PATH', pathlib.Path.home())
+    password = config.get('PASSWORD', 'cupcake')  # :)
+    private_key, eth_address = open_eth_keystore(keystore_dir, config, password=password, create=True)
+
+    #  will not try a faucet if we're in mainnet - also, it should be logged inside
     #  will not try a faucet if we're in a testing environment
     if env in ['COMPOSE', 'K8S']:
 
@@ -179,6 +177,13 @@ def main():
             logger.critical(f'Failed to connect to faucet address. Exiting...')
             exit(-1)
 
+    # load operating key from configuration -- used in testnet to automatically start bootstrap nodes
+    if is_bootstrap and env in ['TESTNET']:
+        private_key = config["OPERATING_PRIVATE_KEY"]
+        eth_address = erc20_contract.w3.toChecksumAddress(address_from_private(private_key))
+        logger.info(f'Loaded private key from config. Staking address is: {eth_address}')
+    logger.info(f'private_key={private_key}')
+    logger.info(f'public_key={eth_address}')
     # load staking key from configuration -- used in testnet to automatically perform staking for bootstrap nodes
     if is_bootstrap and env in ['TESTNET', 'MAINNET']:
         staking_key = config["STAKING_PRIVATE_KEY"]
@@ -254,7 +259,7 @@ def main():
         status = get_status()
         if status.lower() == 'registered':
             break
-        time.sleep(1)
+        time.sleep(10)
 
     logger.info(f'Attempting to set operating address -- staking:{staking_address} operating: {eth_address}')
     eng_contract.transact(staking_address, staking_key, 'setOperatingAddress',
