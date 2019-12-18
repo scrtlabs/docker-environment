@@ -5,7 +5,8 @@ set -e
 ./scripts/configure.py
 
 echo 'Running deployment...'
-npx truffle migrate --network compose
+ENV=$(echo "$ENIGMA_ENV" | tr '[:upper:]' '[:lower:]')
+npx truffle migrate --network $ENV
 echo 'Done deployment!'
 
 node ./operator/src/server.js
