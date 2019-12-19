@@ -246,7 +246,7 @@ def main():
 
         val = erc20_contract.check_allowance(staking_address, provider.enigma_contract_address)
         logger.info(f'Current allowance for {provider.enigma_contract_address}, from {staking_address}:'
-                    f' {int(val, 16) / (10^8)} ENG')
+                    f' {int(val, 16) / (10**8)} ENG')
 
     while not check_eth_limit(eth_address, float(config["MINIMUM_ETHER_BALANCE"]), ethereum_node):
         set_status('Waiting for ETH...')
