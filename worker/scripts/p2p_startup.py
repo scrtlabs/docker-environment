@@ -246,7 +246,7 @@ def main():
 
         val = erc20_contract.check_allowance(staking_address, provider.enigma_contract_address)
         logger.info(f'Current allowance for {provider.enigma_contract_address}, from {staking_address}:'
-                    f' {int(val, 16) / (10**8)} ENG')
+                    f' {val / (10**8)} ENG')
 
     while not check_eth_limit(eth_address, float(config["MINIMUM_ETHER_BALANCE"]), ethereum_node):
         set_status('Waiting for ETH...')
@@ -293,16 +293,12 @@ def main():
                                   provider.enigma_contract_address,
                                   json.loads(provider.enigma_abi)['abi'])
 
+    # todo: sync the auto-login when we figure out how we want to do it
     logger.info('Waiting for node to finish registering...')
-    # for now lets sleep instead of getting confirmations till we move it to web
-    while True:
-        status = get_status()
-        if status.lower() == 'registered':
-            break
-        time.sleep(10)
 
     # we perform auto-deposit in testing environment
     if env in ['K8S', 'COMPOSE'] or (is_bootstrap and env == 'TESTNET'):
+        time.sleep(60)
         set_status('Setting staking address...')
         logger.info(f'Attempting to set operating address -- staking:{staking_address} operating: {eth_address}')
         eng_contract.transact(staking_address, staking_key, 'setOperatingAddress',
@@ -321,9 +317,16 @@ def main():
             set_status('Running')
         else:
             set_status('Failed to login - See logs')
+    else:
+        # for now lets sleep instead of getting confirmations till we move it to web
+        while True:
+            status = get_status()
+            if status.lower() == 'registered':
+                break
+            time.sleep(10)
 
-    set_status('Waiting for login...')
-    logger.info('Waiting for deposit & login...')
+        set_status('Waiting for login...')
+        logger.info('Waiting for deposit & login...')
 
     while not p2p_runner.kill_now:
         # snooze

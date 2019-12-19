@@ -44,13 +44,13 @@ from animations import animate_loading_text, rotate_loading_dots
 from styles import example_style
 kb = KeyBindings()
 
-os.environ['ENIGMA_ENV'] = "TESTNET"
-
 env_defaults = {'K8S': f'{Path.home() / "p2p" / "config" / "k8s_config.json"}',
                 'TESTNET': f'{Path.home() / "p2p" / "config" / "testnet_config.json"}',
                 'MAINNET': f'{Path.home() / "p2p" / "config" / "mainnet_config.json"}',
                 'COMPOSE': f'{Path.home() / "p2p" / "config" / "compose_config.json"}'}
 
+import logging
+logging.getLogger('pycommon.config').setLevel(logging.CRITICAL)
 try:
     config = Config(config_file=env_defaults[os.getenv('ENIGMA_ENV', 'COMPOSE')])
 except (ValueError, IOError):
@@ -208,7 +208,7 @@ def accept(buff):
                                                                                                deposit_amount)
                 except Exception:
                     output = "Please enter a number of ENG to deposit. " \
-                             "Usage: generate allowance [N]\n\nExample: generate allowance 10000"
+                             "Usage: generate approve [N] [  N - amount of allowance in ENG  ]\n\nExample: generate allowance 10000"
             elif cmd.startswith('generate deposit'):
                 try:
                     deposit_amount = int(float(cmd.split(' ')[2]) * (10**8))
@@ -216,7 +216,7 @@ def accept(buff):
                                                                                                deposit_amount)
                 except Exception:
                     output = "Please enter a number of ENG to deposit. " \
-                             "Usage: generate allowance [N]\n\nExample: generate allowance 10000"
+                             "Usage: generate allowance [N] [  N - amount to deposit in ENG  ]\n\nExample: generate allowance 10000"
 
             elif cmd.startswith('generate set-address'):
                 output = 'Generated data for transaction:' + node_actions.generate_set_operating_address(staking_address.text,
