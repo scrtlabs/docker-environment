@@ -75,22 +75,26 @@ def address_as_string(addr: Union[bytes, str]) -> str:
 def get_staking_key():
     filename = f'{config["STAKE_KEY_PATH"]}{config["STAKE_KEY_NAME"]}'
     with open(filename, 'r') as f:
-        staking_key = f.read()
-        return staking_key
+        staking_address = f.read()
+        return staking_address
+
+
+def set_status(new_status: str) -> None:
+    filename = f'{config["ETH_KEY_PATH"]}{config["STATUS_FILENAME"]}'
+    with open(filename, 'w+') as f:
+        f.write(new_status)
 
 
 def get_status() -> str:
-
     filename = f'{config["ETH_KEY_PATH"]}{config["STATUS_FILENAME"]}'
     status = ''
-    try:
-        with open(filename, 'r+') as f:
-            status = f.read()
-        return status
-    except FileNotFoundError:
-        return status
+    with open(filename, 'r+') as f:
+        status = f.read()
+    return status
+
 
 def main():
+    set_status('Down')
     # todo: unhardcode this
     executable = '/root/p2p/src/cli/cli_app.js'
 
@@ -101,12 +105,31 @@ def main():
 
     staking_key = ''
     staking_address = ''
+
     auto_init = True
     eng_contract: EnigmaContract = None
 
     provider = Provider(config=config)
 
+    if not is_bootstrap:
+        while True:
+            try:
+                staking_address = get_staking_key()
+                break
+            except FileNotFoundError:
+                logger.info('Waiting for staking address... Set it up using the CLI')
+                set_status('Waiting for setup')
+                time.sleep(2)
+
+        logger.info(f'Got staking address {staking_address}')
+    set_status('Getting Ethereum Address')
     ethereum_node = config["ETH_NODE_ADDRESS"]
+
+    keystore_dir = config.get('ETH_KEY_PATH', pathlib.Path.home())
+    password = config.get('PASSWORD', 'cupcake')  # :)
+    private_key, eth_address = open_eth_keystore(keystore_dir, config, password=password, create=True)
+
+    set_status('Reticulating Splines...')
 
     # *** Load parameters from config
     enigma_abi_path = f'{config["CONTRACTS_FOLDER"]}{config["ENIGMA_CONTRACT_FILE_NAME"]}'
@@ -142,6 +165,7 @@ def main():
     save_to_path(enigma_abi_path, provider.enigma_abi)
 
     eng_contract_addr = address_as_string(provider.enigma_contract_address)
+
     logger.info(f'Got address {eng_contract_addr} for enigma contract')
 
     token_contract_addr = address_as_string(provider.token_contract_address)
@@ -158,7 +182,7 @@ def main():
     #  will not try a faucet if we're in mainnet - also, it should be logged inside
     #  will not try a faucet if we're in a testing environment
     if env in ['COMPOSE', 'K8S']:
-
+        set_status('Compose local setup...')
         staking_key, staking_address = open_eth_keystore(staking_key_dir, config, password=password, create=True)
 
         try:
@@ -222,6 +246,7 @@ def main():
         logger.info(f'Current allowance for {provider.enigma_contract_address}, from {staking_address}: {val} ENG')
 
     while not check_eth_limit(eth_address, float(config["MINIMUM_ETHER_BALANCE"]), ethereum_node):
+        set_status('Waiting for ETH...')
         time.sleep(5)
 
     kwargs = {'staking_address': staking_address,
@@ -264,25 +289,31 @@ def main():
             break
         time.sleep(10)
 
+    set_status('Setting staking address...')
     logger.info(f'Attempting to set operating address -- staking:{staking_address} operating: {eth_address}')
     eng_contract.transact(staking_address, staking_key, 'setOperatingAddress',
                           eng_contract.w3.toChecksumAddress(eth_address))
-
     logger.info('Set operating address successfully!')
 
     # we perform auto-deposit in testing environment
     if env in ['K8S', 'COMPOSE'] or (is_bootstrap and env == 'TESTNET'):
+        set_status('Depositing...')
         logger.info(f'Attempting deposit from {staking_address} on behalf of worker {eth_address}')
         eng_contract.transact(staking_address, staking_key, 'deposit',
                               eng_contract.w3.toChecksumAddress(staking_address), deposit_amount)
         logger.info(f'Successfully deposited!')
-
+    time.sleep(60)
     # login the worker (hopefully this works)
-    p2p_runner.login()
+    set_status('Logging in...')
+    if p2p_runner.login():
+        set_status('Running')
+    else:
+        set_status('Failed to login - See logs')
 
     while not p2p_runner.kill_now:
         # snooze
         time.sleep(2)
+    set_status('Down')
 
 
 if __name__ == '__main__':

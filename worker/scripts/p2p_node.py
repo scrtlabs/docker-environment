@@ -6,6 +6,8 @@ import subprocess
 from urllib.parse import urlparse
 from typing import List
 
+import requests
+
 from enigma_docker_common.logger import get_logger
 
 logger = get_logger('worker.p2p-node')
@@ -84,28 +86,51 @@ class P2PNode(threading.Thread):
     def _kill(self, signum, frame):
         if self.proc:
             logger.info('Logging out...')
-            self.proc.send_signal(signal.SIGINT)
-            self.proc.wait(timeout=10)
-            del self.proc
+
+            self.logout()
+            try:
+                self.proc.send_signal(signal.SIGINT)
+                self.proc.wait(timeout=5)
+            except subprocess.TimeoutExpired:
+                self.proc.send_signal(signal.SIGTERM)
+            self.kill_now = True
             logger.info('Killed p2p cli')
 
     def register(self):
-        if self.proc:
-            logger.debug('Passing register to P2P')
-            self.proc.stdin.write(b'register\n')
-            self.proc.stdin.flush()
+        try:
+            resp = requests.get('http://localhost:23456/mgmt/register')
+            if resp.status_code == 200:
+                return True
+            else:
+                return False
+        except Exception as e:
+            logger.error(f'Error with register: {e}')
+            return False
 
     def login(self):
-        if self.proc:
-            logger.debug('Passing login to P2P')
-            self.proc.stdin.write(b'login\n')
-            self.proc.stdin.flush()
+        try:
+            resp = requests.get('http://localhost:23456/mgmt/login')
+            if resp.status_code == 200:
+                return True
+            else:
+                return False
+        except Exception as e:
+            logger.error(f'Error with login: {e}')
+            return False
+            # logger.debug('Passing login to P2P')
+            # self.proc.stdin.write(b'login\n')
+            # self.proc.stdin.flush()
 
     def logout(self):
-        if self.proc:
-            logger.debug('Passing logout to P2P')
-            self.proc.stdin.write(b'logout\n')
-            self.proc.stdin.flush()
+        try:
+            resp = requests.get('http://localhost:23456/mgmt/logout')
+            if resp.status_code == 200:
+                return True
+            else:
+                return False
+        except Exception as e:
+            logger.error(f'Error with logout: {e}')
+            return False
 
     def _map_params_to_exec(self) -> List[str]:
         """ build executable params -- if cli params change just change the keys and everything should still work """
