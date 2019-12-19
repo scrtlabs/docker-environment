@@ -74,7 +74,7 @@ node_status_buf.text = "N/A"
 
 balance = 0
 commands = ["setup", "help", "exit", "register", "login", "logout", "restart"]
-command_completer = WordCompleter(commands, ignore_case=True)
+command_completer = WordCompleter(commands, ignore_case=True, sentence=True)
 
 
 @kb.add('c-c')
@@ -89,7 +89,7 @@ def exit_(event):
 
 
 @kb.add('f1')
-def show_detailed_help(event):
+def show_detailed_help(event=None):
     title = 'Help'
 
     text = """Lorem ipsum dolor sit amet, consectetur adipiscing elit.
@@ -168,7 +168,8 @@ def accept(buff):
     async def coroutine():
         try:
             output = ''
-            if txt == 'exit':
+            cmd = txt.lower().strip()
+            if cmd == 'exit':
                 # to properly handle exit events we create a fake object that matches what an event expects
                 # There's probably a better way to do this but I don't care enough to look
                 class Object:
@@ -177,8 +178,10 @@ def accept(buff):
                 event_mock.app = get_app()
                 # noinspection PyTypeChecker
                 exit_(event_mock)
-
-            elif txt == 'setup':
+            elif cmd == 'help':
+                show_detailed_help()
+                output = f'Available commands: {commands}'
+            elif cmd == 'setup':
                 open_dialog = TextInputDialog(
                     title="Secret Node Setup",
                     label_text="Enter staking address",
@@ -186,11 +189,11 @@ def accept(buff):
                 staking = await show_dialog_as_float(open_dialog)
                 await worker_if.set_staking_address(staking)
                 output = f"\n\nSuccessfully set staking address!"
-            elif txt == 'restart':
+            elif cmd == 'restart':
                 worker_if.restart()
                 output = f"Initiated restart successfully"
-            elif txt in worker_if.available_actions:
-                if txt == 'register' and not can_register():
+            elif cmd in worker_if.available_actions:
+                if cmd == 'register' and not can_register():
                     output = '\n\nNot enough ETH in account to register. Please deposit at least 0.1 ETH'
                 else:
                     future = asyncio.ensure_future(worker_if.do_action(txt))
