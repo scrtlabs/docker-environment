@@ -1,9 +1,7 @@
-import time
 import signal
 import threading
 import atexit
 import subprocess
-from urllib.parse import urlparse
 from typing import List
 
 import requests
@@ -47,10 +45,11 @@ class P2PNode(threading.Thread):
         self.km_node = key_mgmt_node
 
         # todo: fix assumption that ws is in http port + 1
-        p = urlparse(ether_node)
-        hostname = p.hostname
-        port = p.port
-        self.ether_gateway = f'ws://{hostname}:{port+1}'
+        # p = urlparse(ether_node)
+        # hostname = p.hostname
+        # port = p.port
+        # self.ether_gateway = f'ws://{hostname}:{port+1}'
+        self.ether_gateway = ether_node
         self.proxy = proxy
         self.core_addr = core_addr
         self.name = peer_name

@@ -3,6 +3,8 @@ import json
 import pathlib
 import time
 from typing import Union
+from urllib.parse import urlparse
+
 from p2p_node import P2PNode
 from bootstrap_loader import BootstrapLoader
 
@@ -111,7 +113,7 @@ def main():
 
     provider = Provider(config=config)
 
-    if not is_bootstrap:
+    if not is_bootstrap and env in ['TESTNET', 'MAINNET']:
         while True:
             try:
                 staking_address = get_staking_key()
@@ -175,9 +177,9 @@ def main():
                                          token_contract_addr,
                                          json.loads(provider.enigma_token_abi)['abi'])
 
-    keystore_dir = config.get('ETH_KEY_PATH', pathlib.Path.home())
-    password = config.get('PASSWORD', 'cupcake')  # :)
-    private_key, eth_address = open_eth_keystore(keystore_dir, config, password=password, create=True)
+    # keystore_dir = config.get('ETH_KEY_PATH', pathlib.Path.home())
+    # password = config.get('PASSWORD', 'cupcake')  # :)
+    # private_key, eth_address = open_eth_keystore(keystore_dir, config, password=password, create=True)
 
     #  will not try a faucet if we're in mainnet - also, it should be logged inside
     #  will not try a faucet if we're in a testing environment
@@ -249,10 +251,19 @@ def main():
         set_status('Waiting for ETH...')
         time.sleep(5)
 
+    p = urlparse(ethereum_node)
+    hostname = p.hostname
+    port = p.port
+
+    # in ganache WS and HTTP are in the same port. In our testnet it isn't (8546 and 8545 respectively)
+    if env in ['TESTNET', 'MAINNET']:
+        ether_gateway = config.get('ETHEREUM_NODE_ADDRESS_WEBSOCKET', f'ws://{hostname}:{port+1}')
+    else:
+        ether_gateway = config.get('ETHEREUM_NODE_ADDRESS_WEBSOCKET', f'ws://{hostname}:{port}')
     kwargs = {'staking_address': staking_address,
               'ethereum_key': private_key,
               'public_address': eth_address,
-              'ether_node': ethereum_node,
+              'ether_node': ether_gateway,
               'abi_path': enigma_abi_path,
               'key_mgmt_node': config["KEY_MANAGEMENT_ADDRESS"],
               'deposit_amount': deposit_amount,
@@ -289,26 +300,28 @@ def main():
             break
         time.sleep(10)
 
-    set_status('Setting staking address...')
-    logger.info(f'Attempting to set operating address -- staking:{staking_address} operating: {eth_address}')
-    eng_contract.transact(staking_address, staking_key, 'setOperatingAddress',
-                          eng_contract.w3.toChecksumAddress(eth_address))
-    logger.info('Set operating address successfully!')
-
     # we perform auto-deposit in testing environment
     if env in ['K8S', 'COMPOSE'] or (is_bootstrap and env == 'TESTNET'):
+        set_status('Setting staking address...')
+        logger.info(f'Attempting to set operating address -- staking:{staking_address} operating: {eth_address}')
+        eng_contract.transact(staking_address, staking_key, 'setOperatingAddress',
+                              eng_contract.w3.toChecksumAddress(eth_address))
+        logger.info('Set operating address successfully!')
+
         set_status('Depositing...')
         logger.info(f'Attempting deposit from {staking_address} on behalf of worker {eth_address}')
         eng_contract.transact(staking_address, staking_key, 'deposit',
                               eng_contract.w3.toChecksumAddress(staking_address), deposit_amount)
         logger.info(f'Successfully deposited!')
-    time.sleep(60)
-    # login the worker (hopefully this works)
-    set_status('Logging in...')
-    if p2p_runner.login():
-        set_status('Running')
-    else:
-        set_status('Failed to login - See logs')
+        time.sleep(60)
+        # login the worker (hopefully this works)
+        set_status('Logging in...')
+        if p2p_runner.login():
+            set_status('Running')
+        else:
+            set_status('Failed to login - See logs')
+
+    logger.info('Waiting for deposit & login...')
 
     while not p2p_runner.kill_now:
         # snooze

@@ -14,6 +14,7 @@ services:
       - MIN_CONFIRMATIONS
       - BOOTSTRAP="TRUE"
       - BOOTSTRAP_ID=B1
+
     expose:
       - "10300" # libp2p port
       - "8080"  # what is this?
