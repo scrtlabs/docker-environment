@@ -54,7 +54,7 @@ def main():
                  '--spid', f'{spid}',
                  '-r', f'{attestation_retries}']
 
-    log_level = config.get('LOG_LEVEL', '').lower()
+    log_level = config.get('LOG_LEVEL', 'info').lower()
     if log_level:
         exec_args.append('-l')
         exec_args.append(log_level)
