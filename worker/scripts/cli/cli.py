@@ -189,7 +189,7 @@ def accept(buff):
                 exit_(event_mock)
             elif cmd == 'help':
                 show_detailed_help()
-                output = f'Available commands: {commands}'
+                output = f'Please use F1 on your keyboard for a more detailed help dialogue or try one of the below commands.\n{commands}'
             elif cmd == 'setup':
                 open_dialog = TextInputDialog(
                     title="Secret Node Setup",
@@ -229,9 +229,9 @@ def accept(buff):
                     while not future.done():
                         await animate_loading_text(output_field.buffer, txt)
                     output = future.result()
-
+                
             else:
-                output = f"\n\nCommand not recognized. Available commands: {commands}"
+                output = f"\n\nThis command is not recognized. \n Please try again with one of these commands: {commands}"
             # output = "\nIn:  {}\nOut: {}".format(
             #     input_field.text, eval(input_field.text)
             # )  # Don't do 'eval' in real code!
