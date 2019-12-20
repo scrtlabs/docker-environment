@@ -316,7 +316,9 @@ def main():
         if p2p_runner.login():
             set_status('Running')
         else:
-            set_status('Failed to login - See logs')
+            set_status('Failed to login - Please see detailed logs located in your worker-p2p ssh window for more information!')
+            
+            
     else:
         # for now lets sleep instead of getting confirmations till we move it to web
         while True:
