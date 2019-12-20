@@ -297,7 +297,7 @@ def main():
     if p2p_runner.login():
         set_status('Running')
     else:
-        set_status('Failed to login - See logs')
+        set_status('Failed to login - Please see detailed logs located in your worker-p2p ssh window for more information!')
 
     while not p2p_runner.kill_now:
         # snooze
