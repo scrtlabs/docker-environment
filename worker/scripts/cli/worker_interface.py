@@ -26,7 +26,7 @@ class WorkerInterface:
                 if response.status == 200:
                     return 'Success!'
                 else:
-                    return 'Failed - See logs or something'
+                    return 'Failed - See detailed logs located in your worker-p2p ssh window for more information!'
 
     async def get_status(self):
         filename = f'{self.worker_config["ETH_KEY_PATH"]}{self.worker_config["STATUS_FILENAME"]}'
