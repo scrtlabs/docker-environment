@@ -71,7 +71,7 @@ build-client:
 	cd common_scripts; docker build -f common.Dockerfile -t enigma_common .
 	cd client; docker build -f client.Dockerfile --build-arg DOCKER_TAG=${DOCKER_TAG} -t enigmampc/client:${DOCKER_TAG} .
 
-build-local-p2p:
+clone-local-p2p:
 	rm -rf /tmp/enigma-p2p
 	git clone --single-branch ${path} /tmp/enigma-p2p
 	echo "FROM alpine" > /tmp/enigma-p2p/clone.Dockerfile
@@ -79,7 +79,7 @@ build-local-p2p:
 	echo "node_modules" > /tmp/enigma-p2p/.dockerignore
 	cd /tmp/enigma-p2p && docker build -f clone.Dockerfile -t gitclone_p2p .
 
-build-local-core:
+clone-local-core:
 	rm -rf /tmp/enigma-core
 	git clone --single-branch ${path} /tmp/enigma-core
 	echo "FROM alpine" > /tmp/enigma-core/clone.Dockerfile
