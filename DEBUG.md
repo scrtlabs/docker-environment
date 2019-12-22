@@ -44,6 +44,8 @@ Build a docker image from the local version of `enigma-p2p`. E.g.:
 
 ```bash
 make clone-local-p2p path=$HOME/workspace/enigma-p2p
+make clone-core
+make build-worker
 ```
 
 ### WebStorm
