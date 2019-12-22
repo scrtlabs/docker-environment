@@ -54,7 +54,7 @@ class WorkerInterface:
             return status
 
     async def get_staking_address(self):
-        filename = f'{self.worker_config["STAKE_KEY_PATH"]}{self.worker_config["ETHEREUM_ADDR_FILENAME"]}'
+        filename = f'{self.worker_config["STAKE_KEY_PATH"]}{self.worker_config["STAKE_KEY_NAME"]}'
         async with AIOFile(filename, 'r') as f:
             staking_address = await f.read()
             return staking_address
@@ -66,7 +66,7 @@ class WorkerInterface:
             return eth_address
 
     async def set_staking_address(self, address):
-        filename = f'{self.worker_config["STAKE_KEY_PATH"]}{self.worker_config["ETHEREUM_ADDR_FILENAME"]}'
+        filename = f'{self.worker_config["STAKE_KEY_PATH"]}{self.worker_config["STAKE_KEY_NAME"]}'
         async with AIOFile(filename, 'w+') as f:
             await f.write(address)
 
