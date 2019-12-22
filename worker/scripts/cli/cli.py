@@ -75,7 +75,7 @@ balance_buff.text = "N/A"
 node_status_buf = Buffer()
 node_status_buf.text = "N/A"
 enigma_contract_address = node_actions.provider.enigma_contract_address
-
+token_contract_address = node_actions.provider.token_contract_address
 balance = 0
 commands = ["setup", "help", "exit", "register", "login", "logout", "restart", "generate deposit", "generate approve",
             "generate set-address"]
@@ -261,7 +261,7 @@ root_container = FloatContainer(
         ),
         # Horizontal separator.
         Window(height=1, char="-", style="class:line"),
-        StakingWindow(staking_address, enigma_contract_address),
+        StakingWindow(staking_address, enigma_contract_address, token_contract_address),
         Window(height=1, char="-", style="class:line"),
         # The 'body', like defined above.
         body,
