@@ -13,7 +13,8 @@ cd docker-environment
 Build a docker image from the local version of `enigma-core`. E.g.:
 
 ```bash
-make build-local-core path=$HOME/workspace/enigma-core
+make clone-local-core path=$HOME/workspace/enigma-core
+make build-worker DEBUG=1 SGX_MODE=SW
 ```
 
 ### CLion
@@ -35,13 +36,14 @@ Sources:
 - https://users.rust-lang.org/t/remote-docker-running-and-testing-with-clion/23420
 - https://users.rust-lang.org/t/clion-gdb-tests-and-path-mappings/23424
 - https://stackoverflow.com/questions/53871765/gdbserver-not-starting-or-listening-on-port-when-run-inside-of-docker/53874697#53874697
+- https://www.jetbrains.com/help/clion/remote-debug.html
 
 ## enigma-p2p
 
 Build a docker image from the local version of `enigma-p2p`. E.g.:
 
 ```bash
-make build-local-p2p path=$HOME/workspace/enigma-p2p
+make clone-local-p2p path=$HOME/workspace/enigma-p2p
 ```
 
 ### WebStorm
