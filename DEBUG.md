@@ -40,11 +40,16 @@ Sources:
 
 ## enigma-p2p
 
-Build a docker image from the local version of `enigma-p2p`. E.g.:
+Get the current `enigma-core` (One time only):
+
+```bash
+make clone-core
+```
+
+Then every change to `enigma-p2p`, build a docker image from the local version of `enigma-p2p`. E.g.:
 
 ```bash
 make clone-local-p2p path=$HOME/workspace/enigma-p2p
-make clone-core
 make build-worker
 ```
 
