@@ -121,3 +121,30 @@ When debugging:
 
 - Get the `--enigma-contract-address` arg with `curl -s 'http://localhost:8081/contract/address?name=enigmacontract.txt' | tr -d \"`.
 - Get the `--enigma-contract-json-path` arg with `curl -s 'http://localhost:8081/contract/abi?name=Enigma.json' | jq '. | fromjson' > Enigma.json` and use like `--enigma-contract-json-path Enigma.json`.
+
+## integration-tests
+
+Follow the readme on how to run the tests locally: https://github.com/enigmampc/integration-tests/tree/develop#running-tests-locally
+
+### vscode
+
+Use this configuration:
+
+```json
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "Launch Program",
+      "skipFiles": ["<node_internals>/**"],
+      "program": "${workspaceFolder}/node_modules/.bin/jest",
+      "args": ["--runInBand"],
+      "disableOptimisticBPs": true,
+      "console": "integratedTerminal",
+      "internalConsoleOptions": "neverOpen"
+    }
+  ]
+}
+```
