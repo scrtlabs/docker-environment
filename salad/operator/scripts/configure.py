@@ -53,7 +53,7 @@ def parse_env_file(file: typing.Iterable[typing.Text]) -> dict:
 
 
 def dump_env_file(env_vars: dict, file: typing.TextIO) -> None:
-    file.writelines(f'{key}={value}\n' for key, value in env_vars.items())
+    file.writelines(f'{key}={value}\n' for key, value in env_vars.items() if value not in ['', [], (), None])
 
 
 def main():
@@ -75,6 +75,8 @@ def main():
             'ENIGMA_PORT': 'ENG_NODE_PORT',
             'DB_NAME': 'DB_NAME',
             'SECRET_CONTRACT_BUILD_FOLDER': 'SECRET_CONTRACT_BUILD_FOLDER',
+            'SALAD_SMART_CONTRACT_ADDRESS': 'SALAD_SMART_CONTRACT_ADDRESS',
+            'SALAD_SECRET_CONTRACT_ADDRESS': 'SALAD_SECRET_CONTRACT_ADDRESS',
         }.items():
             env_vars[env_var] = config[config_var]
 
