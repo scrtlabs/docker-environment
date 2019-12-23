@@ -128,23 +128,18 @@ Follow the readme on how to run the tests locally: https://github.com/enigmampc/
 
 ### vscode
 
-Use this configuration:
+Add this to `.vscode/launch.json` under `configurations`:
 
 ```json
 {
-  "version": "0.2.0",
-  "configurations": [
-    {
-      "type": "node",
-      "request": "launch",
-      "name": "Launch Program",
-      "skipFiles": ["<node_internals>/**"],
-      "program": "${workspaceFolder}/node_modules/.bin/jest",
-      "args": ["--runInBand"],
-      "disableOptimisticBPs": true,
-      "console": "integratedTerminal",
-      "internalConsoleOptions": "neverOpen"
-    }
-  ]
+  "type": "node",
+  "request": "launch",
+  "name": "Launch Program",
+  "skipFiles": ["<node_internals>/**"],
+  "program": "${workspaceFolder}/node_modules/.bin/jest",
+  "args": ["--runInBand"],
+  "disableOptimisticBPs": true,
+  "console": "integratedTerminal",
+  "internalConsoleOptions": "neverOpen"
 }
 ```
