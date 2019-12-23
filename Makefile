@@ -47,7 +47,7 @@ build:
 	cd worker; docker build --build-arg DEBUG=${DEBUG} --build-arg SGX_MODE=${SGX_MODE} -f worker.Dockerfile -t enigmampc/worker_${ext}:${DOCKER_TAG} .
 	cd km; docker build --build-arg DEBUG=${DEBUG} --build-arg SGX_MODE=${SGX_MODE} -f km.Dockerfile -t enigmampc/key_management_${ext}:${DOCKER_TAG} .
 	cd contract; docker build -f contract.Dockerfile -t enigmampc/contract:${DOCKER_TAG} .
-	cd client; docker build -f client.Dockerfile -t enigmampc/client:${DOCKER_TAG} .
+	cd client; docker build -f client.Dockerfile --build-arg DOCKER_TAG=${DOCKER_TAG} -t enigmampc/client:${DOCKER_TAG} .
 
 build-km:
 	cd common_scripts; docker build -f common.Dockerfile -t enigma_common .
@@ -69,4 +69,4 @@ build-compile-base:
 
 build-client:
 	cd common_scripts; docker build -f common.Dockerfile -t enigma_common .
-	cd client; docker build -f client.Dockerfile -t enigmampc/client:${DOCKER_TAG} .
+	cd client; docker build -f client.Dockerfile --build-arg DOCKER_TAG=${DOCKER_TAG} -t enigmampc/client:${DOCKER_TAG} .

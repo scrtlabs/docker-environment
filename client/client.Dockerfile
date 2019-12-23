@@ -1,3 +1,4 @@
+ARG DOCKER_TAG
 FROM ubuntu:18.04 as base
 
 RUN apt-get update && \
@@ -16,6 +17,7 @@ RUN apt-get update && \
     && rm -rf /var/lib/apt/lists/*
 
 ########################
+FROM enigmampc/contract:${DOCKER_TAG} AS contract
 FROM base
 
 WORKDIR /root
@@ -29,10 +31,11 @@ RUN pip3 install \
       --find-links=/root/wheels \
       -r requirements.txt
 
-
 COPY --from=gitclone_integration /integration-tests /root/integration-tests
 COPY --from=gitclone_contract /enigma-contract/enigma-js/lib/enigma-js.node.js /root/integration-tests/enigma-js/lib/enigma-js.node.js
-COPY --from=enigmampc/contract /root/enigma-contract/build /root/build
+
+
+COPY --from=contract /root/enigma-contract/build /root/build
 
 WORKDIR /root/integration-tests
 RUN yarn install

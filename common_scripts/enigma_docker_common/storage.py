@@ -7,6 +7,7 @@ from pathlib import Path
 
 from urllib.parse import urlparse
 from azure.storage.blob import BlobClient
+from azure.core.exceptions import ResourceNotFoundError
 import requests
 
 
@@ -18,13 +19,15 @@ class AzureContainerFileService:
         self.credential = os.getenv('STORAGE_CONNECTION_STRING')
 
     def __getitem__(self, item: str):
-        blob = BlobClient(account_url=self.account_url, container_name=self.container_name, blob_name=item,
-                          credential=self.credential)
-
-        blob_data = b''
-        for data in blob.download_blob():
-            blob_data += data
-        return blob_data
+        try:
+            blob = BlobClient(account_url=self.account_url, container_name=self.container_name, blob_name=item,
+                              credential=self.credential)
+            blob_data = b''
+            for data in blob.download_blob():
+                blob_data += data
+            return blob_data
+        except ResourceNotFoundError:
+            raise IndexError(f'Value {item} not found in container {self.container_name}') from None
 
     def __setitem__(self, key: str, value: Any):
         if not self.credential:
@@ -33,12 +36,12 @@ class AzureContainerFileService:
 
 
 class HttpFileService:
-    def __init__(self, url, namespace: str = 'contract', timeout: int = 60):
+    def __init__(self, url, namespace: str = 'contract', directory='address', timeout: int = 60):
         p = urlparse(url)
         self.hostname = p.hostname
         self.port = p.port
         self.timeout = timeout
-        self.account_url = f'{url}/{namespace}/address?name='
+        self.account_url = f'{url}/{namespace}/{directory}?name='
         self.credential = os.getenv('STORAGE_CONNECTION_STRING')
         self._connected = False
 

@@ -4,6 +4,7 @@ import binascii
 from typing import Tuple
 
 from .logger import get_logger
+from .utils import remove_0x
 
 from web3.auto import w3 as auto_w3
 from Crypto import Random
@@ -70,6 +71,18 @@ def generate_key() -> Tuple[str, bytes]:
     pri_key = SigningKey.generate(curve=SECP256k1)
     pub_key = pri_key.get_verifying_key()
     return '0x' + pri_key.to_string().hex(), pub_key.to_string()
+
+
+def address_from_private(pk) -> str:
+    """
+    Generate private key and public key
+    Save as PEMs for management
+
+    :return: ECDSA Key Object - pri_key, pub_key
+    """
+    pri_key = SigningKey.from_string(string=bytes.fromhex(remove_0x(pk)), curve=SECP256k1)
+    pub_key = pri_key.get_verifying_key()
+    return pubkey_to_addr(pub_key.to_string().hex())
 
 
 def pubkey_to_addr(pubkey: str) -> str:
