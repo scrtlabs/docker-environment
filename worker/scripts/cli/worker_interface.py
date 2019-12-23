@@ -89,20 +89,20 @@ class WorkerInterface:
     def generate_set_operating_address(self, staking_address, eth_address):
         tx = self.eng_contract.setOperatingAddress_build(staking_address, eth_address)
         if 'data' in tx:
-            return f'\nto: {tx["to"]}\ndata: {tx["data"]})'
+            return f'\nto: {tx["to"]}\ndata: {tx["data"]}'
         else:
             return "Failed to generate transaction data"
 
     def generate_deposit(self, staking_address, deposit_amount):
         tx = self.eng_contract.build(staking_address, 'deposit', staking_address, deposit_amount)
         if 'data' in tx:
-            return f'\nto: {tx["to"]}\ndata: {tx["data"]})'
+            return f'\nto: {tx["to"]}\ndata: {tx["data"]}'
         else:
             return "Failed to generate transaction data"
 
     def generate_approve(self, staking_address, deposit_amount):
         tx = self.erc20_contract.approve_build(staking_address, self.provider.enigma_contract_address, deposit_amount)
         if 'data' in tx:
-            return f'\nto: {tx["to"]}\ndata: {tx["data"]})'
+            return f'\nto: {tx["to"]}\ndata: {tx["data"]}'
         else:
             return "Failed to generate transaction data"
