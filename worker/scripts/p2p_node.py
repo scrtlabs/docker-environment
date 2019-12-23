@@ -1,10 +1,10 @@
-import time
 import signal
 import threading
 import atexit
 import subprocess
-
 from typing import List
+
+import requests
 
 from enigma_docker_common.logger import get_logger
 
@@ -28,6 +28,7 @@ class P2PNode(threading.Thread):
                  peer_name: str = 'peer1',
                  random_db: bool = True,
                  auto_init: bool = True,
+                 log_level: str = 'info',
                  bootstrap: bool = False,
                  bootstrap_address: str = 'B1',
                  bootstrap_id: str = 'B1',
@@ -43,17 +44,18 @@ class P2PNode(threading.Thread):
         self.exec_file = executable_name
         self.km_node = key_mgmt_node
 
-        # dirty hack because P2P CLI wants the address without prefix.. remove when that's fixed
-        if ether_node.startswith('https://'):
-            ether_node = ether_node[8:]
-        if ether_node.startswith('http://'):
-            ether_node = ether_node[7:]
+        # todo: fix assumption that ws is in http port + 1
+        # p = urlparse(ether_node)
+        # hostname = p.hostname
+        # port = p.port
+        # self.ether_gateway = f'ws://{hostname}:{port+1}'
         self.ether_gateway = ether_node
         self.proxy = proxy
         self.core_addr = core_addr
         self.name = peer_name
         self.random_db = random_db
         self.auto_init = auto_init
+        self.log_level = log_level
         self.bootstrap = bootstrap
         self.abi_path = abi_path
         self.staking_address = staking_address
@@ -83,28 +85,63 @@ class P2PNode(threading.Thread):
     def _kill(self, signum, frame):
         if self.proc:
             logger.info('Logging out...')
-            self.proc.stdin.write(b'logout\n')
-            self.proc.stdin.flush()
-            time.sleep(2)
-            self.proc.send_signal(signal.SIGINT)
-            time.sleep(2)
-            self.proc.terminate()
-            self.proc.wait(timeout=0.2)
-            del self.proc
-            self.proc = None
+
+            self.logout()
+            try:
+                self.proc.send_signal(signal.SIGINT)
+                self.proc.wait(timeout=5)
+            except subprocess.TimeoutExpired:
+                self.proc.send_signal(signal.SIGTERM)
             self.kill_now = True
             logger.info('Killed p2p cli')
+
+    def register(self):
+        try:
+            resp = requests.get('http://localhost:23456/mgmt/register')
+            if resp.status_code == 200:
+                return True
+            else:
+                return False
+        except Exception as e:
+            logger.error(f'Error with register: {e}')
+            return False
+
+    def login(self):
+        try:
+            resp = requests.get('http://localhost:23456/mgmt/login')
+            if resp.status_code == 200:
+                return True
+            else:
+                return False
+        except Exception as e:
+            logger.error(f'Error with login: {e}')
+            return False
+            # logger.debug('Passing login to P2P')
+            # self.proc.stdin.write(b'login\n')
+            # self.proc.stdin.flush()
+
+    def logout(self):
+        try:
+            resp = requests.get('http://localhost:23456/mgmt/logout')
+            if resp.status_code == 200:
+                return True
+            else:
+                return False
+        except Exception as e:
+            logger.error(f'Error with logout: {e}')
+            return False
 
     def _map_params_to_exec(self) -> List[str]:
         """ build executable params -- if cli params change just change the keys and everything should still work """
         params = {'core': f'{self.core_addr}',
-                  'ethereum-websocket-provider': f'ws://{self.ether_gateway}',
+                  'ethereum-websocket-provider': f'{self.ether_gateway}',
                   'proxy': f'{self.proxy}',
                   'ethereum-address': f'{self.ether_public}',
                   'principal-node': f'{self.km_node}',
                   'ethereum-contract-address': f'{self.contract_addr}',
                   'ethereum-contract-abi-path': self.abi_path,
-                  'health': f'{self.health_check_port}'}
+                  'health': f'{self.health_check_port}',
+                  'log-level': f'{self.log_level}'}
 
         # optional values
         if self.staking_address:
@@ -113,8 +150,6 @@ class P2PNode(threading.Thread):
             params.update({'min-confirmations': self.min_confirmations})
         if self.ethereum_key:
             params.update({'ethereum-key': self.ethereum_key})
-        if self.login_and_deposit:
-            params.update({'deposit-and-login': f'{self.deposit_amount}'})
 
         if self.bootstrap:
             params.update({

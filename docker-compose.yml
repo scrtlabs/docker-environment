@@ -14,6 +14,7 @@ services:
       - MIN_CONFIRMATIONS
       - BOOTSTRAP="TRUE"
       - BOOTSTRAP_ID=B1
+      - LOG_LEVEL
     expose:
       - "10300" # libp2p port
       - "8080"  # what is this?
@@ -31,6 +32,7 @@ services:
       - ENIGMA_ENV
       - SGX_MODE
       - MIN_CONFIRMATIONS
+      - LOG_LEVEL
 
     expose:
       - "9229" # nodejs debugger
@@ -47,6 +49,7 @@ services:
       - AUTO_MINER
       - BLOCK_TIME
       - TIME_BETWEEN_BLOCKS
+      - LOG_LEVEL
     ports:
       - "8081:8081" # contract discovery service
       - "9545:9545" # ethereum node port
@@ -60,6 +63,7 @@ services:
       - ENIGMA_ENV
       - SGX_MODE
       - MIN_CONFIRMATIONS
+      - LOG_LEVEL
     expose:
       - "3040" # JSON RPC port
       - "8081" # KM address discovery

@@ -83,7 +83,7 @@ build-compile-base:
 
 .PHONY: build-client
 build-client: build-enigma-common
-	cd client; docker build -f client.Dockerfile -t enigmampc/client:${DOCKER_TAG} .
+	cd client; docker build -f client.Dockerfile --build-arg DOCKER_TAG=${DOCKER_TAG} -t enigmampc/client:${DOCKER_TAG} .
 
 .PHONY: build-salad-operator
 build-salad-operator: build-enigma-common clone-core

@@ -6,14 +6,37 @@ services:
     environment:
       - ENIGMA_ENV=TESTNET
       - SGX_MODE=HW
-      - CONTRACT_DISCOVERY_ADDRESS=http://contract.app.services.enigma.co:8081
-      - ETH_NODE_ADDRESS=http://contract.app.services.enigma.co:9545
-      - FAUCET_URL=http://contract.app.services.enigma.co:8001
-      - KEY_MANAGEMENT_ADDRESS=http://km.app.services.enigma.co:3040
-      - KEY_MANAGEMENT_DISCOVERY=http://km.app.services.enigma.co:8081
-      - BOOTSTRAP_ADDRESS=/dnsaddr/bootstrap-1.app.services.enigma.co/tcp/10300/ipfs/QmWWkYjEKrfxPcW9z3xWVpDh8DrwHZC7GLjkFkBvocUzZT,/dnsaddr/bootstrap-2.app.services.enigma.co/tcp/10300/ipfs/QmVzK7PgMLbafjVeLtL5QZ4iu1FnM9jPoNWywcWfhg8fJY,/dnsaddr/bootstrap-3.app.services.enigma.co/tcp/10300/ipfs/QmQzbNA7zX75z8gL1U2uKpRXbapnHogPf2jPCTazHBuoSK
-      # - MIN_CONFIRMATIONS=
+      - ETH_NODE_ADDRESS=http://parity.enigma.co:8545
+      - KEY_MANAGEMENT_ADDRESS=http://km-testnet.enigma.co:3040
+      - MIN_CONFIRMATIONS=3
       # - FORCE_NEW_ETH_ADDR=true
     ports:
       - "3346:3346"   # Json RPC
       - "10300:10300" # LibP2P
+    volumes:
+      - ./config/.enigma:/root/.enigma
+    devices:
+      - "/dev/isgx:/dev/isgx"
+  parity:
+    image: parity/parity:v2.5.11-stable
+    user: root
+    volumes:
+      - data-volume:/home/parity/.local/share/io.parity.ethereum/chains/kovan/db
+    command: --chain kovan --jsonrpc-apis 'web3,eth,pubsub,net,parity,parity_pubsub,traces,rpc,secretstore,shh,shh_pubsub' --jsonrpc-interface 0.0.0.0 --jsonrpc-hosts="all"
+    ports:
+      - 8545:8545
+      - 8546:8546
+      - 8180:8180
+      - 30303:30303
+  monitor:
+    image: buythewhale/ethstats_monitor
+    volumes:
+      - ./config/app.json:/home/ethnetintel/eth-net-intelligence-api/app.json:ro
+  dashboard:
+    image: buythewhale/ethstats
+    volumes:
+      - ./config/ws_secret.json:/eth-netstats/ws_secret.json:ro
+    ports:
+      - 3001:3000     
+volumes:
+  data-volume:

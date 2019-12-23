@@ -39,11 +39,6 @@ def main():
         if config['RUST_BACKTRACE'] != '0':
             os.environ["RUST_BACKTRACE"] = config['RUST_BACKTRACE']
 
-    log_flag = ''  # this is here just for compatibility with versions that don't support the -l flag
-    log_level = config.get('LOG_LEVEL', '').lower()
-    if log_level:
-        log_flag = '-l'
-
     spid = config['SPID']
     port = config['PORT']
     attestation_retries = config['ATTESTATION_RETRIES']
@@ -59,10 +54,10 @@ def main():
                  '--spid', f'{spid}',
                  '-r', f'{attestation_retries}']
 
-    log_level = config.get('LOG_LEVEL', '').lower()
+    log_level = os.getenv('LOG_LEVEL_CORE', '').lower() or os.getenv('LOG_LEVEL', 'info').lower()
     if log_level:
         exec_args.append('-l')
-        exec_args.append('log_level')
+        exec_args.append(log_level)
 
     subprocess.call(exec_args, env=env)
 
