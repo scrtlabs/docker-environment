@@ -1,3 +1,5 @@
+[![Actions Status](https://github.com/enigmampc/docker-environment/Python%20Checking/analyze/badge.svg)]
+
 Welcome to the new docker environment!
 
 # What's new?
