@@ -1,4 +1,4 @@
-![](https://github.com/enigmampc/docker-environment/workflows/.github/workflows/pythonapp.yml/badge.svg)
+![](https://github.com/enigmampc/docker-environment/workflows/Python%20Checking/badge.svg?branch=testnet_with_refactor)
 
 Welcome to the new docker environment!
 
