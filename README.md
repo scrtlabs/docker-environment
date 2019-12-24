@@ -1,5 +1,16 @@
-![](https://github.com/enigmampc/docker-environment/workflows/Python%20Checking/badge.svg?branch=testnet_with_refactor)
+Current:
+![](https://github.com/enigmampc/docker-environment/workflows/CI/badge.svg)
+![](https://github.com/enigmampc/docker-environment/workflows/Python%20Checking/badge.svg)
+Welcome to the new docker environment!
 
+Develop:
+![](https://github.com/enigmampc/docker-environment/workflows/CI/badge.svg?branch=develop)
+![](https://github.com/enigmampc/docker-environment/workflows/Python%20Checking/badge.svg?branch=develop)
+Welcome to the new docker environment!
+
+Master:
+![](https://github.com/enigmampc/docker-environment/workflows/CI/badge.svg?branch=master)
+![](https://github.com/enigmampc/docker-environment/workflows/Python%20Checking/badge.svg?branch=master)
 Welcome to the new docker environment!
 
 # What's new?
