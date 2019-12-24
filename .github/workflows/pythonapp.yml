@@ -25,14 +25,16 @@ jobs:
         pip install -r contract/scripts/requirements.txt
         pip install -r worker/scripts/requirements.txt
         pip install -r client/scripts/requirements.txt
+        pip install -r salad/client/scripts/requirements.txt
+        pip install -r salad/operator/scripts/requirements.txt
     - name: Lint with flake8
       run: |
         pip install flake8
-        flake8 --exclude __init__.py --count --max-complexity=10 --max-line-length=127 --statistics ./common_scripts/enigma_docker_common/ ./km/scripts/ ./contract/scripts/ ./client/scripts/ ./worker/scripts/
+        flake8 --exclude __init__.py --count --max-complexity=10 --max-line-length=127 --statistics ./salad/operator/scripts/ ./salad/client/scripts/ ./common_scripts/enigma_docker_common/ ./km/scripts/ ./contract/scripts/ ./client/scripts/ ./worker/scripts/
     - name: Lint with pylint
       run: |
         pip install pylint
-        pylint --rcfile .pylintrc ./common_scripts/enigma_docker_common/ ./km/scripts/ ./contract/scripts/ ./client/scripts/ ./worker/scripts/
+        pylint --rcfile .pylintrc ./salad/operator/scripts/ ./salad/client/scripts/ ./common_scripts/enigma_docker_common/ ./km/scripts/ ./contract/scripts/ ./client/scripts/ ./worker/scripts/
     - name: Typecheck with mypy
       run: |
         pip install mypy
@@ -41,6 +43,8 @@ jobs:
         mypy ./contract/scripts
         mypy ./client/scripts
         mypy ./worker/scripts
+        mypy ./salad/operator/scripts
+        mypy ./salad/client/scripts
     - name: Safety Check
       run: |
         pip install safety
