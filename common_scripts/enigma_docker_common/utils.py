@@ -4,5 +4,4 @@ def remove_0x(hexstr: str) -> str:
         raise TypeError('Parameter must be a string')
     if hexstr.startswith('0x'):
         return hexstr[2:]
-    else:
-        return hexstr
+    return hexstr

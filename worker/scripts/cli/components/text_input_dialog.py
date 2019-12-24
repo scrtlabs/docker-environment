@@ -1,16 +1,10 @@
+# pylint: disable=duplicate-code
 from asyncio import Future
 
 from prompt_toolkit.application.current import get_app
-from prompt_toolkit.layout.containers import (
-    HSplit,
-)
+from prompt_toolkit.layout.containers import HSplit
 from prompt_toolkit.layout.dimension import D
-from prompt_toolkit.widgets import (
-    Button,
-    Dialog,
-    Label,
-    TextArea,
-)
+from prompt_toolkit.widgets import Button, Dialog, Label, TextArea
 
 
 class TextInputDialog:
@@ -49,4 +43,3 @@ class TextInputDialog:
 
     def __pt_container__(self):
         return self.dialog
-

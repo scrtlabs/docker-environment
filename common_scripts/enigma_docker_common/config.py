@@ -15,33 +15,40 @@ global_config_paths = {"DEV": "dev_config.json",
                        "MAINNET": "mainnet_config.json"}
 
 
-__all__ = ['Config', 'config']
+env_defaults = {'K8S': './config/k8s_config.json',
+                'TESTNET': './config/testnet_config.json',
+                'MAINNET': './config/mainnet_config.json',
+                'COMPOSE': './config/compose_config.json'}
+
+
+__all__ = ['Config']
 
 
 class Config(UserDict):
     """ Configuration manager -- loads global parameters
      automatically selects environment variables first, local configuration second, and global configuration if all else fails
 
-     Can pass a list of required arguments which are checked before initialization passes -- this way you can catch any missing parameters early
+     Can pass a list of required arguments which are checked before initialization passes -- this way you can catch any
+     missing parameters early
      """
     def __init__(self, required: list = None, config_file: str = None):
         # don't use mutable objects as default arguments
         self.required = [] if required is None else required
 
         super().__init__()
-
-        if config_file:
-            logger.info(f'Loading custom configuration: {config_file}')
-            try:
-                with open(config_file) as f:
-                    conf_file = json.load(f)
-                    self.update(conf_file)
-            except IOError:
-                logger.critical("there was a problem opening the config file")
-                raise
-            except json.JSONDecodeError as e:
-                logger.critical("config file isn't valid json")
-                raise ValueError from e
+        if not config_file:
+            config_file = env_defaults[os.getenv('ENIGMA_ENV', 'COMPOSE')]
+        logger.info(f'Loading custom configuration: {config_file}')
+        try:
+            with open(config_file) as f:
+                conf_file = json.load(f)
+                self.update(conf_file)
+        except IOError:
+            logger.critical("there was a problem opening the config file")
+            raise
+        except json.JSONDecodeError as e:
+            logger.critical("config file isn't valid json")
+            raise ValueError from e
 
         self.check_required()
 

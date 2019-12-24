@@ -70,3 +70,38 @@ build-compile-base:
 build-client:
 	cd common_scripts; docker build -f common.Dockerfile -t enigma_common .
 	cd client; docker build -f client.Dockerfile --build-arg DOCKER_TAG=${DOCKER_TAG} -t enigmampc/client:${DOCKER_TAG} .
+
+TESTS=./tests/
+SRC = ./common_scripts/enigma_docker_common/ ./km/scripts/ ./contract/scripts/ ./client/scripts/ ./worker/scripts/
+check:
+	## No unused imports, no undefined vars, no line length
+	flake8 --exclude __init__.py --count --exit-zero --max-line-length=127 --statistics --max-complexity 10 $(SRC)
+
+pylint:
+
+	pylint --rcfile .pylintrc $(SRC)
+
+
+typecheck:
+
+	mypy ./common_scripts/enigma_docker_common/
+	mypy ./km/scripts
+	mypy ./contract/scripts
+	mypy ./client/scripts
+	mypy ./worker/scripts
+
+test:
+
+	python -m pytest -v $(TESTS)
+
+coverage:
+
+	python -m pytest --cov src --cov-report term-missing $(TESTS)
+
+prcheck:
+
+	check pylint coverage
+
+safety:
+
+	safety check

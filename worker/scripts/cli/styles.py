@@ -9,6 +9,7 @@ example_style = Style.from_dict(
     }
 )
 
+
 class Color:
     colors = {
         'BLACK': '\033[0;30m',
@@ -40,4 +41,3 @@ class Color:
 
 
 colorize = Color().color
-

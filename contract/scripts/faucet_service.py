@@ -1,18 +1,16 @@
-import logging
 import json
-import os
+import logging
 import random
-import time
-import web3
 import threading
+import time
 
-from flask import Flask, request
-from flask_cors import CORS
-from flask_restplus import Api, Resource, abort
-
+import web3
 from enigma_docker_common.config import Config
 from enigma_docker_common.logger import get_logger
 from enigma_docker_common.provider import Provider
+from flask import Flask, request
+from flask_cors import CORS
+from flask_restplus import Api, Resource, abort
 
 logging.getLogger("urllib3.connectionpool").setLevel(logging.ERROR)
 logging.getLogger("werkzeug").setLevel(logging.ERROR)
@@ -20,16 +18,9 @@ logging.getLogger("werkzeug").setLevel(logging.ERROR)
 # use this logger if you need to add logs. No need to customize the logger further
 logger = get_logger('enigma-contract.faucet')
 
-required = [
-            "ETH_NODE_ADDRESS", "CONTRACT_DISCOVERY_ADDRESS",
-            "FAUCET_PORT", "BLOCK_TIME"]
+required = ["ETH_NODE_ADDRESS", "CONTRACT_DISCOVERY_ADDRESS", "FAUCET_PORT", "BLOCK_TIME"]
 
-env_defaults = {'K8S': './config/k8s_config.json',
-                'TESTNET': './config/testnet_config.json',
-                'MAINNET': './config/mainnet_config.json',
-                'COMPOSE': './config/compose_config.json'}
-
-config = Config(required=required, config_file=env_defaults[os.getenv('ENIGMA_ENV', 'COMPOSE')])
+config = Config(required=required)
 eng_provider = Provider(config=config)
 
 PORT = config['FAUCET_PORT']
@@ -81,7 +72,7 @@ faucet_ns = api.namespace('faucet', description='faucet operations')
 class BalanceEther(Resource):
     """ Returns the balance of an account """
     @faucet_ns.param('account', 'Address to send currency to', 'query')
-    def get(self):
+    def get(self):  # pylint: disable=no-self-use
         # your code here
         account = request.args.get('account')
         if not w3.isAddress(account):
@@ -95,7 +86,7 @@ class BalanceEther(Resource):
 class BalanceEng(Resource):
     """ Returns the balance of an account """
     @faucet_ns.param('account', 'Address to send currency to', 'query')
-    def get(self):
+    def get(self):  # pylint: disable=no-self-use
         # your code here
         account = request.args.get('account')
         if not w3.isAddress(account):
@@ -109,7 +100,7 @@ class BalanceEng(Resource):
 class TransferEther(Resource):
     """ Returns a  """
     @faucet_ns.param('account', 'Address to send currency to', 'query')
-    def get(self):
+    def get(self):  # pylint: disable=no-self-use
         # your code here
         account = request.args.get('account')
         if not w3.isAddress(account):
@@ -126,7 +117,7 @@ class TransferEther(Resource):
 class TransferEng(Resource):
     """ placeholder till we figure out what to do with this """
     @faucet_ns.param('account', 'Address to send currency to', 'query')
-    def get(self):
+    def get(self):  # pylint: disable=no-self-use
         # your code here
         account = request.args.get('account')
         if not w3.isAddress(account):
@@ -142,14 +133,6 @@ class TransferEng(Resource):
         _ = w3.eth.waitForTransactionReceipt(tx_hash)
         val = erc20.functions.balanceOf(account).call()
         logger.debug(f'{account} ENG balance: {val}')
-
-        # tx_hash = erc20.functions.approve(coinbase, 90).transact({'from': account})
-        # tx_receipt = w3.eth.waitForTransactionReceipt(tx_hash)
-
-        # tx_hash = enigma_contract.functions.deposit(account, 90).transact({'from': account})
-        # logger.info(f'Deposit tx_hash: {tx_hash}')
-        # # tx_receipt = w3.eth.waitForTransactionReceipt(tx_hash)
-        #
 
         return {'status': 'success',
                 'result': {'to': account, 'from': coinbase, 'value': ENG_ALLOWANCE_AMT}}

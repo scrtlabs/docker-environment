@@ -1,8 +1,7 @@
-import functools
 import json
 
-from enigma_docker_common import storage
 from enigma_docker_common import config
+from enigma_docker_common import storage
 from enigma_docker_common.logger import get_logger
 
 logger = get_logger('bootstrap-loader')

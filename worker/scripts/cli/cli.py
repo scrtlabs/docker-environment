@@ -1,26 +1,25 @@
 #!/usr/bin/python3
 
+# flake8: noqa
+
 import asyncio
+import logging
 import os
 import time
+import sys
 from asyncio import ensure_future
 from pathlib import Path
 from threading import Thread
 
-from components import (
-    TextInputDialog,
-    MessageDialog
-)
 from enigma_docker_common.config import Config
 from enigma_docker_common.ethereum import EthereumGateway
 from prompt_toolkit import Application
-from prompt_toolkit.completion import WordCompleter
 from prompt_toolkit.application.current import get_app
 from prompt_toolkit.buffer import Buffer
+from prompt_toolkit.completion import WordCompleter
 from prompt_toolkit.document import Document
 from prompt_toolkit.filters import Condition
 from prompt_toolkit.key_binding import KeyBindings
-from prompt_toolkit.layout.menus import CompletionsMenu
 from prompt_toolkit.layout.containers import (
     ConditionalContainer,
     Float,
@@ -32,16 +31,35 @@ from prompt_toolkit.layout.containers import (
 )
 from prompt_toolkit.layout.controls import FormattedTextControl
 from prompt_toolkit.layout.layout import Layout
+from prompt_toolkit.layout.menus import CompletionsMenu
 from prompt_toolkit.widgets import SearchToolbar, TextArea
 from pyfiglet import figlet_format
-from windows import (
-    EnigmaWindow,
-    EthereumWindow,
-    StakingWindow
-)
-from worker_interface import WorkerInterface
-from animations import animate_loading_text, rotate_loading_dots
-from styles import example_style
+
+try:
+    from .animations import animate_loading_text, rotate_loading_dots
+except ImportError:  # since we copy the code around for linters and IDEs relative imports seem to work
+    from animations import animate_loading_text, rotate_loading_dots  # type: ignore
+
+try:
+    from .components import TextInputDialog, MessageDialog
+except ImportError:
+    from components import TextInputDialog, MessageDialog  # type: ignore
+
+try:
+    from .styles import example_style
+except ImportError:
+    from styles import example_style  # type: ignore
+
+try:
+    from .windows import EnigmaWindow, EthereumWindow, StakingWindow
+except ImportError:
+    from windows import EnigmaWindow, EthereumWindow, StakingWindow  # type: ignore
+
+try:
+    from .worker_interface import WorkerInterface
+except ImportError:
+    from worker_interface import WorkerInterface  # type: ignore
+
 kb = KeyBindings()
 
 env_defaults = {'K8S': f'{Path.home() / "p2p" / "config" / "k8s_config.json"}',
@@ -49,20 +67,19 @@ env_defaults = {'K8S': f'{Path.home() / "p2p" / "config" / "k8s_config.json"}',
                 'MAINNET': f'{Path.home() / "p2p" / "config" / "mainnet_config.json"}',
                 'COMPOSE': f'{Path.home() / "p2p" / "config" / "compose_config.json"}'}
 
-import logging
 logging.getLogger('pycommon.config').setLevel(logging.CRITICAL)
 try:
     config = Config(config_file=env_defaults[os.getenv('ENIGMA_ENV', 'COMPOSE')])
 except (ValueError, IOError):
-    exit(1)
+    sys.exit(1)
 
 # noinspection PyUnboundLocalVariable
 ethereum = EthereumGateway(config['ETH_NODE_ADDRESS'])
 # noinspection PyUnboundLocalVariable
 node_actions = WorkerInterface(config=config)
 
-""" Flow: Setup - input staking address, generate eth, transfer funds (balance > 0.1), 
-register, wait for staker to do stuff, login """
+# Flow: Setup - input staking address, generate eth, transfer funds (balance > 0.1),
+# register, wait for staker to do stuff, login
 
 peers = Buffer()
 peers.text = "0"
@@ -74,8 +91,8 @@ balance_buff = Buffer()
 balance_buff.text = "N/A"
 node_status_buf = Buffer()
 node_status_buf.text = "N/A"
-enigma_contract_address = node_actions.provider.enigma_contract_address
-token_contract_address = node_actions.provider.token_contract_address
+enigma_contract_address = node_actions.eng_contract.contract_address
+token_contract_address = node_actions.erc20_contract.contract_address
 balance = 0
 commands = ["setup", "help", "exit", "register", "login", "logout", "restart", "generate deposit", "generate approve",
             "generate set-address"]
@@ -94,7 +111,7 @@ def exit_(event):
 
 
 @kb.add('f1')
-def show_detailed_help(event=None):
+def show_detailed_help(event=None):  # pylint: disable=unused-argument
     title = 'Help'
 
     text = """Type setup and enter your staking address when prompted. Enter OK
@@ -117,8 +134,9 @@ the transaction """
 
 def get_help_text():
     if staking_address.text == 'N/A':
-        help_text = """\n\nWelcome to the Enigma Management Tool!\n\nThis node is not yet configured with a staking address. To initiate the node, use the "setup" command. 
-        """
+        help_text = "\n\nWelcome to the Enigma Management Tool!" \
+                    "\n\nThis node is not yet configured with a staking address." \
+                    "To initiate the node, use the \"setup\" command. "
     else:
         help_text = f'Welcome to the Enigma Management Tool! Try one of our commands: {commands}'
     return help_text
@@ -163,18 +181,13 @@ def can_register():
     return float(balance) >= 0.1
 
 
-# Attach accept handler to the input field. We do this by assigning the
-# handler to the `TextArea` that we created earlier. it is also possible to
-# pass it to the constructor of `TextArea`.
-# NOTE: It's better to assign an `accept_handler`, rather then adding a
-#       custom ENTER key binding. This will automatically reset the input
-#       field and add the strings to the history.
-def accept(buff):
+# todo: pylint is totally right though. TBD
+def accept(buff):  # pylint: disable=unused-argument, too-many-statements
     txt = input_field.text
 
     # Evaluate "calculator" expression.
 
-    async def coroutine():
+    async def coroutine():  # pylint: disable=too-many-statements, too-many-branches
         try:
             output = ''
             cmd = txt.lower().strip()
@@ -184,12 +197,13 @@ def accept(buff):
                 class Object:
                     pass
                 event_mock = Object()
-                event_mock.app = get_app()
+                event_mock.app = get_app()  # pylint: disable=attribute-defined-outside-init
                 # noinspection PyTypeChecker
                 exit_(event_mock)
             elif cmd == 'help':
                 show_detailed_help()
-                output = f'Please use F1 on your keyboard for a more detailed help dialogue or try one of the below commands.\n{commands}'
+                output = f'Please use F1 on your keyboard for a more detailed help dialogue' \
+                         f'or try one of the below commands.\n{commands}'
             elif cmd == 'setup':
                 open_dialog = TextInputDialog(
                     title="Secret Node Setup",
@@ -206,17 +220,19 @@ def accept(buff):
                     deposit_amount = int(float(cmd.split(' ')[2]) * (10**8))
                     output = 'Generated data for transaction:' + node_actions.generate_approve(staking_address.text,
                                                                                                deposit_amount)
-                except Exception:
+                except Exception:  # pylint: disable=broad-except
                     output = "Please enter a number of ENG to deposit. " \
-                             "Usage: generate approve [N] [  N - amount of allowance in ENG  ]\n\nExample: generate allowance 10000"
+                             "Usage: generate approve [N] [  N - amount of allowance in ENG  ]" \
+                             "\n\nExample: generate allowance 10000"
             elif cmd.startswith('generate deposit'):
                 try:
                     deposit_amount = int(float(cmd.split(' ')[2]) * (10**8))
                     output = 'Generated data for transaction:' + node_actions.generate_deposit(staking_address.text,
                                                                                                deposit_amount)
-                except Exception:
+                except Exception:  # pylint: disable=broad-except
                     output = "Please enter a number of ENG to deposit. " \
-                             "Usage: generate allowance [N] [  N - amount to deposit in ENG  ]\n\nExample: generate allowance 10000"
+                             "Usage: generate allowance [N] [  N - amount to deposit in ENG  ]" \
+                             "\n\nExample: generate allowance 10000"
 
             elif cmd.startswith('generate set-address'):
                 output = 'Generated data for transaction:' + node_actions.generate_set_operating_address(staking_address.text,
@@ -229,14 +245,13 @@ def accept(buff):
                     while not future.done():
                         await animate_loading_text(output_field.buffer, txt)
                     output = future.result()
-                
             else:
                 output = f"\n\nThis command is not recognized. \n Please try again with one of these commands: {commands}"
             # output = "\nIn:  {}\nOut: {}".format(
             #     input_field.text, eval(input_field.text)
             # )  # Don't do 'eval' in real code!
 
-        except BaseException as e:
+        except BaseException as e:  # pylint: disable=broad-except
             output = "\n\nError: {}".format(e)
         new_text = output
 
@@ -317,30 +332,28 @@ async def show_dialog_as_float(dialog):
 
 
 async def do_get_ethereum_address():
-    global ethereum_address
+    global ethereum_address  # pylint: disable=global-statement
     while True:
         try:
             ethereum_address.text = await node_actions.get_eth_address()
-        except Exception:
+        except Exception:  # pylint: disable=broad-except
             ethereum_address.text = "N/A"
         await asyncio.sleep(5)
 
 
 async def do_get_staking_address():
-    global staking_address, output_field
+    global staking_address, output_field  # pylint: disable=global-statement
     while True:
         try:
             staking_address.text = await node_actions.get_staking_address()
-        except Exception as e:
+        except Exception:  # pylint: disable=broad-except
             staking_address.text = "N/A"
             # output_field.text = str(e)
         await asyncio.sleep(5)
 
 
 async def do_get_status():
-    global node_status_buf
-    new_status = 'Down'
-    prev_status = ''
+    global node_status_buf  # pylint: disable=global-statement
     rotated = ''
     prev_status = 'Down'
     while True:
@@ -353,32 +366,31 @@ async def do_get_status():
                 prev_status = new_status
                 rotated = new_status
                 node_status_buf.text = rotated
-        except Exception as e:
+        except Exception:  # pylint: disable=broad-except
             node_status_buf.text = "N/A"
-            # output_field.text = str(e)
         await asyncio.sleep(1)
 
 
 def do_get_balance():
-    global balance
+    global balance  # pylint: disable=global-statement
     balance_buff.text = "N/A"
     while True:
         try:
             if ethereum_address.text != 'N/A':
                 balance = ethereum.balance(ethereum_address.text)
                 balance_buff.text = str(balance) + ' ETH'
-        except Exception as e:
+        except Exception as e:  # pylint: disable=broad-except
             output_field.text = str(e)
         time.sleep(5)
 
 
 async def do_get_peers():
-    global peers
+    global peers  # pylint: disable=global-statement
     while True:
         try:
             connections = await node_actions.get_connections()
             peers.text = connections[1:-1] + '/50 Peers'
-        except Exception as e:
+        except Exception:  # pylint: disable=broad-except
             peers.text = "0/50 Peers"
             # output_field.text = str(e)
         await asyncio.sleep(1)
@@ -403,7 +415,7 @@ async def main():
     app.create_background_task(do_get_ethereum_address())
     app.create_background_task(do_get_staking_address())
     app.create_background_task(do_get_peers())
-    result = await app.run_async()
+    await app.run_async()
 
 
 if __name__ == '__main__':

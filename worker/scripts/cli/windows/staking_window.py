@@ -28,22 +28,16 @@ def StakingWindow(staking_address_txt: Buffer, contract_address: str, token_cont
         # todo: figure out how to pack
         Window(width=2, char='||'),
         HSplit([
-            # Horizontal separator.
-            # The 'body', like defined above.
             Window(height=1, content=FormattedTextControl(staking_title_text()), align=WindowAlign.CENTER),
             address_window(staking_address_txt),
         ], height=2),
         Window(width=2, char='||', align=WindowAlign.CENTER),
         HSplit([
-            # Horizontal separator.
-            # The 'body', like defined above.
             Window(height=1, content=FormattedTextControl(contract_title_text()), align=WindowAlign.CENTER),
             enimga_contract_address(contract_address),
         ], height=2),
         Window(width=2, char='||', align=WindowAlign.CENTER),
         HSplit([
-            # Horizontal separator.
-            # The 'body', like defined above.
             Window(height=1, content=FormattedTextControl(erc20_title_text()), align=WindowAlign.CENTER),
             enimga_contract_address(token_contract),
         ], height=2),
@@ -51,4 +45,3 @@ def StakingWindow(staking_address_txt: Buffer, contract_address: str, token_cont
         ], align=HorizontalAlign.CENTER)
 
     return body
-

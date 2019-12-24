@@ -1,5 +1,3 @@
-from typing import Callable
-
 import web3
 from web3.auto import w3 as auto_w3
 
@@ -67,9 +65,6 @@ class Contract:
 
 
 class EnigmaTokenContract(Contract):
-    def __init__(self, eth_node, contract_address, contract_abi):
-        super().__init__(eth_node, contract_address, contract_abi)
-
     def _approve_build_transaction(self, approver: str, to: str, amount) -> dict:
 
         if not self.w3.isAddress(approver):
@@ -111,10 +106,6 @@ class EnigmaTokenContract(Contract):
 
 
 class EnigmaContract(Contract):
-
-    def __init__(self, eth_node, contract_address, contract_abi):
-        super().__init__(eth_node, contract_address, contract_abi)
-
     def deposit(self, staking_address: str, staking_key: bytes, eth_address: str, deposit_amount: int):
         self.transact(self.toCheckSumAddress(staking_address), staking_key, 'deposit',
                       self.toCheckSumAddress(eth_address), deposit_amount)
@@ -124,9 +115,9 @@ class EnigmaContract(Contract):
         self.transact(self.toCheckSumAddress(staking_address), 'setOperatingAddress',
                       self.toCheckSumAddress(eth_address))
 
-    def deposit_build(self, staking_address: str,eth_address: str, deposit_amount: int):
-        return self.build(self.toCheckSumAddress(staking_address), 'deposit',  self.toCheckSumAddress(eth_address),
-                   deposit_amount)
+    def deposit_build(self, staking_address: str, eth_address: str, deposit_amount: int):
+        return self.build(self.toCheckSumAddress(staking_address), 'deposit', self.toCheckSumAddress(eth_address),
+                          deposit_amount)
 
     # noinspection PyPep8Naming
     def setOperatingAddress_build(self, staking_address: str, eth_address: str):
