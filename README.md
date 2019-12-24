@@ -1,4 +1,4 @@
-[![Actions Status](https://github.com/enigmampc/docker-environment/Python%20Checking/analyze/badge.svg)]
+![](https://github.com/enigmampc/docker-environment/workflows/.github/workflows/pythonapp.yml/badge.svg)
 
 Welcome to the new docker environment!
 
