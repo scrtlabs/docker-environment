@@ -24,6 +24,7 @@ clone-all:
 	${p2p}
 	${contract}
 	${client}
+	${salad}
 
 .PHONY: clone-core
 clone-core:
