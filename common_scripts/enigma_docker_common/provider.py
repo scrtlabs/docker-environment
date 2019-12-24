@@ -1,7 +1,6 @@
 import functools
 import io
 import os
-import time
 import zipfile
 from collections.abc import MutableMapping
 from typing import Dict
