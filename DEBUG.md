@@ -24,7 +24,7 @@ make build-worker DEBUG=1 SGX_MODE=SW
 3. `'target remote' args`: Set to `tcp:localhost:7777` (Set port to `7777` for bootstrap or `7778` for worker).
 4. `Symbolfile`: Get it with `docker cp bootstrap01:/root/core/bin/enigma-core-app /tmp/` and then set it to `/tmp/enigma-core-app`.
 5. `Sysroot`: Leave empty.
-6. `Pathmappings`: TODO.
+6. `Pathmappings`: `TODO`.
 7. `Ok`.
 
 Now while `docker-compose up` is running you can run the debugger with this new configuration.
@@ -92,6 +92,10 @@ Now while `docker-compose up` is running in the debug menu (Ctrl+Shift+D) choose
 Sources:
 
 - https://blog.risingstack.com/how-to-debug-a-node-js-app-in-a-docker-container/
+
+## km
+
+`TODO`. Similar to [enigma-core](#enigma-core).
 
 ## enigma-p2p-monitor
 
