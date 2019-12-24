@@ -50,7 +50,7 @@ Then every change to `enigma-p2p`, build a docker image from the local version o
 
 ```bash
 make clone-local-p2p path=$HOME/workspace/enigma-p2p
-make build-worker
+make build-worker SGX_MODE=SW
 ```
 
 ### WebStorm
