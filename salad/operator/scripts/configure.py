@@ -44,12 +44,13 @@ except (ValueError, IOError) as e:
 
 def parse_env_file(file: typing.Iterable[typing.Text]) -> dict:
     """Parse a .env file to a dict"""
-    return {var: val for var, val in (
-        line.rstrip().split('=', 2)
+    return dict(
+        # we ignore the types because mypy doesn't realize dict can take a Generator[List] where len(list) == 2.
+        line.rstrip().split('=', 2)  # type: ignore
         for line
         in file
         if not line.startswith('#')
-    )}
+    )
 
 
 def dump_env_file(env_vars: dict, file: typing.TextIO) -> None:
@@ -68,15 +69,15 @@ def main():
             env_vars = parse_env_file(file)
 
         for env_var, config_var in {
-            'ETH_HOST': 'ETH_NODE_ADDRESS',
-            'ENIGMA_HOST': 'ENG_NODE_ADDRESS',
-            'MONGO_URL': 'MONGO_URL',
-            'ETH_PORT': 'ETH_NODE_PORT',
-            'ENIGMA_PORT': 'ENG_NODE_PORT',
-            'DB_NAME': 'DB_NAME',
-            'SECRET_CONTRACT_BUILD_FOLDER': 'SECRET_CONTRACT_BUILD_FOLDER',
-            'SALAD_SMART_CONTRACT_ADDRESS': 'SALAD_SMART_CONTRACT_ADDRESS',
-            'SALAD_SECRET_CONTRACT_ADDRESS': 'SALAD_SECRET_CONTRACT_ADDRESS',
+                'ETH_HOST': 'ETH_NODE_ADDRESS',
+                'ENIGMA_HOST': 'ENG_NODE_ADDRESS',
+                'MONGO_URL': 'MONGO_URL',
+                'ETH_PORT': 'ETH_NODE_PORT',
+                'ENIGMA_PORT': 'ENG_NODE_PORT',
+                'DB_NAME': 'DB_NAME',
+                'SECRET_CONTRACT_BUILD_FOLDER': 'SECRET_CONTRACT_BUILD_FOLDER',
+                'SALAD_SMART_CONTRACT_ADDRESS': 'SALAD_SMART_CONTRACT_ADDRESS',
+                'SALAD_SECRET_CONTRACT_ADDRESS': 'SALAD_SECRET_CONTRACT_ADDRESS',
         }.items():
             env_vars[env_var] = config[config_var]
 

@@ -4,11 +4,11 @@ This script uses the enigma provider class to identify all the network parameter
 and writes them to the salad client's `.env` file.
 """
 
-import typing
 import os
 import socket
-
 from time import sleep
+
+import typing
 
 from enigma_docker_common.config import Config
 from enigma_docker_common.logger import get_logger
@@ -48,12 +48,13 @@ except (ValueError, IOError) as e:
 
 def parse_env_file(file: typing.Iterable[typing.Text]) -> dict:
     """Parse a .env file to a dict"""
-    return {var: val for var, val in (
-        line.rstrip().split('=', 2)
+    return dict(
+        # we ignore the types because mypy doesn't realize dict can take a Generator[List] where len(list) == 2.
+        line.rstrip().split('=', 2)  # type: ignore
         for line
         in file
         if not line.startswith('#')
-    )}
+    )
 
 
 def dump_env_file(env_vars: dict, file: typing.TextIO) -> None:
@@ -78,13 +79,13 @@ def main():
         env_vars = parse_env_file(file)
 
     for env_var, config_var in {
-        'ETH_HOST': 'ETH_NODE_ADDRESS',
-        'ENIGMA_HOST': 'ENG_NODE_ADDRESS',
-        'OPERATOR_HOST': 'OPERATOR_HOST',
-        'ETH_PORT': 'ETH_NODE_PORT',
-        'ENIGMA_PORT': 'ENG_NODE_PORT',
-        'WS_PORT': 'OPERATOR_PORT',
-        'MONGO_URL': 'MONGO_URL',
+            'ETH_HOST': 'ETH_NODE_ADDRESS',
+            'ENIGMA_HOST': 'ENG_NODE_ADDRESS',
+            'OPERATOR_HOST': 'OPERATOR_HOST',
+            'ETH_PORT': 'ETH_NODE_PORT',
+            'ENIGMA_PORT': 'ENG_NODE_PORT',
+            'WS_PORT': 'OPERATOR_PORT',
+            'MONGO_URL': 'MONGO_URL',
     }.items():
         env_vars[env_var] = config[config_var]
 
