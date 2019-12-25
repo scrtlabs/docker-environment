@@ -5,6 +5,7 @@ import subprocess
 from typing import List
 
 import requests
+import urllib3.exceptions
 
 from enigma_docker_common.logger import get_logger
 
@@ -103,7 +104,7 @@ class P2PNode(threading.Thread):  # pylint: disable=too-many-instance-attributes
         try:
             resp = requests.get('http://localhost:23456/mgmt/login')
             return bool(resp.status_code == 200)
-        except (requests.HTTPError, ConnectionError) as e:
+        except (requests.RequestException, ConnectionError, urllib3.exceptions.HTTPError) as e:
             logger.error(f'Error with login: {e}, falling back to old-style commands')
             if self.proc:
                 logger.debug('Passing logout to P2P')
@@ -116,7 +117,7 @@ class P2PNode(threading.Thread):  # pylint: disable=too-many-instance-attributes
         try:
             resp = requests.get('http://localhost:23456/mgmt/logout')
             return bool(resp.status_code == 200)
-        except (requests.HTTPError, ConnectionError) as e:
+        except (requests.RequestException, ConnectionError, urllib3.exceptions.HTTPError) as e:
             logger.error(f'Error with logout: {e}, falling back to old-style commands')
             if self.proc:
                 logger.debug('Passing logout to P2P')
