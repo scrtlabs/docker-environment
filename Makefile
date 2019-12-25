@@ -95,7 +95,7 @@ build-salad-client:
 	cd salad/client; docker build -f salad_client.Dockerfile -t enigmampc/salad_client:${DOCKER_TAG} .
 
 TESTS=./tests/
-SRC = ./common_scripts/enigma_docker_common/ ./km/scripts/ ./contract/scripts/ ./client/scripts/ ./worker/scripts/
+SRC = ./common_scripts/enigma_docker_common/ ./km/scripts/ ./contract/scripts/ ./client/scripts/ ./worker/scripts/ ./salad/client/scripts/ ./salad/operator/scripts/
 check:
 	## No unused imports, no undefined vars, no line length
 	flake8 --exclude __init__.py --count --exit-zero --max-line-length=127 --statistics --max-complexity 10 $(SRC)
