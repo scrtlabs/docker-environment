@@ -95,6 +95,7 @@ build-salad-client:
 	cd salad/client; docker build -f salad_client.Dockerfile -t enigmampc/salad_client:${DOCKER_TAG} .
 
 TESTS=./tests/
+
 SRC = ./common_scripts/enigma_docker_common/ ./km/scripts/ ./contract/scripts/ ./client/scripts/ ./worker/scripts/ ./salad/operator/scripts/ ./salad/client/scripts/
 
 .PHONY: check
