@@ -34,7 +34,7 @@ if __name__ == '__main__':
 
     contracts_folder_path = config['CONTRACTS_FOLDER']
     enigma_abi_filename = config['ENIGMA_CONTRACT_FILE_NAME']
-    eth_node_address = f'{config["ETH_NODE_ADDRESS"]}:{config["ETH_NODE_PORT"]}'
+    eth_node_address = f'{config["ETH_NODE_ADDRESS"]}'
 
     # Load Enigma.json ABI
     enigma_contract_abi = provider.enigma_abi
