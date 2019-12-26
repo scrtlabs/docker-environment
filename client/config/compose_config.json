@@ -1,8 +1,5 @@
-{
- "CONTRACT_DISCOVERY_PORT": "8081",
- "CONTRACT_DISCOVERY_ADDRESS": "http://contract:8081",
- "ETH_NODE_ADDRESS": "contract",
- "ETH_NODE_PORT": "9545",
+{"CONTRACT_DISCOVERY_ADDRESS": "http://contract:8081",
+ "ETH_NODE_ADDRESS": "http://contract:9545",
  "CONTRACTS_FOLDER": "/root/build/contracts/",
  "ENIGMA_CONTRACT_FILE_NAME": "Enigma.json",
  "FAUCET_URL": "http://contract:8001",

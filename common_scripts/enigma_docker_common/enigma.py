@@ -1,6 +1,5 @@
-from typing import Callable
-
 import web3
+from web3.auto import w3 as auto_w3
 
 from .logger import get_logger
 
@@ -29,8 +28,11 @@ class Contract:
         self._gasprice = self.max_gas_price
 
     @staticmethod
+    def toCheckSumAddress(address: str):
+        return auto_w3.toChecksumAddress(address)
+
+    @staticmethod
     def _sign(raw_tx, key: bytes) -> dict:
-        from web3.auto import w3 as auto_w3
         # stupid_w3.eth.defaultAccount = public_key
         return auto_w3.eth.account.sign_transaction(raw_tx, private_key=key)
 
@@ -47,6 +49,11 @@ class Contract:
         return self._gasprice
 
     def transact(self, sending_address, key, func, *args):
+        transaction = self.build(sending_address, func, *args)
+        signed_tx = self._sign(transaction, key)
+        self._send_and_wait(signed_tx)
+
+    def build(self, sending_address, func, *args):
         csum_addr = self.w3.toChecksumAddress(sending_address)
         nonce = self.w3.eth.getTransactionCount(csum_addr, 'pending')
         transaction = getattr(self.contract.functions, func)(*args).buildTransaction(
@@ -54,15 +61,10 @@ class Contract:
              'gasPrice': self.gasprice,
              'gas': self.gas_default,
              'nonce': nonce})
-
-        signed_tx = self._sign(transaction, key)
-        self._send_and_wait(signed_tx)
+        return transaction
 
 
 class EnigmaTokenContract(Contract):
-    def __init__(self, eth_node, contract_address, contract_abi):
-        super().__init__(eth_node, contract_address, contract_abi)
-
     def _approve_build_transaction(self, approver: str, to: str, amount) -> dict:
 
         if not self.w3.isAddress(approver):
@@ -84,9 +86,17 @@ class EnigmaTokenContract(Contract):
         :param key: [OPTIONAL] private key in bytes
         """
         self.transact(approver, key, 'approve', to, amount)
-        # raw_tx = self._approve_build_transaction(approver, to, amount)
-        # signed_tx = self._sign(raw_tx, key)
-        # self._send_and_wait(signed_tx)
+
+    def approve_build(self, approver: str, to: str, amount):
+        """
+        Builds approve command for {amount} ENG from {approver} to {to}
+
+        :param amount amount to approve in fragments of ENG
+        :param approver
+        :param to
+        :param key: [OPTIONAL] private key in bytes
+        """
+        return self.build(approver, 'approve', to, amount)
 
     def check_allowance(self, approver, to):
         approver = self.w3.toChecksumAddress(approver)
@@ -96,13 +106,19 @@ class EnigmaTokenContract(Contract):
 
 
 class EnigmaContract(Contract):
-
-    def __init__(self, eth_node, contract_address, contract_abi):
-        super().__init__(eth_node, contract_address, contract_abi)
-
     def deposit(self, staking_address: str, staking_key: bytes, eth_address: str, deposit_amount: int):
-        self.transact(staking_address, staking_key, 'deposit', eth_address, deposit_amount)
+        self.transact(self.toCheckSumAddress(staking_address), staking_key, 'deposit',
+                      self.toCheckSumAddress(eth_address), deposit_amount)
 
     # noinspection PyPep8Naming
-    def setOperatingAddress(self, staking_address: str, staking_key: bytes, eth_address: str):
-        self.transact(staking_address, staking_key, 'setOperatingAddress', eth_address)
+    def setOperatingAddress(self, staking_address: str, eth_address: str):
+        self.transact(self.toCheckSumAddress(staking_address), 'setOperatingAddress',
+                      self.toCheckSumAddress(eth_address))
+
+    def deposit_build(self, staking_address: str, eth_address: str, deposit_amount: int):
+        return self.build(self.toCheckSumAddress(staking_address), 'deposit', self.toCheckSumAddress(eth_address),
+                          deposit_amount)
+
+    # noinspection PyPep8Naming
+    def setOperatingAddress_build(self, staking_address: str, eth_address: str):
+        return self.build(self.toCheckSumAddress(staking_address), 'setOperatingAddress', self.toCheckSumAddress(eth_address))

@@ -1,13 +1,14 @@
+import argparse
 import os
-import time
 import pathlib
 import subprocess
-import argparse
-
-SGX_ENV_PATH = '/opt/sgxsdk/environment'
+import sys
+import time
 
 from enigma_docker_common.config import Config
 from enigma_docker_common.logger import get_logger
+
+SGX_ENV_PATH = '/opt/sgxsdk/environment'
 
 logger = get_logger('worker.core-startup')
 
@@ -22,7 +23,7 @@ env_defaults = {'K8S': './core/config/k8s_config.json',
 def init_arg_parse() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser()
     p.add_argument("-e", "--executable", help="Path to Key Management executable", type=str,
-                        default='/root/core/bin/enigma-core-app')
+                   default='/root/core/bin/enigma-core-app')
     return p
 
 
@@ -33,7 +34,7 @@ def main():
     try:
         config = Config(config_file=env_defaults[os.getenv('ENIGMA_ENV', 'COMPOSE')])
     except (ValueError, IOError):
-        exit(-1)
+        sys.exit(-1)
 
     if not os.getenv('RUST_BACKTRACE'):
         if config['RUST_BACKTRACE'] != '0':
@@ -54,7 +55,7 @@ def main():
                  '--spid', f'{spid}',
                  '-r', f'{attestation_retries}']
 
-    log_level = config.get('LOG_LEVEL', 'info').lower()
+    log_level = os.getenv('LOG_LEVEL_CORE', '').lower() or os.getenv('LOG_LEVEL', 'info').lower()
     if log_level:
         exec_args.append('-l')
         exec_args.append(log_level)

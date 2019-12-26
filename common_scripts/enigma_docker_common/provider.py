@@ -1,14 +1,19 @@
-import os
 import functools
+import io
+import os
 import zipfile
-from .logger import get_logger
+from collections.abc import MutableMapping
+from typing import Dict
+
 from . import storage
+from .logger import get_logger
 
 logger = get_logger('enigma_common.provider')
 
 
 class Provider:
-    def __init__(self, config: dict):
+    #  pylint: disable=too-many-statements,too-many-instance-attributes
+    def __init__(self, config: MutableMapping):
         self.config = config
 
         self.CONTRACT_DISCOVERY_ADDRESS = config.get('CONTRACT_DISCOVERY_ADDRESS', '')
@@ -65,11 +70,12 @@ class Provider:
                                          "MAINNET": storage.AzureContainerFileService('public')}
 
         # information stored in global storage
-        self.backend_strategy = {"COMPOSE": storage.HttpFileService(self.CONTRACT_DISCOVERY_ADDRESS, directory='abi'),
-                                 "COMPOSE_DEV": storage.HttpFileService(self.CONTRACT_DISCOVERY_ADDRESS, directory='abi'),
-                                 "K8S": storage.HttpFileService(self.CONTRACT_DISCOVERY_ADDRESS, directory='abi'),
-                                 "TESTNET": storage.AzureContainerFileService(self._km_abi_directory),
-                                 "MAINNET": storage.AzureContainerFileService(self._km_abi_directory)}
+        self.backend_strategy: Dict[str, storage.IndexableContainer[bytes]] = \
+            {"COMPOSE": storage.HttpFileService(self.CONTRACT_DISCOVERY_ADDRESS, directory='abi'),
+             "COMPOSE_DEV": storage.HttpFileService(self.CONTRACT_DISCOVERY_ADDRESS, directory='abi'),
+             "K8S": storage.HttpFileService(self.CONTRACT_DISCOVERY_ADDRESS, directory='abi'),
+             "TESTNET": storage.AzureContainerFileService(self._km_abi_directory),
+             "MAINNET": storage.AzureContainerFileService(self._km_abi_directory)}
 
         self._enigma_abi = None
         self._enigma_token_abi = None
@@ -78,40 +84,40 @@ class Provider:
         self._token_contract_address = None
         self._key_management_abi = None
 
-    @property
+    @property  # type: ignore
     @functools.lru_cache()
     def key_management_abi(self):
         filename = self._km_abi_filename_local if os.getenv('ENIGMA_ENV', '') in ['COMPOSE', 'K8S'] \
             else self._km_abi_filename
         return self.get_file(file_name=filename)
 
-    @property
+    @property  # type: ignore
     @functools.lru_cache()
     def enigma_contract_address(self):
         return self._deployed_contract_address(contract_name=self._enigma_contract_filename)
 
-    @property
+    @property  # type: ignore
     @functools.lru_cache()
     def token_contract_address(self):
         return self._deployed_contract_address(contract_name=self._token_contract_filename)
 
-    @property
+    @property  # type: ignore
     @functools.lru_cache()
     def voting_contract_address(self):
         return self._deployed_contract_address(contract_name=self._voting_contract_filename)
 
-    @property
+    @property  # type: ignore
     @functools.lru_cache()
     def sample_contract_address(self):
         return self._deployed_contract_address(contract_name=self._sample_contract_filename)
 
-    @property
+    @property  # type: ignore
     @functools.lru_cache()
     def principal_address(self):
         fs = self.key_management_discovery[os.getenv('ENIGMA_ENV', 'COMPOSE')]
         return fs[self._principal_address_filename]
 
-    @property
+    @property  # type: ignore
     @functools.lru_cache()
     def enigma_abi(self):
         filename = self._enigma_contract_abi_filename if os.getenv('ENIGMA_ENV', '') in ['COMPOSE', 'K8S'] \
@@ -119,10 +125,10 @@ class Provider:
         file = self.get_file(file_name=filename)
         try:
             return self._unzip_bytes(file, self._enigma_contract_abi_filename)
-        except Exception:
+        except (zipfile.BadZipFile, TypeError, ValueError):
             return file
 
-    @property
+    @property  # type: ignore
     @functools.lru_cache()
     def enigma_token_abi(self):
         filename = self._enigma_token_abi_filename if os.getenv('ENIGMA_ENV', '') in ['COMPOSE', 'K8S'] \
@@ -130,10 +136,10 @@ class Provider:
         file = self.get_file(file_name=filename)
         try:
             return self._unzip_bytes(file, self._enigma_token_abi_filename)
-        except Exception:
+        except (zipfile.BadZipFile, TypeError, ValueError):
             return file
 
-    def get_file(self, file_name) -> bytes:
+    def get_file(self, file_name: str) -> bytes:
         fs = self.backend_strategy[os.getenv('ENIGMA_ENV', 'COMPOSE')]
         try:
             file = fs[file_name]
@@ -142,20 +148,10 @@ class Provider:
             return file
         except PermissionError as e:
             logger.critical(f'Failed to get file, probably missing credentials. {e}')
+            raise FileNotFoundError from None
         except ValueError as e:  # not sure what Exceptions right now
             logger.critical(f'Failed to get file: {e}')
-        except Exception as e:  # not sure what Exceptions right now
-            logger.critical(f'Failed to get file: {type(e)} - {e}')
-            exit(-1)
-
-    def _wait_till_open(self, timeout: int = 60, fs: storage.HttpFileService = None) -> bool:
-        _fs = fs or self.contract_strategy[os.getenv('ENIGMA_ENV', 'COMPOSE')]
-        import time
-        for _ in range(timeout):
-            if _fs.is_ready():
-                return True
-            time.sleep(1)
-        return False
+            raise FileNotFoundError from None
 
     def _deployed_contract_address(self, contract_name):
         fs = self.contract_strategy[os.getenv('ENIGMA_ENV', 'COMPOSE')]
@@ -167,6 +163,5 @@ class Provider:
     @staticmethod
     def _unzip_bytes(file_bytes: bytes, file_name: str) -> bytes:
         """ unzip a file to a path """
-        import io
         with zipfile.ZipFile(io.BytesIO(file_bytes), "r") as zip_ref:
             return zip_ref.read(file_name)

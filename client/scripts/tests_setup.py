@@ -9,19 +9,11 @@ from enigma_docker_common.logger import get_logger
 logger = get_logger('client-startup')
 
 # required configuration parameters -- these can all be overridden as environment variables
-required = [  # required by provider AND locally
-              'CONTRACT_DISCOVERY_PORT', 'CONTRACT_DISCOVERY_ADDRESS',
-              # defaults in local config file
-              'ETH_NODE_ADDRESS', 'ENIGMA_CONTRACT_FILE_NAME', 'CONTRACTS_FOLDER',
-              'FAUCET_URL', 'MINIMUM_ETHER_BALANCE', 'ETH_NODE_PORT', 'WORKER_URL', 'PROXY_PORT']
+required = ['ETH_NODE_ADDRESS', 'ENIGMA_CONTRACT_FILE_NAME', 'CONTRACTS_FOLDER', 'FAUCET_URL',
+            'WORKER_URL', 'PROXY_PORT']
 
 # local path to where we save the private key/public key if we generate it locally
 KEY_PAIR_PATH = os.path.dirname(os.path.dirname(__file__))
-
-env_defaults = {'K8S': './config/k8s_config.json',
-                'TESTNET': './config/testnet_config.json',
-                'MAINNET': './config/mainnet_config.json',
-                'COMPOSE': './config/compose_config.json'}
 
 
 def save_to_path(path, file):
@@ -35,14 +27,14 @@ if __name__ == '__main__':
 
     logger.info('STARTING P2P STARTUP')
     env = os.getenv('ENIGMA_ENV', 'COMPOSE')
-    config = Config(required=required, config_file=env_defaults[env])
+    config = Config(required=required)
     provider = Provider(config=config)
 
     # *** Load parameters from config
 
     contracts_folder_path = config['CONTRACTS_FOLDER']
     enigma_abi_filename = config['ENIGMA_CONTRACT_FILE_NAME']
-    eth_node_address = f'{config["ETH_NODE_ADDRESS"]}:{config["ETH_NODE_PORT"]}'
+    eth_node_address = f'{config["ETH_NODE_ADDRESS"]}'
 
     # Load Enigma.json ABI
     enigma_contract_abi = provider.enigma_abi
@@ -61,7 +53,7 @@ if __name__ == '__main__':
 
     addresses = {'contract': eng_contract_addr,
                  'token': token_contract_address,
-                 'eth_node': f'http://{eth_node_address}',
+                 'eth_node': f'{eth_node_address}',
                  'proxy': f'{config["WORKER_URL"]}:{config["PROXY_PORT"]}'}
 
     if env == 'COMPOSE':
@@ -69,8 +61,3 @@ if __name__ == '__main__':
         addresses['sample'] = provider.sample_contract_address
 
     save_to_path(contracts_folder_path+'addresses.json', json.dumps(addresses).encode())
-
-    # todo: conditional generate
-    # priv, pub = generate_key()
-    # public_key = pubkey_to_addr(pub.hex())
-
