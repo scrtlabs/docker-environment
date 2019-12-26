@@ -1,30 +1,28 @@
-import os
 import json
+import os
 import pathlib
+import sys
 import time
-from typing import Union
 from urllib.parse import urlparse
-
-from p2p_node import P2PNode
-from bootstrap_loader import BootstrapLoader
+from typing import Union
 
 from enigma_docker_common.config import Config
-from enigma_docker_common.provider import Provider
-from enigma_docker_common.logger import get_logger
-from enigma_docker_common.utils import remove_0x
 from enigma_docker_common.crypto import open_eth_keystore, address_from_private
-from enigma_docker_common.ethereum import EthereumGateway
-from enigma_docker_common.faucet_api import get_initial_coins
 from enigma_docker_common.enigma import EnigmaTokenContract, EnigmaContract
+from enigma_docker_common.ethereum import check_eth_limit
+from enigma_docker_common.faucet_api import get_initial_coins
+from enigma_docker_common.logger import get_logger
+from enigma_docker_common.provider import Provider
+from enigma_docker_common.utils import remove_0x
+
+from bootstrap_loader import BootstrapLoader
+from p2p_node import P2PNode
 
 logger = get_logger('worker.p2p-startup')
 
 # required configuration parameters -- these can all be overridden as environment variables
-required = [  # required by provider AND locally
-              'CONTRACT_DISCOVERY_ADDRESS', 'KEY_MANAGEMENT_DISCOVERY',
-              # defaults in local config file
-              'ETH_NODE_ADDRESS', 'ENIGMA_CONTRACT_FILE_NAME', 'CORE_ADDRESS', 'CORE_PORT', 'CONTRACTS_FOLDER',
-              'KEY_MANAGEMENT_ADDRESS', 'FAUCET_URL', 'MINIMUM_ETHER_BALANCE', 'BALANCE_WAIT_TIME', 'MIN_CONFIRMATIONS']
+required = ['ETH_NODE_ADDRESS', 'ENIGMA_CONTRACT_FILE_NAME', 'CORE_ADDRESS', 'CORE_PORT', 'CONTRACTS_FOLDER',
+            'KEY_MANAGEMENT_ADDRESS', 'MINIMUM_ETHER_BALANCE', 'MIN_CONFIRMATIONS']
 
 env_defaults = {'K8S': '/root/p2p/config/k8s_config.json',
                 'TESTNET': '/root/p2p/config/testnet_config.json',
@@ -39,7 +37,7 @@ log_level = os.getenv('LOG_LEVEL', 'info')
 try:
     config = Config(required=required, config_file=env_defaults[os.getenv('ENIGMA_ENV', 'COMPOSE')])
 except (ValueError, IOError):
-    exit(-1)
+    sys.exit(-1)
 
 # local path to where we save the private key/public key if we generate it locally
 KEY_PAIR_PATH = os.path.dirname(os.path.dirname(__file__))
@@ -50,22 +48,6 @@ def save_to_path(path, file, flags='wb+'):
     os.makedirs(os.path.dirname(path), exist_ok=True)
     with open(path, flags) as f:
         f.write(file)
-
-
-def check_eth_limit(account: str,
-                    min_ether: float,
-                    eth_node: str) -> bool:
-    eth_gateway = EthereumGateway(eth_node)
-    cur_balance = float(eth_gateway.balance(account))
-    if min_ether > cur_balance:
-        logger.info(f'Ethereum balance {cur_balance} is less than the minimum amount {min_ether} ETH required to start '
-                    f'the worker. Please transfer currency to the worker account: {account} and restart the worker')
-        # exit(0)
-        return False
-    return True
-    # if allowance_limit > float(erc20.check_allowance(enigma_contract_address, account)):
-    #     logger.info(f'{currency} balance is less than the minimum amount {min_ether}ETH required to start the worker'
-    #                 f' Please transfer currency to the worker account: {account}')
 
 
 def address_as_string(addr: Union[bytes, str]) -> str:
@@ -95,7 +77,8 @@ def get_status() -> str:
     return status
 
 
-def main():
+# todo: pylint is totally right though. TBD
+def main():  # noqa: C901  # pylint: disable=too-many-locals,too-many-branches,too-many-branches,too-many-statements
     set_status('Down')
     # todo: unhardcode this
     executable = '/root/p2p/src/cli/cli_app.js'
@@ -177,10 +160,6 @@ def main():
                                          token_contract_addr,
                                          json.loads(provider.enigma_token_abi)['abi'])
 
-    # keystore_dir = config.get('ETH_KEY_PATH', pathlib.Path.home())
-    # password = config.get('PASSWORD', 'cupcake')  # :)
-    # private_key, eth_address = open_eth_keystore(keystore_dir, config, password=password, create=True)
-
     #  will not try a faucet if we're in mainnet - also, it should be logged inside
     #  will not try a faucet if we're in a testing environment
     if env in ['COMPOSE', 'K8S']:
@@ -192,19 +171,19 @@ def main():
             get_initial_coins(staking_address, 'ETH', config)
         except RuntimeError as e:
             logger.critical(f'Failed to get enough ETH from faucet to start. Error: {e}')
-            exit(-2)
-        except ConnectionError as e:
+            sys.exit(-2)
+        except ConnectionError:
             logger.critical(f'Failed to connect to faucet address. Exiting...')
-            exit(-1)
+            sys.exit(-1)
 
         try:
             get_initial_coins(staking_address, 'ENG', config)
         except RuntimeError as e:
             logger.critical(f'Failed to get enough ENG for staking address - Error: {e}')
-            exit(-2)
-        except ConnectionError as e:
+            sys.exit(-2)
+        except ConnectionError:
             logger.critical(f'Failed to connect to faucet address. Exiting...')
-            exit(-1)
+            sys.exit(-1)
 
     # load operating key from configuration -- used in testnet to automatically start bootstrap nodes
     if is_bootstrap and env in ['TESTNET']:
@@ -224,17 +203,6 @@ def main():
 
     # perform deposit
     if env in ['K8S', 'COMPOSE'] or (is_bootstrap and env == 'TESTNET'):
-        """ Logic for deposit is:
-
-        Staking address                             Operating address 
-                     --------setOperatingAddress---------> 
-
-                     <--------------register--------------
-
-                     ---------------deposit-------------->
-
-                     <-----------------login--------------                                       
-        """
         # tell the p2p to automatically register -- mostly used for testing environments
         auto_init = True
 
@@ -316,9 +284,8 @@ def main():
         if p2p_runner.login():
             set_status('Running')
         else:
-            set_status('Failed to login - Please see detailed logs located in your worker-p2p ssh window for more information!')
-            
-            
+            set_status('Failed to login -'
+                       'Please see detailed logs located in your worker-p2p ssh window for more information!')
     else:
         # for now lets sleep instead of getting confirmations till we move it to web
         while True:
@@ -338,7 +305,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-
-
-
-

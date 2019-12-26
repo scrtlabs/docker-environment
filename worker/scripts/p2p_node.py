@@ -5,18 +5,20 @@ import subprocess
 from typing import List
 
 import requests
+import urllib3.exceptions
 
 from enigma_docker_common.logger import get_logger
 
 logger = get_logger('worker.p2p-node')
 
 
-class P2PNode(threading.Thread):
+# todo: pylint is totally right though. TBD
+class P2PNode(threading.Thread):  # pylint: disable=too-many-instance-attributes
     exec_file = 'cli_app.js'
     runner = 'node'
     kill_now = False
 
-    def __init__(self,
+    def __init__(self,  # pylint: disable=too-many-arguments,too-many-locals
                  ether_node: str,
                  public_address: str,
                  contract_address: str,
@@ -39,16 +41,10 @@ class P2PNode(threading.Thread):
                  bootstrap_path: str = "B1",
                  bootstrap_port: str = "B1",
                  min_confirmations: int = 12,
-                 executable_name: str = 'cli_app.js', *args, **kwargs):
-        super().__init__(*args, **kwargs)
+                 executable_name: str = 'cli_app.js'):
+        super().__init__()
         self.exec_file = executable_name
         self.km_node = key_mgmt_node
-
-        # todo: fix assumption that ws is in http port + 1
-        # p = urlparse(ether_node)
-        # hostname = p.hostname
-        # port = p.port
-        # self.ether_gateway = f'ws://{hostname}:{port+1}'
         self.ether_gateway = ether_node
         self.proxy = proxy
         self.core_addr = core_addr
@@ -82,7 +78,7 @@ class P2PNode(threading.Thread):
         if self.proc:
             self._kill(None, None)
 
-    def _kill(self, signum, frame):
+    def _kill(self, signum, frame):  # pylint: disable=unused-argument
         if self.proc:
             logger.info('Logging out...')
 
@@ -95,40 +91,39 @@ class P2PNode(threading.Thread):
             self.kill_now = True
             logger.info('Killed p2p cli')
 
-    def register(self):
+    @staticmethod
+    def register():
         try:
             resp = requests.get('http://localhost:23456/mgmt/register')
-            if resp.status_code == 200:
-                return True
-            else:
-                return False
-        except Exception as e:
+            return bool(resp.status_code == 200)
+        except (requests.HTTPError, ConnectionError) as e:
             logger.error(f'Error with register: {e}')
             return False
 
     def login(self):
         try:
             resp = requests.get('http://localhost:23456/mgmt/login')
-            if resp.status_code == 200:
+            return bool(resp.status_code == 200)
+        except (requests.RequestException, ConnectionError, urllib3.exceptions.HTTPError) as e:
+            logger.error(f'Error with login: {e}, falling back to old-style commands')
+            if self.proc:
+                logger.debug('Passing logout to P2P')
+                self.proc.stdin.write(b'login\n')
+                self.proc.stdin.flush()
                 return True
-            else:
-                return False
-        except Exception as e:
-            logger.error(f'Error with login: {e}')
             return False
-            # logger.debug('Passing login to P2P')
-            # self.proc.stdin.write(b'login\n')
-            # self.proc.stdin.flush()
 
     def logout(self):
         try:
             resp = requests.get('http://localhost:23456/mgmt/logout')
-            if resp.status_code == 200:
+            return bool(resp.status_code == 200)
+        except (requests.RequestException, ConnectionError, urllib3.exceptions.HTTPError) as e:
+            logger.error(f'Error with logout: {e}, falling back to old-style commands')
+            if self.proc:
+                logger.debug('Passing logout to P2P')
+                self.proc.stdin.write(b'logout\n')
+                self.proc.stdin.flush()
                 return True
-            else:
-                return False
-        except Exception as e:
-            logger.error(f'Error with logout: {e}')
             return False
 
     def _map_params_to_exec(self) -> List[str]:

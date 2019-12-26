@@ -24,6 +24,7 @@ clone-all:
 	${p2p}
 	${contract}
 	${client}
+	${salad}
 
 .PHONY: clone-core
 clone-core:
@@ -92,3 +93,28 @@ build-salad-operator: build-enigma-common clone-core
 .PHONY: build-salad-client
 build-salad-client:
 	cd salad/client; docker build -f salad_client.Dockerfile -t enigmampc/salad_client:${DOCKER_TAG} .
+
+TESTS=./tests/
+
+SRC = ./common_scripts/enigma_docker_common/ ./km/scripts/ ./contract/scripts/ ./client/scripts/ ./worker/scripts/ ./salad/operator/scripts/ ./salad/client/scripts/
+
+.PHONY: check
+check:
+	## No unused imports, no undefined vars, no line length
+	flake8 --exclude __init__.py --count --exit-zero --max-line-length=127 --statistics --max-complexity 10 $(SRC)
+
+.PHONY: pylint
+pylint:
+	pylint --rcfile .pylintrc $(SRC)
+
+.PHONY: typecheck
+typecheck:
+	mypy ./common_scripts/enigma_docker_common/
+	mypy ./km/scripts
+	mypy ./contract/scripts
+	mypy ./client/scripts
+	mypy ./worker/scripts
+
+.PHONY: safety
+safety:
+	safety check

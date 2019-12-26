@@ -50,8 +50,9 @@ COPY --from=gitclone_salad /root/salad/client /root/salad/client
 COPY --from=gitclone_salad /root/salad/smart_contracts /root/salad/smart_contracts
 COPY --from=gitclone_salad /root/salad/package.json /root/salad/
 COPY --from=gitclone_salad /root/salad/truffle.js /root/salad/
-
+RUN true
 COPY --from=node_modules_build /root/salad/node_modules /root/salad/node_modules
+RUN true
 COPY --from=node_modules_build /root/salad/client/node_modules /root/salad/client/node_modules
 
 # Set up the environment variable defaults and compile the smart contracts
