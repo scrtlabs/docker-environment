@@ -1,7 +1,3 @@
-Current:
-![](https://github.com/enigmampc/docker-environment/workflows/CI/badge.svg)
-![](https://github.com/enigmampc/docker-environment/workflows/Python%20Checking/badge.svg)
-
 Develop:
 ![](https://github.com/enigmampc/docker-environment/workflows/CI/badge.svg?branch=develop)
 ![](https://github.com/enigmampc/docker-environment/workflows/Python%20Checking/badge.svg?branch=develop)
