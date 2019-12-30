@@ -59,9 +59,11 @@ def main():
     if log_level:
         exec_args.append('-l')
         exec_args.append(log_level)
-
-    return subprocess.check_call(exec_args, env=env)
-
-
+    
+    try:
+        subprocess.check_call(exec_args, env=env)
+    except CalledProcessError:
+        sys.exit(-1)
+      
 if __name__ == '__main__':
     main()
