@@ -62,7 +62,7 @@ def main():
     
     try:
         subprocess.check_call(exec_args, env=env)
-    except CalledProcessError:
+    except subprocess.CalledProcessError:
         sys.exit(-1)
       
 if __name__ == '__main__':
