@@ -60,7 +60,7 @@ def main():
         exec_args.append('-l')
         exec_args.append(log_level)
 
-    subprocess.call(exec_args, env=env)
+    return subprocess.check_call(exec_args, env=env)
 
 
 if __name__ == '__main__':
