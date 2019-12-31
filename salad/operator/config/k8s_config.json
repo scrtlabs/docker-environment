@@ -2,7 +2,7 @@
  "CONTRACT_DISCOVERY_ADDRESS": "http://contract-service:8081",
  "ETH_NODE_ADDRESS": "contract-service",
  "ETH_NODE_PORT": "9545",
- "ENG_NODE_ADDRESS": "bootstrap-1-service",
+ "ENG_NODE_ADDRESS": "bootstrap-2-service",
  "ENG_NODE_PORT": "3346",
  "MONGO_URL": "mongodb://mongo:27017",
  "DB_NAME": "salad",
