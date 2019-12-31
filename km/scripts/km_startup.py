@@ -186,6 +186,6 @@ if __name__ == '__main__':  # noqa: C901
         time.sleep(5)
 
     try:
-        subprocess.check_call(exec_args, env=env)
+        subprocess.check_call(exec_args)
     except subprocess.CalledProcessError:
         sys.exit(-1)
