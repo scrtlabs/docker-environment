@@ -23,4 +23,4 @@ def parse_env_file(file: typing.Iterable[typing.Text]) -> dict:
 
 
 def dump_env_file(env_vars: dict, file: typing.TextIO) -> None:
-    file.writelines(f'{key}={value}\n' for key, value in env_vars.items())
+    file.writelines(f'{key}={value}\n' for key, value in env_vars.items() if value not in ['', None])
