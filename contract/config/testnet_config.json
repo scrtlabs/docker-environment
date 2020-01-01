@@ -1,10 +1,15 @@
-{"CONTRACT_DISCOVERY_ADDRESS": "http://localhost:8081",
- "KEY_MANAGEMENT_DISCOVERY": "http://km-service:8081",
- "PRINCIPAL_ADDRESS_PATH":  "/root/.enigma/principal-sign-addr.txt",
- "CONTRACT_PATH":  "/root/.enigma/",
- "CONTRACT_FILES":  ["enigmacontract.txt", "enigmatokencontract.txt"],
- "FAUCET_PORT": 8001,
- "ETH_NODE_ADDRESS": "http://localhost:9545",
- "TIME_BETWEEN_BLOCKS": 10,
- "KEY_MANAGEMENT_TIMEOUT": 120,
- "CONTRACT_TIMEOUT": 3600}
+{
+    "CONTRACT_DISCOVERY_ADDRESS": "http://localhost:8081",
+    "KEY_MANAGEMENT_DISCOVERY": "http://km-service:8081",
+    "PRINCIPAL_ADDRESS_PATH": "/root/.enigma/principal-sign-addr.txt",
+    "CONTRACT_PATH": "/root/.enigma/",
+    "CONTRACT_FILES": [
+        "enigmacontract.txt",
+        "enigmatokencontract.txt"
+    ],
+    "FAUCET_PORT": 8001,
+    "ETH_NODE_ADDRESS": "http://localhost:9545",
+    "TIME_BETWEEN_BLOCKS": 10,
+    "KEY_MANAGEMENT_TIMEOUT": 120,
+    "CONTRACT_TIMEOUT": 3600
+}
