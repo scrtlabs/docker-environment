@@ -11,4 +11,4 @@ RUN . /opt/sgxsdk/environment && env && RUSTFLAGS=-Awarnings RUST_BACKTRACE=1 ma
 
 FROM alpine
 
-COPY --from=core-build /root/enigma-core/bin/ /root/enigma-core/bin/
+COPY --from=core-compile /root/enigma-core/bin/ /root/enigma-core/bin/
