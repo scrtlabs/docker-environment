@@ -5,5 +5,6 @@
  "FAUCET_URL": "http://localhost:8001",
  "MINIMUM_ETHER_BALANCE": "0.001",
  "WORKER_URL": "http://localhost",
- "PROXY_PORT": 3346
+ "PROXY_PORT": 3346,
+ "LOG_LEVEL": "debug"
 }
