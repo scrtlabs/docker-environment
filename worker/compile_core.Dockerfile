@@ -1,4 +1,4 @@
-FROM enigmampc/core-compile-base:latest
+FROM enigmampc/core-compile-base:latest as core-compile
 
 ARG SGX_MODE
 ARG DEBUG
@@ -8,3 +8,7 @@ COPY --from=gitclone_core /enigma-core /root/
 WORKDIR /root/enigma-core
 
 RUN . /opt/sgxsdk/environment && env && RUSTFLAGS=-Awarnings RUST_BACKTRACE=1 make DEBUG=${DEBUG}
+
+FROM alpine
+
+COPY --from=core-build /root/enigma-core/bin/ /root/enigma-core/bin/
