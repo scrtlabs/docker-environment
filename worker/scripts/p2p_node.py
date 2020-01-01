@@ -2,6 +2,7 @@ import signal
 import threading
 import atexit
 import subprocess
+import enum
 from typing import List
 
 import requests
@@ -10,6 +11,14 @@ import urllib3.exceptions
 from enigma_docker_common.logger import get_logger
 
 logger = get_logger('worker.p2p-node')
+
+
+class P2PStatuses(enum.Enum):
+    INITIALIZING = "initializing"
+    UNREGISTERED = "unregistered"
+    REGISTERED = "registered"
+    LOGGEDIN = "logged-in"
+    # LOGGEDOUT = "logged-out"
 
 
 # todo: pylint is totally right though. TBD
@@ -91,39 +100,61 @@ class P2PNode(threading.Thread):  # pylint: disable=too-many-instance-attributes
             self.kill_now = True
             logger.info('Killed p2p cli')
 
+    def status(self) -> P2PStatuses:
+        try:
+            resp = requests.get(f'http://localhost:{self.health_check_port}/status')
+            if resp.status_code == 200:
+                try:
+                    return P2PStatuses(resp.json())
+                except ValueError as e:
+                    logger.error(f'P2P returned unknown status: {resp.json()}')
+                    raise ValueError from None
+
+        except (requests.RequestException, ConnectionError, urllib3.exceptions.HTTPError):
+            logger.error(f'Error with register')
+            return False
+
     @staticmethod
     def register():
         try:
             resp = requests.get('http://localhost:23456/mgmt/register')
             return bool(resp.status_code == 200)
-        except (requests.HTTPError, ConnectionError) as e:
-            logger.error(f'Error with register: {e}')
+        except (requests.RequestException, ConnectionError, urllib3.exceptions.HTTPError):
+            logger.error(f'Error with register, cannot connect to p2p management API')
             return False
 
     def login(self):
         try:
             resp = requests.get('http://localhost:23456/mgmt/login')
             return bool(resp.status_code == 200)
-        except (requests.RequestException, ConnectionError, urllib3.exceptions.HTTPError) as e:
-            logger.error(f'Error with login: {e}, falling back to old-style commands')
-            if self.proc:
-                logger.debug('Passing logout to P2P')
-                self.proc.stdin.write(b'login\n')
-                self.proc.stdin.flush()
-                return True
+        except (requests.RequestException, ConnectionError, urllib3.exceptions.HTTPError):
+            logger.error(f'Error with login, falling back to old-style commands')
+            try:
+                if self.proc:
+                    logger.debug('Passing logout to P2P')
+                    self.proc.stdin.write(b'login\n')
+                    self.proc.stdin.flush()
+                    return True
+            except AttributeError:
+                logger.critical('P2P process doesn\'t exist (was it killed prematurely?)')
+                raise RuntimeError from None
             return False
 
     def logout(self):
         try:
             resp = requests.get('http://localhost:23456/mgmt/logout')
             return bool(resp.status_code == 200)
-        except (requests.RequestException, ConnectionError, urllib3.exceptions.HTTPError) as e:
-            logger.error(f'Error with logout: {e}, falling back to old-style commands')
-            if self.proc:
-                logger.debug('Passing logout to P2P')
-                self.proc.stdin.write(b'logout\n')
-                self.proc.stdin.flush()
-                return True
+        except (requests.RequestException, ConnectionError, urllib3.exceptions.HTTPError):
+            logger.error(f'Error with logout, falling back to old-style commands')
+            try:
+                if self.proc:
+                    logger.debug('Passing logout to P2P')
+                    self.proc.stdin.write(b'logout\n')
+                    self.proc.stdin.flush()
+                    return True
+            except AttributeError:
+                logger.critical('P2P process doesn\'t exist (was it killed prematurely?)')
+                raise RuntimeError from None
             return False
 
     def _map_params_to_exec(self) -> List[str]:
