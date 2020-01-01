@@ -1,3 +1,3 @@
 #!/bin/bash
 
-watch './is_ready.sh && echo V || echo X'
+watch './is_ready.sh && echo v || echo x'
