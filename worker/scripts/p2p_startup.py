@@ -282,6 +282,7 @@ def main():  # noqa: C901  # pylint: disable=too-many-locals,too-many-branches,t
     # we perform auto-deposit in testing environment
     if env in ['K8S', 'COMPOSE'] or (is_bootstrap and env == 'TESTNET'):
         wait_for_register(p2p_runner)
+        logger.info(f'Register success!')
         set_status('Setting staking address...')
         logger.info(f'Attempting to set operating address -- staking:{staking_address} operating: {eth_address}')
         # todo: wait for confirmations
@@ -308,7 +309,7 @@ def main():  # noqa: C901  # pylint: disable=too-many-locals,too-many-branches,t
             if status == P2PStatuses.REGISTERED:
                 break
             time.sleep(10)
-
+        logger.info(f'Register success!')
         set_status('Waiting for login...')
         logger.info('Waiting for deposit & login...')
 

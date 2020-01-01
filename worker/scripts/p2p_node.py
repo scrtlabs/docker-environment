@@ -117,14 +117,12 @@ class P2PNode(threading.Thread):  # pylint: disable=too-many-instance-attributes
             resp = self.session.get(f'http://localhost:{self.health_check_port}/status')
             if resp.status_code == 200:
                 try:
+                    logger.debug(f'Got status from P2P: {resp.content.decode()}')
                     return P2PStatuses(resp.content.decode())
                 except ValueError:
                     logger.error(f'P2P returned unknown status: {resp.json()}')
                     raise ValueError from None
             logger.warning(f'Error getting status from p2p -- status server not ready')
-            return P2PStatuses.INITIALIZING
-        except ConnectionRefusedError:
-            logger.info(f'P2P status service not up yet')
             return P2PStatuses.INITIALIZING
         except (requests.RequestException, ConnectionError, urllib3.exceptions.HTTPError) as e:
             logger.error(f'Error getting status from p2p -- status service error: {e}')
