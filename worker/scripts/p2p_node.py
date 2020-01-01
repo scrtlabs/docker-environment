@@ -102,7 +102,7 @@ class P2PNode(threading.Thread):  # pylint: disable=too-many-instance-attributes
 
     def status(self) -> P2PStatuses:
         try:
-            resp = requests.get(f'http://localhost:{self.health_check_port}/status')
+            resp = requests.get(f'http://localhost:{self.health_check_port}/status', timeout=10)
             if resp.status_code == 200:
                 try:
                     return P2PStatuses(resp.content.decode())
@@ -121,7 +121,7 @@ class P2PNode(threading.Thread):  # pylint: disable=too-many-instance-attributes
     @staticmethod
     def register():
         try:
-            resp = requests.get('http://localhost:23456/mgmt/register')
+            resp = requests.get('http://localhost:23456/mgmt/register', timeout=3600)
             return bool(resp.status_code == 200)
         except (requests.RequestException, ConnectionError, urllib3.exceptions.HTTPError):
             logger.error(f'Error with register, cannot connect to p2p management API')
@@ -129,7 +129,7 @@ class P2PNode(threading.Thread):  # pylint: disable=too-many-instance-attributes
 
     def login(self):
         try:
-            resp = requests.get('http://localhost:23456/mgmt/login')
+            resp = requests.get('http://localhost:23456/mgmt/login', timeout=3600)
             return bool(resp.status_code == 200)
         except (requests.RequestException, ConnectionError, urllib3.exceptions.HTTPError):
             logger.error(f'Error with login, falling back to old-style commands')
@@ -146,7 +146,7 @@ class P2PNode(threading.Thread):  # pylint: disable=too-many-instance-attributes
 
     def logout(self):
         try:
-            resp = requests.get('http://localhost:23456/mgmt/logout')
+            resp = requests.get('http://localhost:23456/mgmt/logout', timeout=3600)
             return bool(resp.status_code == 200)
         except (requests.RequestException, ConnectionError, urllib3.exceptions.HTTPError):
             logger.error(f'Error with logout, falling back to old-style commands')
