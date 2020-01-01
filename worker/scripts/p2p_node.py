@@ -2,30 +2,14 @@ import signal
 import threading
 import atexit
 import subprocess
-import enum
 from typing import List
 
 import requests
-from requests.adapters import HTTPAdapter
-from urllib3.util.retry import Retry
-from requests.exceptions import ConnectionError
 import urllib3.exceptions
 
 from enigma_docker_common.logger import get_logger
 
 logger = get_logger('worker.p2p-node')
-
-
-class P2PStatuses(enum.Enum):
-    INITIALIZING = "initializing"
-    UNREGISTERED = "unregistered"
-    REGISTERED = "registered"
-    LOGGEDIN = "logged-in"
-    # LOGGEDOUT = "logged-out"
-
-
-retry = Retry(connect=10, backoff_factor=0.5)
-node_adapter = HTTPAdapter(max_retries=retry)
 
 
 # todo: pylint is totally right though. TBD
@@ -87,11 +71,6 @@ class P2PNode(threading.Thread):  # pylint: disable=too-many-instance-attributes
         signal.signal(signal.SIGINT, self._kill)
         signal.signal(signal.SIGTERM, self._kill)
 
-        self.session = requests.Session()
-
-        self.session.mount(f'http://', node_adapter)
-        self.session.mount(f'https://', node_adapter)
-
     def run(self):
         self._start()
 
@@ -112,62 +91,39 @@ class P2PNode(threading.Thread):  # pylint: disable=too-many-instance-attributes
             self.kill_now = True
             logger.info('Killed p2p cli')
 
-    def status(self) -> P2PStatuses:
+    @staticmethod
+    def register():
         try:
-            resp = self.session.get(f'http://localhost:{self.health_check_port}/status')
-            if resp.status_code == 200:
-                try:
-                    logger.debug(f'Got status from P2P: {resp.content.decode()}')
-                    return P2PStatuses(resp.content.decode())
-                except ValueError:
-                    logger.error(f'P2P returned unknown status: {resp.json()}')
-                    raise ValueError from None
-            logger.warning(f'Error getting status from p2p -- status server not ready')
-            return P2PStatuses.INITIALIZING
-        except (requests.RequestException, ConnectionError, urllib3.exceptions.HTTPError) as e:
-            logger.error(f'Error getting status from p2p -- status service error: {e}')
-            raise ConnectionError from None
-
-    def register(self):
-        try:
-            resp = self.session.get('http://localhost:23456/mgmt/register', timeout=3600)
+            resp = requests.get('http://localhost:23456/mgmt/register')
             return bool(resp.status_code == 200)
-        except (requests.RequestException, ConnectionError, urllib3.exceptions.HTTPError):
-            logger.error(f'Error with register, cannot connect to p2p management API')
+        except (requests.HTTPError, ConnectionError) as e:
+            logger.error(f'Error with register: {e}')
             return False
 
     def login(self):
         try:
-            resp = self.session.get('http://localhost:23456/mgmt/login', timeout=3600)
+            resp = requests.get('http://localhost:23456/mgmt/login')
             return bool(resp.status_code == 200)
-        except (requests.RequestException, ConnectionError, urllib3.exceptions.HTTPError):
-            logger.error(f'Error with login, falling back to old-style commands')
-            try:
-                if self.proc:
-                    logger.debug('Passing logout to P2P')
-                    self.proc.stdin.write(b'login\n')
-                    self.proc.stdin.flush()
-                    return True
-            except AttributeError:
-                logger.critical('P2P process doesn\'t exist (was it killed prematurely?)')
-                raise RuntimeError from None
+        except (requests.RequestException, ConnectionError, urllib3.exceptions.HTTPError) as e:
+            logger.error(f'Error with login: {e}, falling back to old-style commands')
+            if self.proc:
+                logger.debug('Passing logout to P2P')
+                self.proc.stdin.write(b'login\n')
+                self.proc.stdin.flush()
+                return True
             return False
 
     def logout(self):
         try:
-            resp = self.session.get('http://localhost:23456/mgmt/logout', timeout=3600)
+            resp = requests.get('http://localhost:23456/mgmt/logout')
             return bool(resp.status_code == 200)
-        except (requests.RequestException, ConnectionError, urllib3.exceptions.HTTPError):
-            logger.error(f'Error with logout, falling back to old-style commands')
-            try:
-                if self.proc:
-                    logger.debug('Passing logout to P2P')
-                    self.proc.stdin.write(b'logout\n')
-                    self.proc.stdin.flush()
-                    return True
-            except AttributeError:
-                logger.critical('P2P process doesn\'t exist (was it killed prematurely?)')
-                raise RuntimeError from None
+        except (requests.RequestException, ConnectionError, urllib3.exceptions.HTTPError) as e:
+            logger.error(f'Error with logout: {e}, falling back to old-style commands')
+            if self.proc:
+                logger.debug('Passing logout to P2P')
+                self.proc.stdin.write(b'logout\n')
+                self.proc.stdin.flush()
+                return True
             return False
 
     def _map_params_to_exec(self) -> List[str]:

@@ -15,15 +15,8 @@ from enigma_docker_common.logger import get_logger
 from enigma_docker_common.provider import Provider
 from enigma_docker_common.utils import remove_0x
 
-try:
-    from bootstrap_loader import BootstrapLoader  # for IDE
-except ImportError:
-    from .bootstrap_loader import BootstrapLoader
-
-try:
-    from p2p_node import P2PNode, P2PStatuses  # for IDE
-except ImportError:
-    from .p2p_node import P2PNode, P2PStatuses
+from bootstrap_loader import BootstrapLoader
+from p2p_node import P2PNode
 
 logger = get_logger('worker.p2p-startup')
 
@@ -82,14 +75,6 @@ def get_status() -> str:
     with open(filename, 'r+') as f:
         status = f.read()
     return status
-
-
-def wait_for_register(p2p: P2PNode):
-    while True:
-        status = p2p.status()
-        if status == P2PStatuses.REGISTERED:
-            break
-        time.sleep(10)
 
 
 # todo: pylint is totally right though. TBD
@@ -281,35 +266,34 @@ def main():  # noqa: C901  # pylint: disable=too-many-locals,too-many-branches,t
 
     # we perform auto-deposit in testing environment
     if env in ['K8S', 'COMPOSE'] or (is_bootstrap and env == 'TESTNET'):
-        wait_for_register(p2p_runner)
-        logger.info(f'Register success!')
+        time.sleep(60)
         set_status('Setting staking address...')
         logger.info(f'Attempting to set operating address -- staking:{staking_address} operating: {eth_address}')
-        # todo: wait for confirmations
         eng_contract.transact(staking_address, staking_key, 'setOperatingAddress',
                               eng_contract.w3.toChecksumAddress(eth_address))
         logger.info('Set operating address successfully!')
-        time.sleep(60)
+
         set_status('Depositing...')
         logger.info(f'Attempting deposit from {staking_address} on behalf of worker {eth_address}')
         eng_contract.transact(staking_address, staking_key, 'deposit',
                               eng_contract.w3.toChecksumAddress(staking_address), deposit_amount)
         logger.info(f'Successfully deposited!')
         time.sleep(60)
-        # todo: wait for confirmations
+        # login the worker (hopefully this works)
         set_status('Logging in...')
         if p2p_runner.login():
             set_status('Running')
         else:
-            set_status('Failed to login')
+            set_status('Failed to login -'
+                       'Please see detailed logs located in your worker-p2p ssh window for more information!')
     else:
         # for now lets sleep instead of getting confirmations till we move it to web
         while True:
-            status = p2p_runner.status()
-            if status == P2PStatuses.REGISTERED:
+            status = get_status()
+            if status.lower() == 'registered':
                 break
             time.sleep(10)
-        logger.info(f'Register success!')
+
         set_status('Waiting for login...')
         logger.info('Waiting for deposit & login...')
 
