@@ -111,7 +111,7 @@ class P2PNode(threading.Thread):  # pylint: disable=too-many-instance-attributes
                     raise ValueError from None
             logger.warning(f'Error getting status from p2p -- status server not ready')
             return P2PStatuses.INITIALIZING
-        except ConnectionRefusedError:
+        except (ConnectionRefusedError, urllib3.exceptions.NewConnectionError):
             logger.info(f'P2P status service not up yet')
             return P2PStatuses.INITIALIZING
         except (requests.RequestException, ConnectionError, urllib3.exceptions.HTTPError) as e:
