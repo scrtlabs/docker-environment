@@ -1,7 +1,7 @@
 ###### STAGE 1 -- build core
-ARG DOCKER_TAG=${DOCKER_TAG:latest}
-ARG SGX_MODE
-FROM enigmampc/core-artifact-${SGX_MODE}:${DOCKER_TAG} as core-build
+ARG DOCKER_TAG=latest
+ARG CORE_IMAGE=enigmampc/core-artifact-sw:develop
+FROM $CORE_IMAGE as core-build
 
 ###### Stage 2 - install node 10 so we can also run and compile p2p
 
