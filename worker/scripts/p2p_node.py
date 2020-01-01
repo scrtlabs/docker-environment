@@ -6,6 +6,8 @@ import enum
 from typing import List
 
 import requests
+from requests.adapters import HTTPAdapter
+from requests.exceptions import ConnectionError
 import urllib3.exceptions
 
 from enigma_docker_common.logger import get_logger
@@ -19,6 +21,9 @@ class P2PStatuses(enum.Enum):
     REGISTERED = "registered"
     LOGGEDIN = "logged-in"
     # LOGGEDOUT = "logged-out"
+
+
+node_adapter = HTTPAdapter(max_retries=10)
 
 
 # todo: pylint is totally right though. TBD
@@ -80,6 +85,10 @@ class P2PNode(threading.Thread):  # pylint: disable=too-many-instance-attributes
         signal.signal(signal.SIGINT, self._kill)
         signal.signal(signal.SIGTERM, self._kill)
 
+        self.session = requests.Session()
+
+        self.session.mount(f'http://localhost:{self.health_check_port}/status', node_adapter)
+
     def run(self):
         self._start()
 
@@ -102,7 +111,7 @@ class P2PNode(threading.Thread):  # pylint: disable=too-many-instance-attributes
 
     def status(self) -> P2PStatuses:
         try:
-            resp = requests.get(f'http://localhost:{self.health_check_port}/status', timeout=10)
+            resp = self.session.get(f'http://localhost:{self.health_check_port}/status')
             if resp.status_code == 200:
                 try:
                     return P2PStatuses(resp.content.decode())
@@ -111,10 +120,10 @@ class P2PNode(threading.Thread):  # pylint: disable=too-many-instance-attributes
                     raise ValueError from None
             logger.warning(f'Error getting status from p2p -- status server not ready')
             return P2PStatuses.INITIALIZING
-        except (ConnectionRefusedError, ConnectionError):
+        except ConnectionRefusedError:
             logger.info(f'P2P status service not up yet')
             return P2PStatuses.INITIALIZING
-        except (requests.RequestException, urllib3.exceptions.HTTPError) as e:
+        except (requests.RequestException, ConnectionError, urllib3.exceptions.HTTPError) as e:
             logger.error(f'Error getting status from p2p -- status service error: {e}')
             raise ConnectionError from None
 
