@@ -6,6 +6,10 @@ WORKERS=$(
         wc -l
 )
 
+if [[ "$WORKERS" -eq 0 ]]; then
+    exit 1
+fi
+
 REGISTERED_WORKERS_IN_KM=$(
     docker-compose logs --tail 1000 km |
         grep -F 'get_active_workers() =>' |
@@ -15,8 +19,8 @@ REGISTERED_WORKERS_IN_KM=$(
         wc -l
 )
 
-if [[ "$WORKERS" -eq "$REGISTERED_WORKERS_IN_KM" ]]; then
-    exit 0
+if [[ "$WORKERS" -ne "$REGISTERED_WORKERS_IN_KM" ]]; then
+    exit 1
 fi
 
-exit 1
+exit 0
