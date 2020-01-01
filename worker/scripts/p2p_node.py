@@ -101,18 +101,19 @@ class P2PNode(threading.Thread):  # pylint: disable=too-many-instance-attributes
             logger.info('Killed p2p cli')
 
     def status(self) -> P2PStatuses:
+        resp = ''
         try:
             resp = requests.get(f'http://localhost:{self.health_check_port}/status')
             if resp.status_code == 200:
                 try:
-                    return P2PStatuses(resp.content)
+                    return P2PStatuses(resp.content.decode())
                 except ValueError as e:
                     logger.error(f'P2P returned unknown status: {resp.json()}')
                     raise ValueError from None
             logger.warning(f'Error getting status from p2p -- status server not ready')
             return P2PStatuses.INITIALIZING
         except (requests.RequestException, ConnectionError, urllib3.exceptions.HTTPError):
-            logger.error(f'Error getting status from p2p status server')
+            logger.error(f'Error getting status from p2p status server: {getattr(resp, "content")}')
             raise ConnectionError from None
 
     @staticmethod
