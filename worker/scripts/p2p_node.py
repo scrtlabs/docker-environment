@@ -105,14 +105,15 @@ class P2PNode(threading.Thread):  # pylint: disable=too-many-instance-attributes
             resp = requests.get(f'http://localhost:{self.health_check_port}/status')
             if resp.status_code == 200:
                 try:
-                    return P2PStatuses(resp.json())
+                    return P2PStatuses(resp.content)
                 except ValueError as e:
                     logger.error(f'P2P returned unknown status: {resp.json()}')
                     raise ValueError from None
-
+            logger.warning(f'Error getting status from p2p -- status server not ready')
+            return P2PStatuses.INITIALIZING
         except (requests.RequestException, ConnectionError, urllib3.exceptions.HTTPError):
-            logger.error(f'Error with register')
-            return False
+            logger.error(f'Error getting status from p2p status server')
+            raise ConnectionError from None
 
     @staticmethod
     def register():
