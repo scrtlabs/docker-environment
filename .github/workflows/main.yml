@@ -10,8 +10,8 @@ jobs:
       - uses: actions/checkout@v1
       - name: Build the Docker images
         run: |
-          make clone-all
-          make build SGX_MODE=SW
+          make clone-all BRANCH=develop
+          make build SGX_MODE=SW DOCKER_TAG=develop
       - name: Run the tests
         run: |
           cp .env.template .env
