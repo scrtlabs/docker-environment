@@ -34,7 +34,7 @@ class P2PNode(threading.Thread):  # pylint: disable=too-many-instance-attributes
     runner = 'node'
     kill_now = False
 
-    def __init__(self,  # pylint: disable=too-many-arguments,too-many-locals
+    def __init__(self,  # pylint: disable=too-many-arguments,too-many-locals,too-many-statements
                  ether_node: str,
                  public_address: str,
                  contract_address: str,
