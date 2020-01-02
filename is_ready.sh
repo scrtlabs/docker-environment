@@ -12,7 +12,7 @@ fi
 
 REGISTERED_WORKERS_IN_KM=$(
     docker-compose logs --tail 1000 km |
-        grep -F 'get_active_workers() =>' |
+        grep -P 'get_active_workers|Confirmed epoch with worker params' |
         tail -1 |
         grep -Poi '0x[a-f0-9]+' |
         sort -u |
