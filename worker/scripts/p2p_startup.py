@@ -239,6 +239,8 @@ def main():  # noqa: C901  # pylint: disable=too-many-locals,too-many-branches,t
     hostname = p.hostname
     port = p.port
 
+    confirmations = config["MIN_CONFIRMATIONS"]
+
     # in ganache WS and HTTP are in the same port. In our testnet it isn't (8546 and 8545 respectively)
     if env in ['TESTNET', 'MAINNET']:
         ether_gateway = config.get('ETHEREUM_NODE_ADDRESS_WEBSOCKET', f'ws://{hostname}:{port+1}')
@@ -254,7 +256,7 @@ def main():  # noqa: C901  # pylint: disable=too-many-locals,too-many-branches,t
               'bootstrap_address': bootstrap_address,
               'contract_address': eng_contract_addr,
               'health_check_port': config["HEALTH_CHECK_PORT"],
-              'min_confirmations': config["MIN_CONFIRMATIONS"],
+              'min_confirmations': confirmations,
               'log_level': log_level,
               'auto_init': auto_init}
 
@@ -286,16 +288,18 @@ def main():  # noqa: C901  # pylint: disable=too-many-locals,too-many-branches,t
         set_status('Setting staking address...')
         logger.info(f'Attempting to set operating address -- staking:{staking_address} operating: {eth_address}')
         # todo: wait for confirmations
-        eng_contract.transact(staking_address, staking_key, 'setOperatingAddress',
-                              eng_contract.w3.toChecksumAddress(eth_address))
-        logger.info('Set operating address successfully!')
-        time.sleep(60)
+        receipt = eng_contract.transact(staking_address, staking_key, 'setOperatingAddress',
+                                        eng_contract.w3.toChecksumAddress(eth_address))
+        logger.info(f'Set operating address successfully, waiting for {confirmations} confirmations')
+        eng_contract.wait_for_confirmations(receipt, confirmations)
+        logger.info(f'Done waiting for {confirmations} confirmations for setOperatingAddress')
         set_status('Depositing...')
         logger.info(f'Attempting deposit from {staking_address} on behalf of worker {eth_address}')
-        eng_contract.transact(staking_address, staking_key, 'deposit',
-                              eng_contract.w3.toChecksumAddress(staking_address), deposit_amount)
-        logger.info(f'Successfully deposited!')
-        time.sleep(60)
+        receipt = eng_contract.transact(staking_address, staking_key, 'deposit',
+                                        eng_contract.w3.toChecksumAddress(staking_address), deposit_amount)
+        logger.info(f'Deposited successfully, waiting for {confirmations} confirmations')
+        eng_contract.wait_for_confirmations(receipt, confirmations)
+        logger.info(f'Done waiting for {confirmations} confirmations for setOperatingAddress')
         # todo: wait for confirmations
         set_status('Logging in...')
         if p2p_runner.login():

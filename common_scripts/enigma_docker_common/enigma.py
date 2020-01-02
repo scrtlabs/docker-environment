@@ -1,3 +1,5 @@
+import time
+
 import web3
 from web3.auto import w3 as auto_w3
 
@@ -36,10 +38,18 @@ class Contract:
         # stupid_w3.eth.defaultAccount = public_key
         return auto_w3.eth.account.sign_transaction(raw_tx, private_key=key)
 
-    def _send_and_wait(self, signed_tx):
+    def _send_transactions(self, signed_tx):
         self.w3.eth.sendRawTransaction(signed_tx.rawTransaction)
         tx_receipt = self.w3.eth.waitForTransactionReceipt(signed_tx.hash)
         return tx_receipt
+
+    def wait_for_confirmations(self, receipt, confirmations):
+        current_block = self.w3.eth.getBlock('latest')
+        tx_in_block = self.w3.eth.getTransactionReceipt(receipt)['blockNumber']
+
+        while current_block - tx_in_block < confirmations:
+            time.sleep(5)
+            current_block = self.w3.eth.getBlock('latest')
 
     @property
     def gasprice(self):
@@ -51,7 +61,8 @@ class Contract:
     def transact(self, sending_address, key, func, *args):
         transaction = self.build(sending_address, func, *args)
         signed_tx = self._sign(transaction, key)
-        self._send_and_wait(signed_tx)
+        receipt = self._send_transactions(signed_tx)
+        return receipt
 
     def build(self, sending_address, func, *args):
         csum_addr = self.w3.toChecksumAddress(sending_address)
@@ -107,13 +118,13 @@ class EnigmaTokenContract(Contract):
 
 class EnigmaContract(Contract):
     def deposit(self, staking_address: str, staking_key: bytes, eth_address: str, deposit_amount: int):
-        self.transact(self.toCheckSumAddress(staking_address), staking_key, 'deposit',
-                      self.toCheckSumAddress(eth_address), deposit_amount)
+        return self.transact(self.toCheckSumAddress(staking_address), staking_key, 'deposit',
+                             self.toCheckSumAddress(eth_address), deposit_amount)
 
     # noinspection PyPep8Naming
     def setOperatingAddress(self, staking_address: str, eth_address: str):
-        self.transact(self.toCheckSumAddress(staking_address), 'setOperatingAddress',
-                      self.toCheckSumAddress(eth_address))
+        return self.transact(self.toCheckSumAddress(staking_address), 'setOperatingAddress',
+                             self.toCheckSumAddress(eth_address))
 
     def deposit_build(self, staking_address: str, eth_address: str, deposit_amount: int):
         return self.build(self.toCheckSumAddress(staking_address), 'deposit', self.toCheckSumAddress(eth_address),
