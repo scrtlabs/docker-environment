@@ -299,7 +299,7 @@ def main():  # noqa: C901  # pylint: disable=too-many-locals,too-many-branches,t
                                         eng_contract.w3.toChecksumAddress(staking_address), deposit_amount)
         logger.info(f'Deposited successfully, waiting for {confirmations} confirmations')
         eng_contract.wait_for_confirmations(receipt, confirmations)
-        logger.info(f'Done waiting for {confirmations} confirmations for setOperatingAddress')
+        logger.info(f'Done waiting for {confirmations} confirmations for deposit')
         # todo: wait for confirmations
         set_status('Logging in...')
         if p2p_runner.login():

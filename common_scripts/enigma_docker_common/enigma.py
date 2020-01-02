@@ -44,12 +44,8 @@ class Contract:
         return tx_receipt
 
     def wait_for_confirmations(self, receipt, confirmations):
-        current_block = self.w3.eth.getBlock('latest')
-        tx_in_block = self.w3.eth.getTransactionReceipt(receipt)['blockNumber']
-
-        while current_block - tx_in_block < confirmations:
+        while self.w3.eth.blockNumber - receipt.blockNumber < int(confirmations):
             time.sleep(5)
-            current_block = self.w3.eth.getBlock('latest')
 
     @property
     def gasprice(self):

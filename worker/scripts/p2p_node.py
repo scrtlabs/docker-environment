@@ -24,7 +24,7 @@ class P2PStatuses(enum.Enum):
     # LOGGEDOUT = "logged-out"
 
 
-retry = Retry(connect=10, backoff_factor=0.5)
+retry = Retry(connect=3, backoff_factor=0.5)
 node_adapter = HTTPAdapter(max_retries=retry)
 
 
@@ -102,13 +102,11 @@ class P2PNode(threading.Thread):  # pylint: disable=too-many-instance-attributes
     def _kill(self, signum, frame):  # pylint: disable=unused-argument
         if self.proc:
             logger.info('Logging out...')
-
-            self.logout()
-            try:
-                self.proc.send_signal(signal.SIGINT)
-                self.proc.wait(timeout=5)
-            except subprocess.TimeoutExpired:
-                self.proc.send_signal(signal.SIGTERM)
+            #
+            # self.logout()
+            #
+            # self.proc.send_signal(signal.SIGINT)
+            # self.proc.wait(timeout=5)
             self.kill_now = True
             logger.info('Killed p2p cli')
 
@@ -130,7 +128,7 @@ class P2PNode(threading.Thread):  # pylint: disable=too-many-instance-attributes
 
     def register(self):
         try:
-            resp = self.session.get('http://localhost:23456/mgmt/register', timeout=3600)
+            resp = self.session.get('http://localhost:23456/mgmt/register')
             return bool(resp.status_code == 200)
         except (requests.RequestException, ConnectionError, urllib3.exceptions.HTTPError):
             logger.error(f'Error with register, cannot connect to p2p management API')
@@ -138,7 +136,7 @@ class P2PNode(threading.Thread):  # pylint: disable=too-many-instance-attributes
 
     def login(self):
         try:
-            resp = self.session.get('http://localhost:23456/mgmt/login', timeout=3600)
+            resp = self.session.get('http://localhost:23456/mgmt/login')
             return bool(resp.status_code == 200)
         except (requests.RequestException, ConnectionError, urllib3.exceptions.HTTPError):
             logger.error(f'Error with login, falling back to old-style commands')
@@ -155,7 +153,7 @@ class P2PNode(threading.Thread):  # pylint: disable=too-many-instance-attributes
 
     def logout(self):
         try:
-            resp = self.session.get('http://localhost:23456/mgmt/logout', timeout=3600)
+            resp = self.session.get('http://localhost:23456/mgmt/logout')
             return bool(resp.status_code == 200)
         except (requests.RequestException, ConnectionError, urllib3.exceptions.HTTPError):
             logger.error(f'Error with logout, falling back to old-style commands')
