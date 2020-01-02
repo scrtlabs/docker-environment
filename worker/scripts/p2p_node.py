@@ -1,17 +1,17 @@
-import signal
-import threading
 import atexit
-import subprocess
 import enum
+import signal
+import subprocess
+import threading
 from typing import List
 
 import requests
 from requests.adapters import HTTPAdapter
-from urllib3.util.retry import Retry
-from requests.exceptions import ConnectionError
 import urllib3.exceptions
+from urllib3.util.retry import Retry
 
 from enigma_docker_common.logger import get_logger
+
 
 logger = get_logger('worker.p2p-node')
 
