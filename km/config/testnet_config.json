@@ -15,5 +15,6 @@
  "KM_FILENAME": "principal-sign-addr.txt",
  "KEYPAIR_DIRECTORY": "/root/.enigma/",
  "EPOCH_SIZE": "60",
- "MIN_CONFIRMATIONS": "3"
+ "MIN_CONFIRMATIONS": "3",
+ "LOG_LEVEL": "debug"
 }

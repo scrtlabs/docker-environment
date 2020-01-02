@@ -6,5 +6,6 @@
  "MINIMUM_ETHER_BALANCE": "0.001",
  "WORKER_URL": "http://bootstrap",
  "PROXY_PORT": 3346,
- "KEY_MANAGEMENT_DISCOVERY": ""
+ "KEY_MANAGEMENT_DISCOVERY": "",
+ "LOG_LEVEL": "debug"
 }
