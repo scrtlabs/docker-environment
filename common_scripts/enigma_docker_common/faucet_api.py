@@ -31,10 +31,9 @@ def request_coins(faucet_url, account: str, currency: str) -> float:
         resp = requests.get(f'{faucet_url}/faucet/{currency}?account={account}')
         if resp.status_code == 200:
             return 120.120  # todo: replace with amount
-        else:
-            raise RuntimeError(f'Failed to get ether from faucet: {resp.status_code}')
+        raise RuntimeError(f'Failed to get ether from faucet: {resp.status_code}')
     except (requests.exceptions.RequestException, ConnectionError):
-        raise
+        raise ConnectionError(f'Failed to connect to faucet @ {faucet_url}') from None
 
 
 def get_balance(faucet_url, account: str, currency: str) -> float:
@@ -51,10 +50,9 @@ def get_balance(faucet_url, account: str, currency: str) -> float:
         if resp.status_code == 200:
             logger.info(f'Current {currency} balance is: {resp.json()}')
             return resp.json()
-        else:
-            raise RuntimeError(f'Failed to get balance from faucet: {resp.status_code}')
-    except (requests.exceptions.RequestException, ConnectionError) as e:
-        raise
+        raise RuntimeError(f'Failed to get balance from faucet: {resp.status_code}')
+    except (requests.exceptions.RequestException, ConnectionError):
+        raise ConnectionError(f'Failed to connect to faucet @ {faucet_url}') from None
 
 
 def wait_for_balance(address, currency: str, min_balance: float, timeout: int, backoff: int, config):

@@ -1,20 +1,22 @@
 name: CI
 
-on: [push]
+on: [pull_request]
 
 jobs:
-
   build:
-
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v1
-    - name: Build the Docker images
-      run: |
-        make clone-all
-        make build SGX_MODE=SW
-    - name: Run the tests
-      run: |
-        cp .env.template .env
-        docker-compose up --exit-code-from client & sleep 240 && docker-compose exec -T client make test
+      - uses: actions/checkout@v1
+      - name: Build the Docker images
+        run: |
+          make clone-all
+          make build SGX_MODE=SW
+      - name: Run the tests
+        run: |
+          cp .env.template .env
+          docker-compose up -d
+          until ./is_ready.sh; do
+            sleep 1
+          done
+          docker-compose exec -T client make test

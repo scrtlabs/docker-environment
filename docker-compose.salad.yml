@@ -1,0 +1,33 @@
+version: "3"
+
+services:
+  mongo:
+    container_name: mongo
+    hostname: mongo
+    image: mongo
+    expose:
+      - "27017"
+
+  salad_operator:
+    hostname: salad_operator
+    container_name: salad_operator
+    image: enigmampc/salad_operator:${DOCKER_TAG}
+    tty: true
+    ports:
+      - "8080:8080"
+    depends_on:
+      - contract
+      - mongo
+    environment:
+      - ENIGMA_ENV
+      - SGX_MODE
+
+  salad_client:
+    hostname: salad_client
+    image: enigmampc/salad_client:${DOCKER_TAG}
+    tty: true
+    depends_on:
+      - salad_operator
+    environment:
+      - ENIGMA_ENV
+      - SGX_MODE

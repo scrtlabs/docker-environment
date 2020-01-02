@@ -1,17 +1,17 @@
+import binascii
 import os
 import pathlib
-import binascii
 from typing import Tuple
+
+from Crypto import Random
+from Crypto.Cipher import AES
+from Crypto.Hash import keccak
+from Crypto.Util import Counter
+from ecdsa import SigningKey, SECP256k1
+from web3.auto import w3 as auto_w3
 
 from .logger import get_logger
 from .utils import remove_0x
-
-from web3.auto import w3 as auto_w3
-from Crypto import Random
-from Crypto.Hash import keccak
-from Crypto.Cipher import AES
-from Crypto.Util import Counter
-from ecdsa import SigningKey, SECP256k1, VerifyingKey
 
 logger = get_logger('enigma_common.crypto')
 
@@ -108,7 +108,7 @@ def save_to_path(path, file, flags='wb+'):
         f.write(file)
 
 
-def _create_keystore(privkey_path: str, pubkey_path: str, password: str = '') -> Tuple[str, str]:
+def _create_keystore(privkey_path: pathlib.Path, pubkey_path: pathlib.Path, password: str = '') -> Tuple[str, str]:
     private_key, eth_address = get_eth_address()
     eth_address = auto_w3.toChecksumAddress(eth_address)
     if password:

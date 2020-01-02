@@ -1,36 +1,32 @@
 # Environment options: COMPOSE, K8S, TESTNET, MAINNET
-import os
 import json
-import subprocess
+import os
 import pathlib
+import subprocess
+import sys
 import threading
-
-from km_address_server import run
+import time
 
 from enigma_docker_common.config import Config
-from enigma_docker_common.provider import Provider
-from enigma_docker_common.logger import get_logger
-from enigma_docker_common.crypto import open_eth_keystore
+from enigma_docker_common.ethereum import check_eth_limit
 from enigma_docker_common.faucet_api import get_initial_coins
+from enigma_docker_common.logger import get_logger
+from enigma_docker_common.provider import Provider
 from enigma_docker_common.storage import AzureContainerFileService
+
+try:
+    from .km_address_server import start_server
+except ImportError:
+    from km_address_server import start_server  # type: ignore
 
 
 logger = get_logger('key_management.startup')
 
 
-required = [  # global environment setting
-              'ENIGMA_ENV',
-              # required by provider AND locally
-              'CONTRACT_DISCOVERY_ADDRESS', 'KEY_MANAGEMENT_DISCOVERY',
-              # defaults in local config file
-              'ETH_NODE_ADDRESS', 'CONTRACTS_FOLDER', 'DEFAULT_CONFIG_PATH', 'FAUCET_URL',
-              'TEMP_CONFIG_PATH', "MINIMUM_ETHER_BALANCE", "MINIMUM_ENG_BALANCE",
-]
-
-env_defaults = {'K8S': './config/k8s_config.json',
-                'TESTNET': './config/testnet_config.json',
-                'MAINNET': './config/mainnet_config.json',
-                'COMPOSE': './config/compose_config.json'}
+required = ['ENIGMA_ENV',
+            'CONTRACT_DISCOVERY_ADDRESS', 'KEY_MANAGEMENT_DISCOVERY',  # required by provider AND locally
+            'ETH_NODE_ADDRESS', 'CONTRACTS_FOLDER', 'DEFAULT_CONFIG_PATH', 'FAUCET_URL',  # defaults in local config file
+            'TEMP_CONFIG_PATH', "MINIMUM_ETHER_BALANCE", "MINIMUM_ENG_BALANCE"]
 
 env = os.getenv('ENIGMA_ENV', 'COMPOSE')
 SGX_MODE = os.getenv('SGX_MODE', 'HW')
@@ -38,28 +34,26 @@ SGX_MODE = os.getenv('SGX_MODE', 'HW')
 
 def generate_config_file(app_config: dict, default_config_path: str, config_file_path: str) -> None:
     """ Generates a configuration file based on environment variables set in env_map variable above """
-    with open(default_config_path, 'r') as f:
-        default_config = json.load(f)
+    with open(default_config_path, 'r') as cfg_file:
+        default_config = json.load(cfg_file)
 
     # for each value either use the environment variable set as key.upper() or take the value from the default config
     # also, if the value can represent an integer, use that representation instead of a string
-    temp_conf = {k: int(app_config.get(k.upper(), v))
-                 if app_config.get(k.upper(), 'false').isdigit()
-                 else app_config.get(k.upper(), v)
-                 for k, v in default_config.items()}
+    temp_conf = {
+        k: int(app_config.get(k.upper(), v)) if app_config.get(k.upper(), 'false').isdigit()
+        else app_config.get(k.upper(), v) for k, v in default_config.items()}  # pylint: disable=bad-continuation
 
+    temp_conf['with_private_key'] = True if app_config.get('WITH_PRIVATE_KEY', '') == "True" else temp_conf['with_private_key']
     # Changing the name so it's consistent with the one in p2p
-    temp_conf['CONFIRMATIONS'] = int(app_config['MIN_CONFIRMATIONS']) if 'MIN_CONFIRMATIONS' in app_config \
-        else temp_conf['CONFIRMATIONS']
+    temp_conf['confirmations'] = int(app_config.get('MIN_CONFIRMATIONS', temp_conf['confirmations']))
 
     logger.debug(f'Running with config file at {config_file_path} with parameters: {temp_conf}')
 
-    with open(config_file_path, 'w') as f:
-        f.write(json.dumps(temp_conf))
+    with open(config_file_path, 'w') as cfg_file:
+        cfg_file.write(json.dumps(temp_conf))
 
 
 def generate_keypair(km_executable: str, keypair_path, address_path, config_path: str) -> None:
-    import subprocess
     subprocess.call([km_executable, "-w", f'--principal-config', f"{config_path}"])
 
     if not os.path.exists(keypair_path):
@@ -71,23 +65,26 @@ def generate_keypair(km_executable: str, keypair_path, address_path, config_path
 def save_to_path(path, file):
     logger.info(f'Saving file to path: {path}')
     os.makedirs(os.path.dirname(path), exist_ok=True)
-    with open(path, 'wb+') as f:
-        f.write(file)
+    with open(path, 'wb+') as cfg_file:
+        cfg_file.write(file)
 
 
-if __name__ == '__main__':
+if __name__ == '__main__':  # noqa: C901
     # parse arguments
     logger.info('STARTING KEY MANAGEMENT')
     logger.info(f'Environment: {env}')
 
-    config = Config(required=required, config_file=env_defaults[env])
+    config = Config(required=required)
     provider = Provider(config=config)
 
     km_key_storage = AzureContainerFileService(config['KEYPAIR_STORAGE_DIRECTORY'])
 
+    ethereum_node = config["ETH_NODE_ADDRESS"]
+
     keypair = config['KEYPAIR_PATH']
     public = config['KEYPAIR_PUBLIC_PATH']
-    config['URL'] = f'{config["ETH_NODE_ADDRESS"]}'
+    config['URL'] = ethereum_node
+
     # not sure we want to let people set the executable from outside, especially
     # since we're running as root atm O.o
     if 'EXECUTABLE_PATH' in os.environ:
@@ -122,7 +119,7 @@ if __name__ == '__main__':
             logger.info(f'Found Signing address: {signing_address}')
     except FileNotFoundError:
         logger.critical('Signing address not found. Please restart or check configuration')
-        exit(-1)
+        sys.exit(-1)
 
     try:
         with open('/root/.enigma/ethereum-account-addr.txt') as f:
@@ -134,7 +131,7 @@ if __name__ == '__main__':
 
     #  KM address discovery mechanism for testing environments
     if env in ['COMPOSE', 'K8S']:
-        thread1 = threading.Thread(target=run, args=(int(config.get('ADDRESS_DISCOVERY_PORT', 8081)), ))
+        thread1 = threading.Thread(target=start_server, args=(int(config.get('ADDRESS_DISCOVERY_PORT', 8081)), ))
         thread1.start()
 
     #  will not try a faucet if we're in mainnet or testnet
@@ -143,10 +140,10 @@ if __name__ == '__main__':
             get_initial_coins(eth_address, 'ETH', config)
         except RuntimeError as e:
             logger.critical(f'Failed to get enough ETH or ENG to start - {e}')
-            exit(-2)
+            sys.exit(-2)
         except ConnectionError as e:
             logger.critical(f'Failed to connect to remote address: {e}')
-            exit(-1)
+            sys.exit(-1)
 
     logger.info(f'Getting enigma-contract...')
     enigma_address = provider.enigma_contract_address
@@ -164,7 +161,7 @@ if __name__ == '__main__':
     save_to_path(contract_target, enigma_contract_abi)
     if not os.path.exists(contract_target):
         logger.critical(f'Contract ABI file doesn\'t exist @ {contract_target} -- initializing must have failed')
-        exit(-1)
+        sys.exit(-1)
 
     config['ENIGMA_CONTRACT_PATH'] = contract_target
 
@@ -183,4 +180,12 @@ if __name__ == '__main__':
         exec_args.append('-l')
         exec_args.append(log_level)
 
-    subprocess.call(exec_args)
+    eth_address = '0x' + config['ACCOUNT_ADDRESS']
+
+    while not check_eth_limit(eth_address, float(config["MINIMUM_ETHER_BALANCE"]), ethereum_node):
+        time.sleep(5)
+
+    try:
+        subprocess.check_call(exec_args)
+    except subprocess.CalledProcessError:
+        sys.exit(-1)

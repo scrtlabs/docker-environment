@@ -6,15 +6,17 @@ services:
     environment:
       - ENIGMA_ENV=TESTNET
       - SGX_MODE=HW
-      - ETH_NODE_ADDRESS=http://parity:8545
-      - KEY_MANAGEMENT_ADDRESS=http://km.testnet.services.enigma.co:3040
-      # - MIN_CONFIRMATIONS=
+      - ETH_NODE_ADDRESS=http://parity.enigma.co:8545
+      - KEY_MANAGEMENT_ADDRESS=http://km-testnet.enigma.co:3040
+      - MIN_CONFIRMATIONS=3
       # - FORCE_NEW_ETH_ADDR=true
     ports:
       - "3346:3346"   # Json RPC
       - "10300:10300" # LibP2P
     volumes:
       - ./config/.enigma:/root/.enigma
+    devices:
+      - "/dev/isgx:/dev/isgx"
   parity:
     image: parity/parity:v2.5.11-stable
     user: root

@@ -1,17 +1,26 @@
-import socket
 import os
+import socket
 import time
-
-from typing import AnyStr, Any
 from pathlib import Path
-
 from urllib.parse import urlparse
-from azure.storage.blob import BlobClient
-from azure.core.exceptions import ResourceNotFoundError
+from typing import AnyStr, Any, Generic, TypeVar
+
 import requests
+from azure.core.exceptions import ResourceNotFoundError
+from azure.storage.blob import BlobClient
+
+T = TypeVar('T')
 
 
-class AzureContainerFileService:
+class IndexableContainer(Generic[T]):
+    def __getitem__(self, key: str) -> T:
+        pass
+
+    def __setitem__(self, key: str, value: Any):
+        pass
+
+
+class AzureContainerFileService(IndexableContainer[bytes]):
     def __init__(self, directory: str):
         self.account_name = 'objectstorage2'
         self.account_url = f'https://{self.account_name}.blob.core.windows.net/'
@@ -35,7 +44,7 @@ class AzureContainerFileService:
         raise NotImplementedError
 
 
-class HttpFileService:
+class HttpFileService(IndexableContainer[bytes]):
     def __init__(self, url, namespace: str = 'contract', directory='address', timeout: int = 60):
         p = urlparse(url)
         self.hostname = p.hostname
@@ -58,6 +67,7 @@ class HttpFileService:
         if self.connected:
             addr = requests.get(f'{self.account_url}{item}')
             return addr.json()
+        return {}
 
     def __setitem__(self, key: str, value: Any):
         if not self.credential:

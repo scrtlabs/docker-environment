@@ -1,4 +1,12 @@
-Welcome to the new docker environment!
+Develop:
+![](https://github.com/enigmampc/docker-environment/workflows/CI/badge.svg?branch=develop)
+![](https://github.com/enigmampc/docker-environment/workflows/Python%20Checking/badge.svg?branch=develop)
+
+Master:
+![](https://github.com/enigmampc/docker-environment/workflows/CI/badge.svg?branch=master)
+![](https://github.com/enigmampc/docker-environment/workflows/Python%20Checking/badge.svg?branch=master)
+
+# Welcome to the new docker environment!
 
 # What's new?
 

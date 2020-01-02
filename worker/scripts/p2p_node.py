@@ -1,22 +1,24 @@
-import time
 import signal
 import threading
 import atexit
 import subprocess
-
 from typing import List
+
+import requests
+import urllib3.exceptions
 
 from enigma_docker_common.logger import get_logger
 
 logger = get_logger('worker.p2p-node')
 
 
-class P2PNode(threading.Thread):
+# todo: pylint is totally right though. TBD
+class P2PNode(threading.Thread):  # pylint: disable=too-many-instance-attributes
     exec_file = 'cli_app.js'
     runner = 'node'
     kill_now = False
 
-    def __init__(self,
+    def __init__(self,  # pylint: disable=too-many-arguments,too-many-locals
                  ether_node: str,
                  public_address: str,
                  contract_address: str,
@@ -39,16 +41,10 @@ class P2PNode(threading.Thread):
                  bootstrap_path: str = "B1",
                  bootstrap_port: str = "B1",
                  min_confirmations: int = 12,
-                 executable_name: str = 'cli_app.js', *args, **kwargs):
-        super().__init__(*args, **kwargs)
+                 executable_name: str = 'cli_app.js'):
+        super().__init__()
         self.exec_file = executable_name
         self.km_node = key_mgmt_node
-
-        # dirty hack because P2P CLI wants the address without prefix.. remove when that's fixed
-        if ether_node.startswith('https://'):
-            ether_node = ether_node[8:]
-        if ether_node.startswith('http://'):
-            ether_node = ether_node[7:]
         self.ether_gateway = ether_node
         self.proxy = proxy
         self.core_addr = core_addr
@@ -82,36 +78,58 @@ class P2PNode(threading.Thread):
         if self.proc:
             self._kill(None, None)
 
-    def _kill(self, signum, frame):
+    def _kill(self, signum, frame):  # pylint: disable=unused-argument
         if self.proc:
             logger.info('Logging out...')
-            self.proc.send_signal(signal.SIGINT)
-            self.proc.wait(timeout=10)
-            del self.proc
+
+            self.logout()
+            try:
+                self.proc.send_signal(signal.SIGINT)
+                self.proc.wait(timeout=5)
+            except subprocess.TimeoutExpired:
+                self.proc.send_signal(signal.SIGTERM)
+            self.kill_now = True
             logger.info('Killed p2p cli')
 
-    def register(self):
-        if self.proc:
-            logger.debug('Passing register to P2P')
-            self.proc.stdin.write(b'register\n')
-            self.proc.stdin.flush()
+    @staticmethod
+    def register():
+        try:
+            resp = requests.get('http://localhost:23456/mgmt/register')
+            return bool(resp.status_code == 200)
+        except (requests.HTTPError, ConnectionError) as e:
+            logger.error(f'Error with register: {e}')
+            return False
 
     def login(self):
-        if self.proc:
-            logger.debug('Passing login to P2P')
-            self.proc.stdin.write(b'login\n')
-            self.proc.stdin.flush()
+        try:
+            resp = requests.get('http://localhost:23456/mgmt/login')
+            return bool(resp.status_code == 200)
+        except (requests.RequestException, ConnectionError, urllib3.exceptions.HTTPError) as e:
+            logger.error(f'Error with login: {e}, falling back to old-style commands')
+            if self.proc:
+                logger.debug('Passing logout to P2P')
+                self.proc.stdin.write(b'login\n')
+                self.proc.stdin.flush()
+                return True
+            return False
 
     def logout(self):
-        if self.proc:
-            logger.debug('Passing logout to P2P')
-            self.proc.stdin.write(b'logout\n')
-            self.proc.stdin.flush()
+        try:
+            resp = requests.get('http://localhost:23456/mgmt/logout')
+            return bool(resp.status_code == 200)
+        except (requests.RequestException, ConnectionError, urllib3.exceptions.HTTPError) as e:
+            logger.error(f'Error with logout: {e}, falling back to old-style commands')
+            if self.proc:
+                logger.debug('Passing logout to P2P')
+                self.proc.stdin.write(b'logout\n')
+                self.proc.stdin.flush()
+                return True
+            return False
 
     def _map_params_to_exec(self) -> List[str]:
         """ build executable params -- if cli params change just change the keys and everything should still work """
         params = {'core': f'{self.core_addr}',
-                  'ethereum-websocket-provider': f'ws://{self.ether_gateway}',
+                  'ethereum-websocket-provider': f'{self.ether_gateway}',
                   'proxy': f'{self.proxy}',
                   'ethereum-address': f'{self.ether_public}',
                   'principal-node': f'{self.km_node}',
