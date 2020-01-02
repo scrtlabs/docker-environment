@@ -15,7 +15,7 @@ jobs:
       - name: Run the tests
         run: |
           cp .env.template .env
-          docker-compose up -d
+          DOCKER_TAG=develop docker-compose up -d
           until ./is_ready.sh; do
             sleep 1
           done
