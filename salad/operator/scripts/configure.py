@@ -53,6 +53,7 @@ def main():
                 'SECRET_CONTRACT_BUILD_FOLDER': 'SECRET_CONTRACT_BUILD_FOLDER',
                 'SALAD_SMART_CONTRACT_ADDRESS': 'SALAD_SMART_CONTRACT_ADDRESS',
                 'SALAD_SECRET_CONTRACT_ADDRESS': 'SALAD_SECRET_CONTRACT_ADDRESS',
+                'NETWORK_ID': 'NETWORK_ID',
         }.items():
             envs[env_var] = config[config_var]
 

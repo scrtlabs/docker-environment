@@ -2,6 +2,7 @@
     "CONTRACT_DISCOVERY_ADDRESS": "http://contract:8081",
     "ETH_NODE_ADDRESS": "parity.enigma.co",
     "ETH_NODE_PORT": "8545",
+    "NETWORK_ID": "42",
     "ENG_NODE_ADDRESS": "bootstrap-1.testnet.services.enigma.co",
     "ENG_NODE_PORT": "3346",
     "MONGO_URL": "mongodb://mongo:27017",
