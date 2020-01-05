@@ -72,7 +72,11 @@ build-contract: build-enigma-common
 
 .PHONY: build-worker
 build-worker: build-enigma-common
-	cd worker; docker build --build-arg DEBUG=${DEBUG} --build-arg SGX_MODE=${SGX_MODE} -f worker.Dockerfile -t enigmampc/worker_${ext}:${DOCKER_TAG} .
+	cd worker; docker build --build-arg CORE_IMAGE=enigmampc/core-artifact-${ext}:${DOCKER_TAG} -f worker.Dockerfile -t enigmampc/worker_${ext}:${DOCKER_TAG} .
+
+.PHONY: build-core
+build-core:
+	cd worker; docker build --build-arg DEBUG=${DEBUG} --build-arg SGX_MODE=${SGX_MODE} -f compile_core.Dockerfile -t enigmampc/core-artifact-${ext}:${DOCKER_TAG} .
 
 .PHONY: build-runtime-base
 build-runtime-base:
