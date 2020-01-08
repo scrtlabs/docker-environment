@@ -25,5 +25,6 @@
     "STAKE_KEY_NAME": "staking_address",
     "STATUS_FILENAME": "status",
     "ETHEREUM_ADDR_FILENAME": "eth_address.txt",
-    "MGMT_URL": "http://localhost:23456/mgmt/"
+    "MGMT_URL": "http://localhost:23456/mgmt/",
+    "LOG_LEVEL": "debug"
 }
