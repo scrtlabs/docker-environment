@@ -24,7 +24,7 @@ RUN apt-get update \
 
 RUN npm -g config set user root
 
-RUN npm install -g truffle@5.1.2 ganache-cli
+RUN npm install -g truffle@5.1.2 ganache-cli@6.7.0
 
 
 ############ STAGE 2 -- compile smart contracts
