@@ -17,6 +17,7 @@ logger = get_logger('worker.p2p-node')
 
 
 class P2PStatuses(enum.Enum):
+    UNAVAILABLE = "unavailable"
     INITIALIZING = "initializing"
     UNREGISTERED = "unregistered"
     REGISTERED = "registered"
@@ -123,8 +124,8 @@ class P2PNode(threading.Thread):  # pylint: disable=too-many-instance-attributes
             logger.warning(f'Error getting status from p2p -- status server not ready')
             return P2PStatuses.INITIALIZING
         except (requests.RequestException, ConnectionError, urllib3.exceptions.HTTPError) as e:
-            logger.error(f'Error getting status from p2p -- status service error: {e}')
-            raise ConnectionError from None
+            logger.info(f'Seems that P2P is not yet available -- status service unavailable: {e}')
+            return P2PStatuses.UNAVAILABLE
 
     def register(self):
         try:

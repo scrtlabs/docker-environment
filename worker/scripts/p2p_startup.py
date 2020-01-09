@@ -86,13 +86,10 @@ def get_status() -> str:
 
 def wait_for_register(p2p: P2PNode):
     while True:
-        try:
-            status = p2p.status()
-            if status == P2PStatuses.REGISTERED:
-                break
-        # TODO this is a debug code
-        except Exception as e:
-            logger.info(f'Got exception while checking p2p status {e}')
+        status = p2p.status()
+        if status == P2PStatuses.REGISTERED:
+            logger.info(f'P2P server is available and registered!')
+            break
         time.sleep(10)
 
 
