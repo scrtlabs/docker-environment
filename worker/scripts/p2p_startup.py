@@ -88,6 +88,7 @@ def wait_for_register(p2p: P2PNode):
     while True:
         status = p2p.status()
         if status == P2PStatuses.REGISTERED:
+            logger.info(f'P2P server is available and registered!')
             break
         time.sleep(10)
 
