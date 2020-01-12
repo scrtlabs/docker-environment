@@ -2,6 +2,7 @@
  "CONTRACT_DISCOVERY_ADDRESS": "http://contract:8081",
  "ETH_NODE_ADDRESS": "contract",
  "ETH_NODE_PORT": "9545",
+ "NETWORK_ID": null,
  "ENG_NODE_ADDRESS": "worker",
  "ENG_NODE_PORT": "3346",
  "MONGO_URL": "mongodb://mongo:27017",
