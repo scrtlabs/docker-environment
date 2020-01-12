@@ -31,6 +31,25 @@ RUN : \
     && npm install -g modclean \
     && modclean -n default:safe -r
 
+# uninstall the enigma-js version from npm
+RUN yarn remove 'enigma-js' --ignore-workspace-root-check
+# Build and install custom enigma-js:
+COPY --from=gitclone_contract /enigma-contract/ /root/enigma-contract/
+# Build the smart contracts
+RUN : \
+    && cd /root/enigma-contract/ \
+    && yarn \
+    && yarn add truffle@5.1.2 \
+    && npx truffle compile \
+# Build the enigma-js library
+RUN : \
+    && cd /root/enigma-contract/enigma-js \
+    && yarn \
+    && npx webpack --env build
+# Install the local enigma-js library
+RUN cd operator && yarn add 'file:/root/enigma-contract/enigma-js/'
+RUN yarn add 'file:/root/enigma-contract/enigma-js/' --ignore-workspace-root-check
+
 ##########################
 
 FROM enigmampc/core-runtime-base:latest
