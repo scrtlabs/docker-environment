@@ -11,4 +11,4 @@ if ! ./scripts/take_salad_contract_addresses_from_environment.js; then
     echo 'Done deployment!'
 fi
 
-node ./operator/src/server.js
+node ./operator/src/server.js -t
