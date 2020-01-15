@@ -11,8 +11,6 @@ RUN apt-get update && \
     #### Core dependencies ####
     librocksdb-dev \
     libzmq5 \
-    #### Init dependencies ####
-    supervisor \
     #### SGX installer dependencies ####
     make libcurl4 libssl1.1 libprotobuf10 systemd-sysv && \
     rm -rf /var/lib/apt/lists/*

@@ -89,5 +89,5 @@ ENV LANG=C.UTF-8
 
 RUN ln -s /root/p2p/scripts/cli/cli.py /usr/bin/cli
 
-CMD . /opt/sgxsdk/environment && /usr/bin/supervisord -c /etc/supervisor/conf.d/supervisord.conf
+ENTRYPOINT . /opt/sgxsdk/environment && /usr/bin/supervisord -c /etc/supervisor/conf.d/supervisord.conf
 # CMD ["/usr/bin/python", "/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
