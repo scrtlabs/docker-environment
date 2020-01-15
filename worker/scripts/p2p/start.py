@@ -150,6 +150,7 @@ def main():  # pylint: disable=too-many-statements
     )
 
     optional = OptionalParameters(
+        min_confirmations=worker_env.confirmations,
         deposit_amount=worker_env.deposit_amount,
         bootstrap_address=bootstrap_params.address,
         health_check_port=config["HEALTH_CHECK_PORT"],
