@@ -62,6 +62,7 @@ RUN pip3 install \
 
 COPY scripts/requirements.txt .
 RUN pip3 install -r requirements.txt
+RUN pip3 install supervisor
 
 COPY --from=core-build /root/enigma-core/bin/ /root/core/bin/
 COPY --from=p2p_build /app ./p2p/
