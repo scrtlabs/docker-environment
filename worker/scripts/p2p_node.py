@@ -143,7 +143,7 @@ class P2PNode(threading.Thread):  # pylint: disable=too-many-instance-attributes
             logger.error(f'Error with login, falling back to old-style commands')
             try:
                 if self.proc:
-                    logger.debug('Passing logout to P2P')
+                    logger.debug('Passing login to P2P')
                     self.proc.stdin.write(b'login\n')
                     self.proc.stdin.flush()
                     return True
