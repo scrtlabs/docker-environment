@@ -3,17 +3,49 @@ import enum
 import signal
 import subprocess
 import threading
-from typing import List
+from collections import UserDict
+from dataclasses import dataclass
+from urllib.parse import urlparse
+from typing import List, Union
 
 import requests
-from requests.adapters import HTTPAdapter
 import urllib3.exceptions
+from enigma_docker_common.logger import get_logger
+from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 
-from enigma_docker_common.logger import get_logger
+logger = get_logger('worker.p2p.node')
 
 
-logger = get_logger('worker.p2p-node')
+@dataclass
+class RequiredParameters:
+    ether_node: str
+    public_address: str
+    contract_address: str
+    key_mgmt_node: str
+    abi_path: str
+    staking_address: str
+    ethereum_key: str
+
+
+@dataclass
+class OptionalParameters:  # pylint: disable=too-many-instance-attributes
+    proxy: int = 3346
+    core_addr: str = 'localhost:5552'
+    peer_name: str = 'peer1'
+    random_db: bool = True
+    auto_init: bool = True
+    log_level: str = 'info'
+    bootstrap: bool = False
+    bootstrap_address: str = 'B1'
+    bootstrap_id: str = 'B1'
+    health_check_port: int = 12345
+    deposit_amount: int = 0
+    bootstrap_path: str = "B1"
+    bootstrap_port: str = "B1"
+    min_confirmations: Union[str, int] = "12"
+    login_and_deposit: bool = False
+    executable_name: str = 'cli_app.js'
 
 
 class P2PStatuses(enum.Enum):
@@ -29,61 +61,36 @@ retry = Retry(connect=3, backoff_factor=0.5)
 node_adapter = HTTPAdapter(max_retries=retry)
 
 
+def p2p_parse_url(env: str, ethereum_node: str, config: UserDict) -> str:
+    p = urlparse(ethereum_node)
+    hostname = p.hostname
+    port = p.port
+    if not port:
+        raise ValueError('No port specified in ethereum node')
+    # in ganache WS and HTTP are in the same port. In our testnet it isn't (8546 and 8545 respectively)
+    if env in ['TESTNET', 'MAINNET']:
+        ether_gateway = config.get('ETHEREUM_NODE_ADDRESS_WEBSOCKET', f'ws://{hostname}:{port + 1}')
+    else:
+        ether_gateway = config.get('ETHEREUM_NODE_ADDRESS_WEBSOCKET', f'ws://{hostname}:{port}')
+
+    return ether_gateway
+
+
 # todo: pylint is totally right though. TBD
-class P2PNode(threading.Thread):  # pylint: disable=too-many-instance-attributes
+class P2PNode(threading.Thread):
     exec_file = 'cli_app.js'
     runner = 'node'
     kill_now = False
 
-    def __init__(self,  # pylint: disable=too-many-arguments,too-many-locals,too-many-statements
-                 ether_node: str,
-                 public_address: str,
-                 contract_address: str,
-                 key_mgmt_node: str,
-                 abi_path: str,
-                 staking_address: str = '',  # remove default value when staking address is added to p2p
-                 proxy: int = 3346,
-                 core_addr: str = 'localhost:5552',
-                 peer_name: str = 'peer1',
-                 random_db: bool = True,
-                 auto_init: bool = True,
-                 log_level: str = 'info',
-                 bootstrap: bool = False,
-                 bootstrap_address: str = 'B1',
-                 bootstrap_id: str = 'B1',
-                 health_check_port: int = 12345,
-                 deposit_amount: int = 0,
-                 login_and_deposit: bool = False,
-                 ethereum_key: str = '',
-                 bootstrap_path: str = "B1",
-                 bootstrap_port: str = "B1",
-                 min_confirmations: int = 12,
-                 executable_name: str = 'cli_app.js'):
+    def __init__(self,
+                 required: RequiredParameters,
+                 optional: OptionalParameters = OptionalParameters()):
         super().__init__()
-        self.exec_file = executable_name
-        self.km_node = key_mgmt_node
-        self.ether_gateway = ether_node
-        self.proxy = proxy
-        self.core_addr = core_addr
-        self.name = peer_name
-        self.random_db = random_db
-        self.auto_init = auto_init
-        self.log_level = log_level
-        self.bootstrap = bootstrap
-        self.abi_path = abi_path
-        self.staking_address = staking_address
-        self.bootstrap_addr = bootstrap_address
-        self.ether_public = public_address
-        self.contract_addr = contract_address
-        self.deposit_amount = deposit_amount
-        self.login_and_deposit = login_and_deposit
-        self.ethereum_key = ethereum_key
-        self.bootstrap_id: str = bootstrap_id
-        self.bootstrap_path: str = bootstrap_path
-        self.bootstrap_port: str = bootstrap_port
-        self.min_confirmations = str(min_confirmations) if int(min_confirmations) != 12 else None
-        self.health_check_port = health_check_port
+
+        self.optional = optional
+        self.required = required
         self.proc = None
+
         atexit.register(self.stop)
         signal.signal(signal.SIGINT, self._kill)
         signal.signal(signal.SIGTERM, self._kill)
@@ -103,17 +110,12 @@ class P2PNode(threading.Thread):  # pylint: disable=too-many-instance-attributes
     def _kill(self, signum, frame):  # pylint: disable=unused-argument
         if self.proc:
             logger.info('Logging out...')
-            #
-            # self.logout()
-            #
-            # self.proc.send_signal(signal.SIGINT)
-            # self.proc.wait(timeout=5)
             self.kill_now = True
             logger.info('Killed p2p cli')
 
     def status(self) -> P2PStatuses:
         try:
-            resp = self.session.get(f'http://localhost:{self.health_check_port}/status')
+            resp = self.session.get(f'http://localhost:{self.optional.health_check_port}/status')
             if resp.status_code == 200:
                 try:
                     logger.debug(f'Got status from P2P: {resp.content.decode()}')
@@ -171,33 +173,28 @@ class P2PNode(threading.Thread):  # pylint: disable=too-many-instance-attributes
 
     def _map_params_to_exec(self) -> List[str]:
         """ build executable params -- if cli params change just change the keys and everything should still work """
-        params = {'core': f'{self.core_addr}',
-                  'ethereum-websocket-provider': f'{self.ether_gateway}',
-                  'proxy': f'{self.proxy}',
-                  'ethereum-address': f'{self.ether_public}',
-                  'principal-node': f'{self.km_node}',
-                  'ethereum-contract-address': f'{self.contract_addr}',
-                  'ethereum-contract-abi-path': self.abi_path,
-                  'health': f'{self.health_check_port}',
-                  'log-level': f'{self.log_level}'}
+        params = {'core': f'{self.optional.core_addr}',
+                  'ethereum-websocket-provider': f'{self.required.ether_node}',
+                  'proxy': f'{self.optional.proxy}',
+                  'ethereum-address': f'{self.required.public_address}',
+                  'principal-node': f'{self.required.key_mgmt_node}',
+                  'ethereum-contract-address': f'{self.required.contract_address}',
+                  'ethereum-contract-abi-path': self.required.abi_path,
+                  'health': f'{self.optional.health_check_port}',
+                  'log-level': f'{self.optional.log_level}',
+                  'ethereum-key': self.required.ethereum_key,
+                  'staking-address': f'{self.required.staking_address}',
+                  'min-confirmations': str(self.optional.min_confirmations)}
 
-        # optional values
-        if self.staking_address:
-            params.update({'staking-address': f'{self.staking_address}'})
-        if self.min_confirmations:
-            params.update({'min-confirmations': self.min_confirmations})
-        if self.ethereum_key:
-            params.update({'ethereum-key': self.ethereum_key})
-
-        if self.bootstrap:
+        if self.optional.bootstrap:
             params.update({
-                'path': self.bootstrap_path,
-                'bnodes': f'{self.bootstrap_addr}',  # f'{self.bootstrap_addr}'
-                'port': self.bootstrap_port
+                'path': self.optional.bootstrap_path,
+                'bnodes': f'{self.optional.bootstrap_address}',  # f'{self.bootstrap_addr}'
+                'port': self.optional.bootstrap_port
             })
         else:
             params.update({
-                'bnodes': f'{self.bootstrap_addr}',
+                'bnodes': f'{self.optional.bootstrap_address}',
                 'nickname': f'{self.name}'
             })
 
@@ -207,10 +204,10 @@ class P2PNode(threading.Thread):  # pylint: disable=too-many-instance-attributes
             params_list.append(f'--{k}')
             params_list.append(v)
 
-        if self.auto_init:
+        if self.optional.auto_init:
             params_list.append(f'--auto-init')
 
-        if self.random_db:
+        if self.optional.random_db:
             params_list.append(f'--random-db')
 
         return params_list

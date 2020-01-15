@@ -113,14 +113,21 @@ class EnigmaTokenContract(Contract):
 
 
 class EnigmaContract(Contract):
-    def deposit(self, staking_address: str, staking_key: bytes, eth_address: str, deposit_amount: int):
-        return self.transact(self.toCheckSumAddress(staking_address), staking_key, 'deposit',
-                             self.toCheckSumAddress(eth_address), deposit_amount)
+    def deposit(self, staking_address: str, staking_key: bytes, eth_address: str, deposit_amount: int,
+                confirmations: int = 0):
+        receipt = self.transact(self.toCheckSumAddress(staking_address), staking_key, 'deposit',
+                                self.toCheckSumAddress(eth_address), deposit_amount)
+        if confirmations:
+            self.wait_for_confirmations(receipt, confirmations)
+        return receipt
 
     # noinspection PyPep8Naming
-    def setOperatingAddress(self, staking_address: str, eth_address: str):
-        return self.transact(self.toCheckSumAddress(staking_address), 'setOperatingAddress',
-                             self.toCheckSumAddress(eth_address))
+    def setOperatingAddress(self, staking_address: str, staking_key: bytes, eth_address: str, confirmations: int = 0):
+        receipt = self.transact(self.toCheckSumAddress(staking_address), staking_key, 'setOperatingAddress',
+                                self.toCheckSumAddress(eth_address))
+        if confirmations:
+            self.wait_for_confirmations(receipt, confirmations)
+        return receipt
 
     def deposit_build(self, staking_address: str, eth_address: str, deposit_amount: int):
         return self.build(self.toCheckSumAddress(staking_address), 'deposit', self.toCheckSumAddress(eth_address),

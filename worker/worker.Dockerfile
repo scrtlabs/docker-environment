@@ -74,7 +74,7 @@ COPY config/p2p ./p2p/config
 COPY scripts/core_startup.py ./core/
 COPY scripts ./p2p/scripts
 
-RUN chmod +x ./p2p/scripts/p2p_startup.py && chmod +x ./core/core_startup.py
+RUN chmod +x ./p2p/scripts/p2p/start.py && chmod +x ./core/core_startup.py
 RUN chmod +x ./p2p/scripts/cli/cli.py
 COPY devops/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
@@ -89,4 +89,5 @@ ENV LANG=C.UTF-8
 
 RUN ln -s /root/p2p/scripts/cli/cli.py /usr/bin/cli
 
-CMD ["/usr/bin/python", "/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
+CMD . /opt/sgxsdk/environment && /usr/bin/supervisord -c /etc/supervisor/conf.d/supervisord.conf
+# CMD ["/usr/bin/python", "/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
