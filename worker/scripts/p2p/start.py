@@ -170,6 +170,7 @@ def main():  # pylint: disable=too-many-statements
     p2p_runner.start()
 
     logger.info('Waiting for node to finish registering...')
+    utils.set_status(config, 'Registering...')
     wait_for_register(p2p_runner)
     logger.info(f'Register success!')
 
