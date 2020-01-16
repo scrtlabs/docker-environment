@@ -63,8 +63,13 @@ RUN pip3 install \
       --find-links=/root/wheels \
       enigma_docker_common
 
+# install init dependencies
 COPY scripts/requirements.txt .
 RUN pip3 install -r requirements.txt
+
+# install CLI dependencies
+COPY scripts/cli/requirements.txt requirements_cli.txt
+RUN pip3 install -r requirements_cli.txt
 
 COPY --from=core-build /root/enigma-core/bin/ /root/core/bin/
 COPY --from=p2p_build /app ./p2p/
