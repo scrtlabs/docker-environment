@@ -78,6 +78,11 @@ WORKDIR /root
 
 COPY --from=pybuild /root/wheels /root/wheels
 
+RUN pip3 install \
+      --no-index \
+      --find-links=/root/wheels \
+      supervisor
+
 # install init dependencies
 COPY scripts/requirements.txt .
 RUN pip3 install \
