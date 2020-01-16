@@ -1,11 +1,9 @@
 ARG DOCKER_TAG
-FROM ubuntu:18.04 as base
+FROM brunneis/python:3.8.0-ubuntu-bionic as base
 
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
-    python3-pip \
     curl \
-    python-dev \
     git \
     g++ \
     make \
@@ -52,4 +50,4 @@ RUN chmod +x startup.sh && chmod +x tests_setup.py
 ENV ENIGMA_ENV=TESTNET
 ENV SGX_MODE=SW
 
-CMD /bin/bash -c './startup.sh';'/bin/bash'
+ENTRYPOINT /bin/bash -c './startup.sh';'/bin/bash'
