@@ -24,6 +24,7 @@ jobs:
         pip install -r km/scripts/requirements.txt
         pip install -r contract/scripts/requirements.txt
         pip install -r worker/scripts/requirements.txt
+        pip install -r worker/scripts/cli/requirements.txt
         pip install -r client/scripts/requirements.txt
         pip install -r salad/client/scripts/requirements.txt
         pip install -r salad/operator/scripts/requirements.txt
