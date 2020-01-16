@@ -178,14 +178,14 @@ def main():  # pylint: disable=too-many-statements
         utils.set_status(config, 'Setting staking address...')
         logger.info(f'Attempting to set operating address -- staking:{staking.address} operating: {operating.address}')
         # todo: wait for confirmations
-        eng_contract.setOperatingAddress(staking.address, remove_0x(staking.key), operating.address, int(worker_env.confirmations))
+        eng_contract.setOperatingAddress(staking.address, staking.key, operating.address, int(worker_env.confirmations))
         logger.info(f'Done waiting for {worker_env.confirmations} confirmations for setOperatingAddress')
 
         utils.set_status(config, 'Depositing...')
 
         logger.info(f'Attempting deposit from {staking.address} on behalf of worker {operating.address}')
         logger.error(f'staking={staking}, operating={operating}')
-        eng_contract.deposit(staking.address, remove_0x(staking.key), operating.address,
+        eng_contract.deposit(staking.address, staking.key, operating.address,
                              worker_env.deposit_amount, int(worker_env.confirmations))
         logger.info(f'Done waiting for {worker_env.confirmations} confirmations for deposit')
 
