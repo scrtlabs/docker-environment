@@ -93,8 +93,8 @@ def main():  # pylint: disable=too-many-statements
 
     config = Config(required=required_config, config_file=env_defaults[os.getenv('ENIGMA_ENV', 'COMPOSE')])
 
-    utils.set_status(config, 'Down')
     worker_env = Environment(config=config)
+    worker_env.set_status('Down')
     provider = Provider(config=config)
 
     logger.debug(f'Running with config: {config.items()}')
@@ -106,21 +106,21 @@ def main():  # pylint: disable=too-many-statements
     logger.info('Done')
 
     logger.info('Loading ethereum address...')
-    utils.set_status(config, 'Loading Ethereum Address...')
+    worker_env.set_status('Loading Ethereum Address...')
     # load operating key from configuration -- used in testnet to automatically start bootstrap nodes
     operating = worker_env.load_operating_address()
     logger.info(f'Loaded operating address. Operating address is: {operating.address}')
 
     logger.info('Loading staking address...')
-    utils.set_status(config, 'Loading Staking Address...')
+    worker_env.set_status('Loading Staking Address...')
     staking = worker_env.load_staking_address()
     logger.info(f'Got staking address {staking.address}')
 
     if worker_env.testing_env:
-        utils.set_status(config, 'Compose local setup...')
+        worker_env.set_status('Compose local setup...')
         request_coins_from_faucet(config, operating.address, staking.address)
 
-    utils.set_status(config, 'Reticulating Splines...')
+    worker_env.set_status('Reticulating Splines...')
     bootstrap_params = load_bootstrap_parameters(config, worker_env.bootstrap())
 
     # perform deposit
@@ -136,7 +136,7 @@ def main():  # pylint: disable=too-many-statements
                      f' {val / (10 ** 8)} ENG')
 
     while not check_eth_limit(operating.address, float(config["MINIMUM_ETHER_BALANCE"]), worker_env.ethereum_node):
-        utils.set_status(config, 'Waiting for ETH...')
+        worker_env.set_status('Waiting for ETH...')
         time.sleep(5)
 
     required = RequiredParameters(
@@ -170,38 +170,38 @@ def main():  # pylint: disable=too-many-statements
     p2p_runner.start()
 
     logger.info('Waiting for node to finish registering...')
-    utils.set_status(config, 'Registering...')
+    worker_env.set_status('Registering...')
     wait_for_register(p2p_runner)
     logger.info(f'Register success!')
 
     # now perform the part of the deposit that comes after the p2p registers
     if worker_env.should_auto_deposit():
-        utils.set_status(config, 'Setting staking address...')
+        worker_env.set_status('Setting staking address...')
         logger.info(f'Attempting to set operating address -- staking:{staking.address} operating: {operating.address}')
         # todo: wait for confirmations
         eng_contract.setOperatingAddress(staking.address, staking.key, operating.address, int(worker_env.confirmations))
         logger.info(f'Done waiting for {worker_env.confirmations} confirmations for setOperatingAddress')
 
-        utils.set_status(config, 'Depositing...')
+        worker_env.set_status('Depositing...')
 
         logger.info(f'Attempting deposit from {staking.address} on behalf of worker {operating.address}')
         eng_contract.deposit(staking.address, staking.key, worker_env.deposit_amount, int(worker_env.confirmations))
         logger.info(f'Done waiting for {worker_env.confirmations} confirmations for deposit')
 
-        utils.set_status(config, 'Logging in...')
+        worker_env.set_status('Logging in...')
         if p2p_runner.login():
-            utils.set_status(config, 'Running')
+            worker_env.set_status('Running')
         else:
-            utils.set_status(config, 'Failed to login')
+            worker_env.set_status('Failed to login')
 
     else:
-        utils.set_status(config, 'Waiting for login...')
+        worker_env.set_status('Waiting for login...')
         logger.info('Waiting for deposit & login...')
 
     while not p2p_runner.kill_now:
         # snooze
         time.sleep(2)
-    utils.set_status(config, 'Down')
+    worker_env.set_status('Down')
 
 
 if __name__ == '__main__':

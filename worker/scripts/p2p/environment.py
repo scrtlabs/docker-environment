@@ -78,3 +78,9 @@ class Environment:  # pylint: disable=too-many-instance-attributes
 
     def generate_staking_key_local(self):
         return utils.load_staking_keys(self.config)
+
+    def set_status(self, new_status: str) -> None:
+        utils.set_status(self.config, new_status)
+
+    def get_status(self) -> str:
+        return utils.get_status(self.config)
