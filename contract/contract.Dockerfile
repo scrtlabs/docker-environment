@@ -97,4 +97,4 @@ EXPOSE 9545
 EXPOSE 8081
 EXPOSE 8001
 
-CMD /usr/bin/supervisord -c /etc/supervisor/conf.d/supervisord.conf
+ENTRYPOINT supervisord -c /etc/supervisor/conf.d/supervisord.conf
