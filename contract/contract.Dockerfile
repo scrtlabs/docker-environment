@@ -1,20 +1,20 @@
 ########### STAGE 1
-FROM ubuntu:18.04 as contract_base
+FROM brunneis/python:3.8.0-ubuntu-bionic as contract_base
 
 LABEL maintainer='info@enigma.co'
 
 RUN apt-get update \
  && apt-get install -y --no-install-recommends \
     curl \
-    python3-pip \
     # for startup script wait till ganache is up
     iproute2 \
-    supervisor \
     make \
     # for npm install to run migrate
  && pip3 install --upgrade pip \
  && curl -sL https://deb.nodesource.com/setup_10.x | bash - \
  && curl -sL https://dl.yarnpkg.com/debian/pubkey.gpg | apt-key add -
+
+RUN pip3 install supervisor
 
 RUN echo "deb https://dl.yarnpkg.com/debian/ stable main" | tee /etc/apt/sources.list.d/yarn.list
 
