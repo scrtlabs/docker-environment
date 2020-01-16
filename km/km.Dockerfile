@@ -32,6 +32,9 @@ RUN pip3 install \
       --find-links=/root/wheels \
       -r requirements.txt
 
+COPY scripts/requirements.txt .
+RUN pip3 install -r requirements.txt
+
 COPY --from=core-build /root/enigma-principal/bin ./bin
 
 COPY scripts ./scripts
