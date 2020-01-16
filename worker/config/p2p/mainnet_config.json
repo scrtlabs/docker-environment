@@ -22,6 +22,7 @@
  "CONTRACT_TIMEOUT": 3600,
  "HEALTH_CHECK_PORT": 12345,
  "STATUS_FILENAME": "status",
+ "STAKE_KEY_NAME": "eth_address.txt",
  "ETHEREUM_ADDR_FILENAME": "eth_address.txt",
  "MGMT_URL": "http://localhost:23456/mgmt/"
 }
