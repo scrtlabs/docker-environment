@@ -37,8 +37,8 @@ WORKDIR /root/enigma-contract/
 RUN apt-get update \
  && apt-get install -y --no-install-recommends \
     git \
-    g++
-
+    g++ \
+    python
 RUN yarn
 RUN truffle compile
 #
@@ -51,6 +51,7 @@ FROM node:10 as ethereum_node_builder
 RUN apt-get update \
  && apt-get install -y --no-install-recommends \
     # for npm install
+    python \
     git \
     g++ \
     make \
