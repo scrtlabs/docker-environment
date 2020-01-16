@@ -11,7 +11,7 @@ except ImportError:
 logger = get_logger('p2p.startup.environment')
 
 
-class Environment: # pylint: disable=too-many-instance-attributes
+class Environment:  # pylint: disable=too-many-instance-attributes
 
     testing_env = ["K8S", "COMPOSE"]
 
