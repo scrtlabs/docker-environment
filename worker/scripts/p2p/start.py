@@ -184,6 +184,7 @@ def main():  # pylint: disable=too-many-statements
         utils.set_status(config, 'Depositing...')
 
         logger.info(f'Attempting deposit from {staking.address} on behalf of worker {operating.address}')
+        logger.error(f'staking={staking}, operating={operating}')
         eng_contract.deposit(staking.address, staking.key, operating.address,
                              worker_env.deposit_amount, int(worker_env.confirmations))
         logger.info(f'Done waiting for {worker_env.confirmations} confirmations for deposit')
