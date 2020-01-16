@@ -64,7 +64,7 @@ class BootstrapLoader:
             self.keyfile = self._get_file(self.bootstrap_id)
 
             as_dict = json.loads(self.keyfile)
-            logger.debug(f'Got bootstrap configuration file: {as_dict}')
+            # logger.debug(f'Got bootstrap configuration file: {as_dict}')
             self._address = as_dict["id"]
             self._key = as_dict["privKey"]
             self._public = as_dict["pubKey"]

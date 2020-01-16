@@ -114,10 +114,10 @@ class EnigmaTokenContract(Contract):
 
 
 class EnigmaContract(Contract):
-    def deposit(self, staking_address: str, staking_key: Union[bytes, str], eth_address: str, deposit_amount: int,
+    def deposit(self, staking_address: str, staking_key: Union[bytes, str], deposit_amount: int,
                 confirmations: int = 0):
         receipt = self.transact(self.toCheckSumAddress(staking_address), staking_key, 'deposit',
-                                self.toCheckSumAddress(eth_address), deposit_amount)
+                                self.toCheckSumAddress(staking_address), deposit_amount)
         if confirmations:
             self.wait_for_confirmations(receipt, confirmations)
         return receipt
