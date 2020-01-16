@@ -28,7 +28,7 @@ class CustomFormatter(logging.Formatter):
 
     @classmethod
     def _colorize(cls, color):
-        return f'[%(asctime)25s] {color}%(levelname)s{cls.RESET} [%(name)-30s] %(funcName)s:%(lineno)s -- %(message)s'
+        return f'[%(asctime)25s] {color}%(levelname)s{cls.RESET} [%(name)]-30s %(funcName)s:%(lineno)s -- %(message)s'
 
     @classmethod
     def get_formats(cls):
