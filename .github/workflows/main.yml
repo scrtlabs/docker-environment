@@ -19,4 +19,4 @@ jobs:
           until ./is_ready.sh; do
             sleep 1
           done
-          docker-compose exec -T client make test
+          DOCKER_TAG=develop docker-compose exec -T client make test
