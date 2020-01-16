@@ -141,7 +141,7 @@ def main():  # pylint: disable=too-many-statements
 
     required = RequiredParameters(
         public_address=operating.address,
-        ethereum_key=operating.key,
+        ethereum_key=remove_0x(operating.key),
         ether_node=p2p_parse_url(env, worker_env.ethereum_node, config),
         staking_address=staking.address,
         abi_path=worker_env.enigma_abi_path,
