@@ -31,6 +31,7 @@ RUN apt-get update \
     gcc \
     g++ \
     git \
+    python \
  && rm -rf /var/lib/apt/lists/*
 
 COPY --from=gitclone_p2p /enigma-p2p/package.json ./
@@ -90,5 +91,5 @@ ENV LANG=C.UTF-8
 
 RUN ln -s /root/p2p/scripts/cli/cli.py /usr/bin/cli
 
-ENTRYPOINT . /opt/sgxsdk/environment && /usr/bin/supervisord -c /etc/supervisor/conf.d/supervisord.conf
+ENTRYPOINT . /opt/sgxsdk/environment && supervisord -c /etc/supervisor/conf.d/supervisord.conf
 # CMD ["/usr/bin/python", "/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]

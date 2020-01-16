@@ -1,4 +1,5 @@
 import time
+from typing import Union
 
 import web3
 from web3.auto import w3 as auto_w3
@@ -113,7 +114,7 @@ class EnigmaTokenContract(Contract):
 
 
 class EnigmaContract(Contract):
-    def deposit(self, staking_address: str, staking_key: bytes, eth_address: str, deposit_amount: int,
+    def deposit(self, staking_address: str, staking_key: Union[bytes, str], eth_address: str, deposit_amount: int,
                 confirmations: int = 0):
         receipt = self.transact(self.toCheckSumAddress(staking_address), staking_key, 'deposit',
                                 self.toCheckSumAddress(eth_address), deposit_amount)
@@ -122,7 +123,8 @@ class EnigmaContract(Contract):
         return receipt
 
     # noinspection PyPep8Naming
-    def setOperatingAddress(self, staking_address: str, staking_key: bytes, eth_address: str, confirmations: int = 0):
+    def setOperatingAddress(self, staking_address: str, staking_key: Union[bytes, str],
+                            eth_address: str, confirmations: int = 0):
         receipt = self.transact(self.toCheckSumAddress(staking_address), staking_key, 'setOperatingAddress',
                                 self.toCheckSumAddress(eth_address))
         if confirmations:
