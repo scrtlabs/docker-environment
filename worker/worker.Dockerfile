@@ -54,12 +54,21 @@ FROM enigma_common as pybuild
 
 RUN pip3 wheel --wheel-dir=/root/wheels supervisor
 
+WORKDIR /root/common_scripts
+RUN pip3 wheel --wheel-dir=/root/wheels .
+
 # install init dependencies
 COPY scripts/requirements.txt .
-RUN pip3 wheel --wheel-dir=/root/wheels -r requirements.txt
+RUN pip3 wheel \
+    --find-links=/root/wheels \
+    --wheel-dir=/root/wheels \
+    -r requirements.txt
 
 COPY scripts/cli/requirements.txt requirements_cli.txt
-RUN pip3 wheel --wheel-dir=/root/wheels -r requirements_cli.txt
+RUN pip3 wheel \
+    --find-links=/root/wheels \
+    --wheel-dir=/root/wheels \
+    -r requirements_cli.txt
 
 ####### Stage 4 - add p2p folder and compiled core together
 
@@ -67,16 +76,21 @@ FROM p2p_base
 
 WORKDIR /root
 
-COPY --from=enigma_common /root/wheels /root/wheels
-
-RUN pip3 install \
-      --no-index \
-      --find-links=/root/wheels \
-      enigma_docker_common
+COPY --from=pybuild /root/wheels /root/wheels
 
 # install init dependencies
 COPY scripts/requirements.txt .
-RUN pip3 install -r requirements.txt
+RUN pip3 install \
+      --no-index \
+      --find-links=/root/wheels \
+      -r requirements.txt
+
+# install CLI dependencies
+COPY scripts/cli/requirements.txt cli_requirements.txt
+RUN pip3 install \
+      --no-index \
+      --find-links=/root/wheels \
+      -r cli_requirements.txt
 
 COPY --from=core-build /root/enigma-core/bin/ /root/core/bin/
 COPY --from=p2p_build /app ./p2p/
