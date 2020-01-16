@@ -48,6 +48,19 @@ COPY --from=gitclone_p2p /enigma-p2p/src ./src/
 COPY --from=gitclone_p2p /enigma-p2p/configs ./configs
 COPY --from=gitclone_p2p /enigma-p2p/test/testUtils ./test/testUtils
 
+###### Build Worker & CLI dependencies
+
+FROM enigma_common as pybuild
+
+RUN pip3 wheel --wheel-dir=/root/wheels supervisor
+
+# install init dependencies
+COPY scripts/requirements.txt .
+RUN pip3 wheel --wheel-dir=/root/wheels -r requirements.txt
+
+COPY scripts/cli/requirements.txt requirements_cli.txt
+RUN pip3 wheel --wheel-dir=/root/wheels -r requirements_cli.txt
+
 ####### Stage 4 - add p2p folder and compiled core together
 
 FROM p2p_base
@@ -55,8 +68,6 @@ FROM p2p_base
 WORKDIR /root
 
 COPY --from=enigma_common /root/wheels /root/wheels
-
-RUN pip3 install supervisor
 
 RUN pip3 install \
       --no-index \
@@ -66,10 +77,6 @@ RUN pip3 install \
 # install init dependencies
 COPY scripts/requirements.txt .
 RUN pip3 install -r requirements.txt
-
-# install CLI dependencies
-COPY scripts/cli/requirements.txt requirements_cli.txt
-RUN pip3 install -r requirements_cli.txt
 
 COPY --from=core-build /root/enigma-core/bin/ /root/core/bin/
 COPY --from=p2p_build /app ./p2p/
