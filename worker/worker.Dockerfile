@@ -5,7 +5,7 @@ FROM $CORE_IMAGE as core-build
 
 ###### Stage 2 - install node 10 so we can also run and compile p2p
 
-FROM enigmampc/core-runtime-base:latest as p2p_base
+FROM enigmampc/core-runtime-base:develop as p2p_base
 
 LABEL maintainer=enigmampc
 
