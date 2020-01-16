@@ -1,4 +1,4 @@
-FROM ubuntu:18.04
+FROM brunneis/python:3.8.0-ubuntu-bionic
 
 LABEL maintainer=enigmampc
 
@@ -6,15 +6,11 @@ LABEL maintainer=enigmampc
 ARG SGX_VERSION=2.6.100.51363
 ARG OS_REVESION=bionic1
 
-
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
     #### Core dependencies ####
     librocksdb-dev \
     libzmq5 \
-    #### Docker image devops dependencies ####
-    python3-pip \
-    supervisor \
     #### SGX installer dependencies ####
     make libcurl4 libssl1.1 libprotobuf10 systemd-sysv && \
     rm -rf /var/lib/apt/lists/*

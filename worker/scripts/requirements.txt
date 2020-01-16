@@ -1,5 +1,1 @@
 enigma_docker_common
-prompt_toolkit==3.0.2
-aiofile
-aiohttp
-pyfiglet

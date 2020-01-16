@@ -23,7 +23,7 @@
     "KEY_MANAGEMENT_TIMEOUT": 120,
     "CONTRACT_TIMEOUT": 3600,
     "HEALTH_CHECK_PORT": 12345,
-    "STAKE_KEY_NAME": "staking_address",
+    "STAKE_KEY_NAME": "eth_address.txt",
     "STAKING_PRIVATE_KEY": "b0057716d5917badaf911b193b12b910811c1497b5bada8d7711f758981c3773",
     "STATUS_FILENAME": "status",
     "ETHEREUM_ADDR_FILENAME": "eth_address.txt",

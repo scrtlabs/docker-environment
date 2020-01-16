@@ -36,6 +36,8 @@ def main():
     except (ValueError, IOError):
         sys.exit(-1)
 
+    logger.debug(f'Running with config: { config.items() }')
+
     if not os.getenv('RUST_BACKTRACE'):
         if config['RUST_BACKTRACE'] != '0':
             os.environ["RUST_BACKTRACE"] = config['RUST_BACKTRACE']
@@ -59,6 +61,8 @@ def main():
     if log_level:
         exec_args.append('-l')
         exec_args.append(log_level)
+
+    logger.info(f'Running core with arguments: {exec_args}')
 
     try:
         subprocess.check_call(exec_args, env=env)

@@ -1,10 +1,24 @@
 import json
+from dataclasses import dataclass
+from collections import UserDict
 
-from enigma_docker_common import config
 from enigma_docker_common import storage
 from enigma_docker_common.logger import get_logger
 
+try:
+    import utils
+except ImportError:
+    from ..p2p import utils
+
 logger = get_logger('bootstrap-loader')
+
+
+@dataclass
+class BootstrapParams:
+    address: str
+    id: str
+    path: str
+    port: str
 
 
 class BootstrapLoader:
@@ -15,7 +29,7 @@ class BootstrapLoader:
     """
     bootstrap_file_name = "bootstrap_addresses.json"
 
-    def __init__(self, cfg: config.Config, bootstrap_id: str = ''):
+    def __init__(self, cfg: UserDict, bootstrap_id: str = ''):
         self.env = cfg.get('ENIGMA_ENV', 'COMPOSE')
         self.bootstrap_id = bootstrap_id
         if self.env == 'COMPOSE':
@@ -50,7 +64,7 @@ class BootstrapLoader:
             self.keyfile = self._get_file(self.bootstrap_id)
 
             as_dict = json.loads(self.keyfile)
-            logger.debug(f'Got bootstrap configuration file: {as_dict}')
+            # logger.debug(f'Got bootstrap configuration file: {as_dict}')
             self._address = as_dict["id"]
             self._key = as_dict["privKey"]
             self._public = as_dict["pubKey"]
@@ -83,3 +97,33 @@ class BootstrapLoader:
         except ValueError as e:  # not sure what Exceptions right now
             logger.error(f'Failed to get file: {e}')
             raise
+
+
+def load_bootstrap_parameters(config: UserDict, is_bootstrap: bool):
+    bootstrap_id = config.get('BOOTSTRAP_ID', '') if is_bootstrap else ''
+    bootstrap_address = config.get('BOOTSTRAP_ADDRESS', '')
+    bootstrap_loader = BootstrapLoader(config, bootstrap_id)
+    # file must be .json since p2p will try to use require(). Can remove when p2p is changed
+    bootstrap_path: str = config['BOOTSTRAP_PATH'] + bootstrap_id
+    bootstrap_port: str = config['BOOTSTRAP_PORT']
+
+    # #### bootstrap params #####
+    if is_bootstrap:
+        logger.info('Loading bootstrap node parameters')
+
+        bootstrap_id = bootstrap_loader.address
+
+        # we save the keyfile to disk so we can send it to p2p runner
+        bootstrap_path += '.json'
+
+        keyfile = bootstrap_loader.to_json()
+        utils.save_to_path(bootstrap_path, keyfile)
+
+    if not bootstrap_address:  # if bootstrap addresses are not configured, try to pull
+        logger.info('Loading bootstrap addresses...')
+        bootstrap_address = bootstrap_loader.all_bootstrap_addresses()
+        logger.info(f'Got bootstrap addresses: {bootstrap_address}')
+    else:
+        logger.info(f'Bootstrap addresses already set: {bootstrap_address}')
+
+    return BootstrapParams(address=bootstrap_address, id=bootstrap_id, path=bootstrap_path, port=bootstrap_port)

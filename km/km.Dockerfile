@@ -15,7 +15,7 @@ RUN . /opt/sgxsdk/environment && env && SGX_MODE=${SGX_MODE} RUSTFLAGS=-Awarning
 
 ####### Stage 3
 
-FROM enigmampc/core-runtime-base:latest
+FROM enigmampc/core-runtime-base:develop
 
 RUN mkdir -p /tmp/contracts
 
@@ -23,12 +23,17 @@ WORKDIR /root
 
 COPY --from=enigma_common /root/wheels /root/wheels
 
+RUN pip3 install supervisor
+
 COPY scripts/requirements.txt .
 
 RUN pip3 install \
       --no-index \
       --find-links=/root/wheels \
       -r requirements.txt
+
+COPY scripts/requirements.txt .
+RUN pip3 install -r requirements.txt
 
 COPY --from=core-build /root/enigma-principal/bin ./bin
 
@@ -41,4 +46,4 @@ COPY devops/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
 EXPOSE 3040
 
-CMD . /opt/sgxsdk/environment && /usr/bin/supervisord -c /etc/supervisor/conf.d/supervisord.conf
+ENTRYPOINT . /opt/sgxsdk/environment && supervisord -c /etc/supervisor/conf.d/supervisord.conf

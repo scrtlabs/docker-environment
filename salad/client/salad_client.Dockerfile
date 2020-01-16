@@ -20,7 +20,7 @@ RUN : \
 
 ##########################
 
-FROM enigmampc/core-runtime-base:latest
+FROM enigmampc/core-runtime-base:develop
 
 ENV DEBIAN_FRONTEND noninteractive
 ARG SGX_MODE=SW
@@ -63,4 +63,4 @@ RUN : \
 COPY scripts ./scripts/
 COPY config ./config/
 
-CMD ./scripts/run.sh
+ENTRYPOINT ./scripts/run.sh
