@@ -48,12 +48,12 @@ env_defaults = {'K8S': '/root/p2p/config/k8s_config.json',
 env = os.getenv('ENIGMA_ENV', 'COMPOSE')
 
 
-def wait_for_register(p2p: P2PNode):
+def wait_for_register(p2p: P2PNode) -> P2PStatuses:
     while True:
         status = p2p.status()
-        if status == P2PStatuses.REGISTERED:
+        if status in (P2PStatuses.REGISTERED, P2PStatuses.LOGGEDIN):
             logger.info(f'P2P server is available and registered!')
-            break
+            return status
         time.sleep(10)
 
 
@@ -123,18 +123,6 @@ def main():  # pylint: disable=too-many-statements
     worker_env.set_status('Reticulating Splines...')
     bootstrap_params = load_bootstrap_parameters(config, worker_env.bootstrap())
 
-    # perform deposit
-    if worker_env.should_auto_deposit():
-        #  todo: when we switch this key to be inside the enclave, or encrypted, modify this
-        erc20_contract.approve(staking.address,
-                               provider.enigma_contract_address,
-                               worker_env.deposit_amount,
-                               key=bytes.fromhex(remove_0x(staking.key)))
-
-        val = erc20_contract.check_allowance(staking.address, provider.enigma_contract_address)
-        logger.debug(f'Current allowance for {provider.enigma_contract_address}, from {staking.address}:'
-                     f' {val / (10 ** 8)} ENG')
-
     while not check_eth_limit(operating.address, float(config["MINIMUM_ETHER_BALANCE"]), worker_env.ethereum_node):
         worker_env.set_status('Waiting for ETH...')
         time.sleep(5)
@@ -171,32 +159,45 @@ def main():  # pylint: disable=too-many-statements
 
     logger.info('Waiting for node to finish registering...')
     worker_env.set_status('Registering...')
-    wait_for_register(p2p_runner)
-    logger.info(f'Register success!')
+    status = wait_for_register(p2p_runner)
+    logger.info(f'Node is registered!')
 
     # now perform the part of the deposit that comes after the p2p registers
-    if worker_env.should_auto_deposit():
+    if worker_env.should_auto_deposit() and status != P2PStatuses.LOGGEDIN:
+        erc20_contract.approve(staking.address,
+                               provider.enigma_contract_address,
+                               worker_env.deposit_amount,
+                               key=bytes.fromhex(remove_0x(staking.key)))
+
+        val = erc20_contract.check_allowance(staking.address, provider.enigma_contract_address)
+        logger.debug(f'Current allowance for {provider.enigma_contract_address}, from {staking.address}:'
+                     f' {val / (10 ** 8)} ENG')
+
         worker_env.set_status('Setting staking address...')
         logger.info(f'Attempting to set operating address -- staking:{staking.address} operating: {operating.address}')
         # todo: wait for confirmations
-        eng_contract.setOperatingAddress(staking.address, staking.key, operating.address, int(worker_env.confirmations))
-        logger.info(f'Done waiting for {worker_env.confirmations} confirmations for setOperatingAddress')
+        try:
+            eng_contract.setOperatingAddress(staking.address, staking.key, operating.address, int(worker_env.confirmations))
+            logger.info(f'Done waiting for {worker_env.confirmations} confirmations for setOperatingAddress')
+            worker_env.set_status('Depositing...')
 
-        worker_env.set_status('Depositing...')
-
-        logger.info(f'Attempting deposit from {staking.address} on behalf of worker {operating.address}')
-        eng_contract.deposit(staking.address, staking.key, worker_env.deposit_amount, int(worker_env.confirmations))
-        logger.info(f'Done waiting for {worker_env.confirmations} confirmations for deposit')
+            logger.info(f'Attempting deposit from {staking.address} on behalf of worker {operating.address}')
+            eng_contract.deposit(staking.address, staking.key, worker_env.deposit_amount, int(worker_env.confirmations))
+            logger.info(f'Done waiting for {worker_env.confirmations} confirmations for deposit')
+        except enigma.StakingAddressAlreadySet:
+            logger.warning('Staking address already set. Probably due to restarting the node with the same staking address')
 
         worker_env.set_status('Logging in...')
         if p2p_runner.login():
             worker_env.set_status('Running')
         else:
             worker_env.set_status('Failed to login')
-
-    else:
+    elif status != P2PStatuses.LOGGEDIN:
         worker_env.set_status('Waiting for login...')
         logger.info('Waiting for deposit & login...')
+    else:
+        worker_env.set_status('Running')
+        logger.info('Worker is up')
 
     while not p2p_runner.kill_now:
         # snooze

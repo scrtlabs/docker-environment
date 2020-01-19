@@ -108,9 +108,11 @@ class P2PNode(threading.Thread):
             self._kill(None, None)
 
     def _kill(self, signum, frame):  # pylint: disable=unused-argument
-        if self.proc:
+        if self.proc and not self.kill_now:
             logger.info('Logging out...')
             self.kill_now = True
+            self.logout()
+            self.proc.send_signal(signal.SIGINT)
             logger.info('Killed p2p cli')
 
     def status(self) -> P2PStatuses:
@@ -166,7 +168,7 @@ class P2PNode(threading.Thread):
                     self.proc.stdin.write(b'logout\n')
                     self.proc.stdin.flush()
                     return True
-            except AttributeError:
+            except (AttributeError, BrokenPipeError):
                 logger.critical('P2P process doesn\'t exist (was it killed prematurely?)')
                 raise RuntimeError from None
             return False
