@@ -111,6 +111,7 @@ class P2PNode(threading.Thread):
             logger.info('Logging out...')
             self.kill_now = True
             self.logout()
+            self.proc.send_signal(signal.SIGINT)
             logger.info('Killed p2p cli')
 
     def status(self) -> P2PStatuses:

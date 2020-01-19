@@ -188,7 +188,7 @@ def main():  # pylint: disable=too-many-statements
             eng_contract.deposit(staking.address, staking.key, worker_env.deposit_amount, int(worker_env.confirmations))
             logger.info(f'Done waiting for {worker_env.confirmations} confirmations for deposit')
         except enigma.StakingAddressAlreadySet:
-            logger.info('Staking address already set. Probably due to restarting the node with the same staking address')
+            logger.warning('Staking address already set. Probably due to restarting the node with the same staking address')
 
         worker_env.set_status('Logging in...')
         if p2p_runner.login():
