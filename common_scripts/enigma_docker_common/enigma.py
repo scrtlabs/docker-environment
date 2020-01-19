@@ -136,7 +136,7 @@ class EnigmaContract(Contract):
                 self.wait_for_confirmations(receipt, confirmations)
             return receipt
         except ValueError as e:
-            if 'Staking address currently tied to an in-use operating address' in getattr(e, 'message'):
+            if 'Staking address currently tied to an in-use operating address' in str(e):
                 raise StakingAddressAlreadySet(f'Cannot call setOperatingAddress twice for the same staking address: {staking_address}') from None
 
     def deposit_build(self, staking_address: str, eth_address: str, deposit_amount: int):
