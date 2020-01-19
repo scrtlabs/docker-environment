@@ -90,6 +90,7 @@ class P2PNode(threading.Thread):
         self.optional = optional
         self.required = required
         self.proc = None
+
         atexit.register(self.stop)
         signal.signal(signal.SIGINT, self._kill)
         signal.signal(signal.SIGTERM, self._kill)
