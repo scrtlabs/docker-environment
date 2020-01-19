@@ -9,6 +9,10 @@ from .logger import get_logger
 logger = get_logger('enigma_common.enigma')
 
 
+class StakingAddressAlreadySet(ValueError):
+    pass
+
+
 class Contract:
 
     max_gas_price = 20000000000
@@ -125,11 +129,15 @@ class EnigmaContract(Contract):
     # noinspection PyPep8Naming
     def setOperatingAddress(self, staking_address: str, staking_key: Union[bytes, str],
                             eth_address: str, confirmations: int = 0):
-        receipt = self.transact(self.toCheckSumAddress(staking_address), staking_key, 'setOperatingAddress',
-                                self.toCheckSumAddress(eth_address))
-        if confirmations:
-            self.wait_for_confirmations(receipt, confirmations)
-        return receipt
+        try:
+            receipt = self.transact(self.toCheckSumAddress(staking_address), staking_key, 'setOperatingAddress',
+                                    self.toCheckSumAddress(eth_address))
+            if confirmations:
+                self.wait_for_confirmations(receipt, confirmations)
+            return receipt
+        except ValueError as e:
+            if 'Staking address currently tied to an in-use operating address' in getattr(e, 'message'):
+                raise StakingAddressAlreadySet(f'Cannot call setOperatingAddress twice for the same staking address: {staking_address}') from None
 
     def deposit_build(self, staking_address: str, eth_address: str, deposit_amount: int):
         return self.build(self.toCheckSumAddress(staking_address), 'deposit', self.toCheckSumAddress(eth_address),

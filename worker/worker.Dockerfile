@@ -110,7 +110,7 @@ COPY scripts ./p2p/scripts
 
 RUN chmod +x ./p2p/scripts/p2p/start.py && chmod +x ./core/core_startup.py
 RUN chmod +x ./p2p/scripts/cli/cli.py
-COPY devops/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+COPY devops/supervisord.conf /etc/supervisor/supervisord.conf
 
 ##### FOR NOW TILL I FIND A WAY TO SET THESE INSIDE PYTHON :'(
 ENV LD_LIBRARY_PATH=/opt/intel/libsgx-enclave-common/aesm:/opt/sgxsdk/sdk_libs:/opt/sgxsdk/sdk_libs
@@ -123,5 +123,5 @@ ENV LANG=C.UTF-8
 
 RUN ln -s /root/p2p/scripts/cli/cli.py /usr/bin/cli
 
-ENTRYPOINT . /opt/sgxsdk/environment && supervisord -c /etc/supervisor/conf.d/supervisord.conf
+ENTRYPOINT . /opt/sgxsdk/environment && supervisord -c /etc/supervisor/supervisord.conf
 # CMD ["/usr/bin/python", "/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]

@@ -179,14 +179,16 @@ def main():  # pylint: disable=too-many-statements
         worker_env.set_status('Setting staking address...')
         logger.info(f'Attempting to set operating address -- staking:{staking.address} operating: {operating.address}')
         # todo: wait for confirmations
-        eng_contract.setOperatingAddress(staking.address, staking.key, operating.address, int(worker_env.confirmations))
-        logger.info(f'Done waiting for {worker_env.confirmations} confirmations for setOperatingAddress')
+        try:
+            eng_contract.setOperatingAddress(staking.address, staking.key, operating.address, int(worker_env.confirmations))
+            logger.info(f'Done waiting for {worker_env.confirmations} confirmations for setOperatingAddress')
+            worker_env.set_status('Depositing...')
 
-        worker_env.set_status('Depositing...')
-
-        logger.info(f'Attempting deposit from {staking.address} on behalf of worker {operating.address}')
-        eng_contract.deposit(staking.address, staking.key, worker_env.deposit_amount, int(worker_env.confirmations))
-        logger.info(f'Done waiting for {worker_env.confirmations} confirmations for deposit')
+            logger.info(f'Attempting deposit from {staking.address} on behalf of worker {operating.address}')
+            eng_contract.deposit(staking.address, staking.key, worker_env.deposit_amount, int(worker_env.confirmations))
+            logger.info(f'Done waiting for {worker_env.confirmations} confirmations for deposit')
+        except enigma.StakingAddressAlreadySet:
+            logger.info('Staking address already set. Probably due to restarting the node with the same staking address')
 
         worker_env.set_status('Logging in...')
         if p2p_runner.login():
