@@ -110,6 +110,7 @@ class P2PNode(threading.Thread):
     def _kill(self, signum, frame):  # pylint: disable=unused-argument
         if self.proc:
             logger.info('Logging out...')
+            self.logout()
             self.kill_now = True
             logger.info('Killed p2p cli')
 

@@ -48,12 +48,12 @@ env_defaults = {'K8S': '/root/p2p/config/k8s_config.json',
 env = os.getenv('ENIGMA_ENV', 'COMPOSE')
 
 
-def wait_for_register(p2p: P2PNode):
+def wait_for_register(p2p: P2PNode) -> P2PStatuses:
     while True:
         status = p2p.status()
-        if status == P2PStatuses.REGISTERED:
+        if status == P2PStatuses.REGISTERED or status == P2PStatuses.LOGGEDIN:
             logger.info(f'P2P server is available and registered!')
-            break
+            return status
         time.sleep(10)
 
 
@@ -171,11 +171,11 @@ def main():  # pylint: disable=too-many-statements
 
     logger.info('Waiting for node to finish registering...')
     worker_env.set_status('Registering...')
-    wait_for_register(p2p_runner)
-    logger.info(f'Register success!')
+    status = wait_for_register(p2p_runner)
+    logger.info(f'Node is registered!')
 
     # now perform the part of the deposit that comes after the p2p registers
-    if worker_env.should_auto_deposit():
+    if worker_env.should_auto_deposit() and status != P2PStatuses.LOGGEDIN:
         worker_env.set_status('Setting staking address...')
         logger.info(f'Attempting to set operating address -- staking:{staking.address} operating: {operating.address}')
         # todo: wait for confirmations
@@ -193,10 +193,13 @@ def main():  # pylint: disable=too-many-statements
             worker_env.set_status('Running')
         else:
             worker_env.set_status('Failed to login')
-
-    else:
+    elif status != P2PStatuses.LOGGEDIN:
         worker_env.set_status('Waiting for login...')
         logger.info('Waiting for deposit & login...')
+
+    else:
+        worker_env.set_status('Running')
+        logger.info('Worker is up')
 
     while not p2p_runner.kill_now:
         # snooze
