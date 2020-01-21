@@ -41,7 +41,7 @@ class Environment:  # pylint: disable=too-many-instance-attributes
         return self.env == "MAINNET"
 
     def load_staking_from_config(self):
-        return self.is_bootstrap and not self.testing_env
+        return self.is_bootstrap and not self.testing()
 
     def load_operating_key_from_config(self):
         return self.is_bootstrap and self.testnet()
@@ -50,7 +50,7 @@ class Environment:  # pylint: disable=too-many-instance-attributes
         return self.testing() or (self.is_bootstrap and self.testnet())
 
     def load_staking_from_cli(self):
-        return not self.is_bootstrap and not self.testing_env
+        return not self.is_bootstrap and not self.testing()
 
     def load_operating_address(self):
         if self.load_operating_key_from_config():
