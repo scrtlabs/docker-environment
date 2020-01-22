@@ -73,6 +73,3 @@ class Config(UserDict):
                 return os.getenv(env_name)
 
         return super().__getitem__(item)
-
-    def __repr__(self):
-        return f'Configuration: {json.dumps(self.items(), sort_keys=True)}'

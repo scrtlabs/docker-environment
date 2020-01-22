@@ -1,7 +1,10 @@
-import time
 import socket
+import time
+from collections import UserDict
 from urllib.parse import urlparse
+
 import requests
+
 from .logger import get_logger
 
 logger = get_logger('enigma_common.faucet')
@@ -55,7 +58,7 @@ def get_balance(faucet_url, account: str, currency: str) -> float:
         raise ConnectionError(f'Failed to connect to faucet @ {faucet_url}') from None
 
 
-def wait_for_balance(address, currency: str, min_balance: float, timeout: int, backoff: int, config):
+def wait_for_balance(address, currency: str, min_balance: float, timeout: int, backoff: int, config: UserDict):
     t_stop = timeout + time.monotonic()
     while time.monotonic() < t_stop:
         if min_balance > float(get_balance(config['FAUCET_URL'], address, currency)):
@@ -68,7 +71,7 @@ def wait_for_balance(address, currency: str, min_balance: float, timeout: int, b
     raise RuntimeError('Balance did not go over minimum in required time')
 
 
-def get_initial_coins(account: str, currency: str, config: dict):
+def get_initial_coins(account: str, currency: str, config: UserDict):
 
     try:
         _currency = {'ETH': 'ether',

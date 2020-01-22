@@ -185,6 +185,8 @@ if __name__ == '__main__':  # noqa: C901
     while not check_eth_limit(eth_address, float(config["MINIMUM_ETHER_BALANCE"]), ethereum_node):
         time.sleep(5)
 
+    logger.info(f'Running KM with arguments: {exec_args}')
+
     try:
         subprocess.check_call(exec_args)
     except subprocess.CalledProcessError:

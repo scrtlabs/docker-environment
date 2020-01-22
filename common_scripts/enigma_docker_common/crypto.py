@@ -1,6 +1,8 @@
 import binascii
 import os
 import pathlib
+from collections import UserDict
+from dataclasses import dataclass
 from typing import Tuple
 
 from Crypto import Random
@@ -21,6 +23,16 @@ ETHER_ADDRESS_NAME = 'eth_address.txt'
 # AES supports multiple key sizes: 16 (AES128), 24 (AES192), or 32 (AES256).
 KEY_BYTES = 32
 IV_LEN = AES.block_size
+
+
+@dataclass
+class EthereumKey:
+    key: str = ''
+    address: str = ''
+
+    def __post_init__(self):
+        if self.key and not self.address:
+            self.address = auto_w3.toChecksumAddress(address_from_private(self.key))
 
 
 def _derive_key(password: str) -> bytes:
@@ -120,7 +132,7 @@ def _create_keystore(privkey_path: pathlib.Path, pubkey_path: pathlib.Path, pass
     return private_key, eth_address
 
 
-def open_eth_keystore(path: str, config: dict, password: str = '', create: bool = True):
+def open_eth_keystore(path: str, config: UserDict, password: str = '', create: bool = True) -> EthereumKey:
     """ Create """
     privkey_path = pathlib.Path(path) / PRIVATE_KEY_NAME
     pubkey_path = pathlib.Path(path) / ETHER_ADDRESS_NAME
@@ -149,4 +161,4 @@ def open_eth_keystore(path: str, config: dict, password: str = '', create: bool 
                 # todo: add a check it was properly saved
             else:
                 raise
-    return private_key, eth_address
+    return EthereumKey(key=private_key, address=eth_address)

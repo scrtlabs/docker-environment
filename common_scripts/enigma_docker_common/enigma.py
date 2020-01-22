@@ -1,4 +1,5 @@
 import time
+from typing import Union
 
 import web3
 from web3.auto import w3 as auto_w3
@@ -6,6 +7,10 @@ from web3.auto import w3 as auto_w3
 from .logger import get_logger
 
 logger = get_logger('enigma_common.enigma')
+
+
+class StakingAddressAlreadySet(ValueError):
+    pass
 
 
 class Contract:
@@ -113,14 +118,27 @@ class EnigmaTokenContract(Contract):
 
 
 class EnigmaContract(Contract):
-    def deposit(self, staking_address: str, staking_key: bytes, eth_address: str, deposit_amount: int):
-        return self.transact(self.toCheckSumAddress(staking_address), staking_key, 'deposit',
-                             self.toCheckSumAddress(eth_address), deposit_amount)
+    def deposit(self, staking_address: str, staking_key: Union[bytes, str], deposit_amount: int,
+                confirmations: int = 0):
+        receipt = self.transact(self.toCheckSumAddress(staking_address), staking_key, 'deposit',
+                                self.toCheckSumAddress(staking_address), deposit_amount)
+        if confirmations:
+            self.wait_for_confirmations(receipt, confirmations)
+        return receipt
 
     # noinspection PyPep8Naming
-    def setOperatingAddress(self, staking_address: str, eth_address: str):
-        return self.transact(self.toCheckSumAddress(staking_address), 'setOperatingAddress',
-                             self.toCheckSumAddress(eth_address))
+    def setOperatingAddress(self, staking_address: str, staking_key: Union[bytes, str],
+                            eth_address: str, confirmations: int = 0):
+        try:
+            receipt = self.transact(self.toCheckSumAddress(staking_address), staking_key, 'setOperatingAddress',
+                                    self.toCheckSumAddress(eth_address))
+            if confirmations:
+                self.wait_for_confirmations(receipt, confirmations)
+            return receipt
+        except ValueError as e:
+            if 'Staking address currently tied to an in-use operating address' in str(e):
+                raise StakingAddressAlreadySet(f'Cannot call setOperatingAddress twice for the same staking address: '
+                                               f'{staking_address}') from None
 
     def deposit_build(self, staking_address: str, eth_address: str, deposit_amount: int):
         return self.build(self.toCheckSumAddress(staking_address), 'deposit', self.toCheckSumAddress(eth_address),

@@ -3,7 +3,6 @@ version: "3"
 services:
   bootstrap:
     hostname: bootstrap
-    container_name: bootstrap01
     image: enigmampc/worker_sw:${DOCKER_TAG}
     depends_on:
       - contract
@@ -18,9 +17,8 @@ services:
     expose:
       - "10300" # libp2p port
       - "8080"  # what is this?
-    ports:
-      - "3346:3346" # gateway port
-      - "9229:9229" # nodejs debugger
+      - "3346"  # gateway port
+      - "9229"  # nodejs debugger 
 
   worker:
     hostname: worker
@@ -41,7 +39,6 @@ services:
 
   contract:
     hostname: contract
-    container_name: contract
     image: enigmampc/contract:${DOCKER_TAG}
     environment:
       - SGX_MODE
@@ -50,14 +47,13 @@ services:
       - BLOCK_TIME
       - TIME_BETWEEN_BLOCKS
       - LOG_LEVEL
-    ports:
-      - "8081:8081" # contract discovery service
-      - "9545:9545" # ethereum node port
-      - "8001:8001" # faucet port
+    expose:
+      - "8081" # contract discovery service
+      - "9545" # ethereum node port
+      - "8001" # faucet port
 
   km:
     hostname: km
-    container_name: km
     image: enigmampc/key_management_sw:${DOCKER_TAG}
     environment:
       - ENIGMA_ENV

@@ -13,6 +13,7 @@
  "BOOTSTRAP_ADDRESS": "/dnsaddr/bootstrap-service/tcp/10300/ipfs/QmcrQZ6RJdpYuGvZqD5QEHAv6qX4BrQLJLQPQUrTrzdcgm",
  "ETH_KEY_PATH": "/root/p2p/",
  "STAKE_KEY_PATH": "/root/p2p/staking/",
+ "STAKE_KEY_NAME": "eth_address.txt",
  "LOCAL_LIBP2P_KEY_PATH": "/root/p2p/scripts/bootstrap/",
  "LIBP2P_KEY_PATH": "/root/p2p/libp2p/",
  "BOOTSTRAP_ID": "B1",

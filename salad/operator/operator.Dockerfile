@@ -52,7 +52,7 @@ RUN yarn add 'file:/root/enigma-contract/enigma-js/' --ignore-workspace-root-che
 
 ##########################
 
-FROM enigmampc/core-runtime-base:latest
+FROM enigmampc/core-runtime-base:develop
 
 ARG SGX_MODE=SW
 ENV SGX_MODE $SGX_MODE
@@ -99,4 +99,4 @@ RUN : \
 COPY config/ config/
 COPY scripts/ scripts/
 
-CMD ./scripts/run.sh
+ENTRYPOINT ./scripts/run.sh
