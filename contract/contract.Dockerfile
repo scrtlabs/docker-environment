@@ -31,6 +31,7 @@ RUN npm install -g truffle@5.1.2 ganache-cli@6.7.0
 FROM contract_base as contract_compile
 
 COPY --from=gitclone_contract /enigma-contract /root/enigma-contract
+COPY --from=gitclone_contract /git_commit /root/enigma-contract/git_commit
 
 WORKDIR /root/enigma-contract/
 
