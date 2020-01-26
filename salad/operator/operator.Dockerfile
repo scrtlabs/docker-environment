@@ -17,23 +17,9 @@ RUN cargo +$(cat rust-toolchain) build --release --target wasm32-unknown-unknown
 
 FROM node:10-buster as node_modules_build
 
-COPY --from=gitclone_salad /root/salad/package.json /root/salad/package.json
-COPY --from=gitclone_salad /root/salad/yarn.lock /root/salad/yarn.lock
-COPY --from=gitclone_salad /root/salad/client/package.json /root/salad/client/package.json
-COPY --from=gitclone_salad /root/salad/operator/package.json /root/salad/operator/package.json
 WORKDIR /root/salad
 
-# Install required dependencies + yarn and then clean the node_modules directory
-RUN : \
-    && rm -rf operator/node_modules client/node_modules \
-    && yarn install --production \
-    && yarn add truffle@5.1.2 --ignore-workspace-root-check \
-    && npm install -g modclean \
-    && modclean -n default:safe -r
-
-# uninstall the enigma-js version from npm
-RUN yarn remove 'enigma-js' --ignore-workspace-root-check
-# Build and install custom enigma-js:
+# Build a custom enigma-js:
 COPY --from=gitclone_contract /enigma-contract/ /root/enigma-contract/
 # Build the smart contracts
 RUN : \
@@ -46,9 +32,21 @@ RUN : \
     && cd /root/enigma-contract/enigma-js \
     && yarn \
     && npx webpack --env build
+
+COPY --from=gitclone_salad /root/salad/package.json /root/salad/package.json
+COPY --from=gitclone_salad /root/salad/yarn.lock /root/salad/yarn.lock
+COPY --from=gitclone_salad /root/salad/client/package.json /root/salad/client/package.json
+COPY --from=gitclone_salad /root/salad/operator/package.json /root/salad/operator/package.json
+
 # Install the local enigma-js library
-RUN cd operator && yarn add 'file:/root/enigma-contract/enigma-js/'
-RUN yarn add 'file:/root/enigma-contract/enigma-js/' --ignore-workspace-root-check
+RUN yarn workspaces run add 'file:/root/enigma-contract/enigma-js/'
+
+# Install required dependencies + yarn and then clean the node_modules directory
+RUN : \
+    && yarn install --production \
+    && yarn add truffle@5.1.2 --ignore-workspace-root-check \
+    && npm install -g modclean \
+    && modclean -n default:safe -r
 
 ##########################
 
