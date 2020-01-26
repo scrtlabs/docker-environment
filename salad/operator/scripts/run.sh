@@ -23,4 +23,4 @@ if [[ -z "$OPERATOR_ETH_PRIVATE_KEY" ]]; then
     ./scripts/distribute_funds.py "$ADDRESS_1"
 fi
 
-node ./operator/src/server.js
+node ./operator/src/server.js -t
