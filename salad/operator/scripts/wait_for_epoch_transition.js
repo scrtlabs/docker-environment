@@ -24,15 +24,15 @@ const main = async () => {
     );
 
     const enigmaContract = enigma.enigmaContract;
-    console.error('Waiting for an epoch to pass after the contract deployment');
+    console.log('Waiting for an epoch to pass after the contract deployment');
     await new Promise(resolve =>
         enigmaContract.events.WorkersParameterized({})
             .once('data', data => {
-                console.error(`got data ${data}`);
+                console.log(`got data ${data}`);
                 resolve(data);
             })
     );
-    console.error('an epoch has passed');
+    console.log('an epoch has passed');
 };
 
-main().catch(err => { console.error(err); process.exit(1) });
+main().catch(err => { console.log(err); process.exit(1) });

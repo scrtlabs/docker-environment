@@ -38,10 +38,10 @@ async function main() {
         await store.insertSmartContractAddress(process.env.SALAD_SMART_CONTRACT_ADDRESS);
         await store.insertSecretContractAddress(process.env.SALAD_SECRET_CONTRACT_ADDRESS);
     } catch (e) {
-        log.error('Error while taking contract addresses from env', e);
+        log.info('Error while taking contract addresses from env', e);
     } finally {
         await store.closeAsync();
     }
 }
 
-main().catch(err => { log.error(err); process.exit(1) });
+main().catch(err => { log.info(err); process.exit(1) });
