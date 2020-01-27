@@ -14,6 +14,7 @@ fi
 
 # If the operator's private key has not been supplied externally, provide it here.
 if [[ -z "$OPERATOR_ETH_PRIVATE_KEY" ]]; then
+    echo 'generating account for operator'
     ACCOUNT_1="$(./scripts/create_account.js)"
 
     ADDRESS_1="$(echo "$ACCOUNT_1" | cut -d' ' -f1)"
