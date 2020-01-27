@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 
+require('dotenv').config();
 const Web3 = require('web3');
 const {Enigma} = require('enigma-js/node');
 
