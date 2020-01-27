@@ -34,6 +34,8 @@ const main = async () => {
             })
     );
     console.log('an epoch has passed');
+    await web3.currentProvider.disconnect();
+    console.log('provider disconnected');
 };
 
 main().catch(err => { console.log(err); process.exit(1) });
