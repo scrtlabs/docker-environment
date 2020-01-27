@@ -10,6 +10,8 @@ def main():
         for i in range(20):
             print(f'{i} - distributing ether to {address}')
             request_coins('http://contract.reuven.services.enigma.co:8001', address, 'ether')
+            print(f'{i} - distributing eng to {address}')
+            request_coins('http://contract.reuven.services.enigma.co:8001', address, 'eng')
 
 
 if __name__ == '__main__':
