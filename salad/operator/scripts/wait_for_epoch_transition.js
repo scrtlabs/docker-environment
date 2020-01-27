@@ -29,7 +29,7 @@ const main = async () => {
     await new Promise(resolve =>
         enigmaContract.events.WorkersParameterized({})
             .once('data', data => {
-                console.log(`got data ${data}`);
+                console.log(`got data ${JSON.stringify(data)}`);
                 resolve(data);
             })
     );
