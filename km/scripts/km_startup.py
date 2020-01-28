@@ -24,7 +24,6 @@ logger = get_logger('key_management.startup')
 
 
 required = ['ENIGMA_ENV',
-            'CONTRACT_DISCOVERY_ADDRESS', 'KEY_MANAGEMENT_DISCOVERY',  # required by provider AND locally
             'ETH_NODE_ADDRESS', 'CONTRACTS_FOLDER', 'DEFAULT_CONFIG_PATH', 'FAUCET_URL',  # defaults in local config file
             'TEMP_CONFIG_PATH', "MINIMUM_ETHER_BALANCE", "MINIMUM_ENG_BALANCE"]
 
