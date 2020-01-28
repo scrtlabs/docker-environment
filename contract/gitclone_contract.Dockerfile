@@ -9,3 +9,5 @@ ARG branch=master
 # Cache buster -- make sure everything after this is never cached
 ADD http://worldtimeapi.org/api/timezone/Europe/London.txt /tmp/bustcache
 RUN git clone --single-branch --branch ${branch} https://github.com/enigmampc/enigma-contract.git
+# Save Git commit hash of this build into /git_commit.
+RUN git -C /enigma-contract/ rev-parse HEAD > /git_commit

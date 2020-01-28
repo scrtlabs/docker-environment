@@ -26,8 +26,8 @@ eng_provider = Provider(config=config)
 PORT = config['FAUCET_PORT']
 NODE_URL = config["ETH_NODE_ADDRESS"]
 
-ETH_ALLOWANCE_AMT = config.get('ALLOWANCE_AMOUNT', web3.Web3.toWei(1, 'ether'))
-ENG_ALLOWANCE_AMT = config.get('ENG_ALLOWANCE_AMOUNT', 100000)
+ETH_ALLOWANCE_AMT = int(config.get('ALLOWANCE_AMOUNT', web3.Web3.toWei(100, 'ether')))
+ENG_ALLOWANCE_AMT = int(config.get('ENG_ALLOWANCE_AMOUNT', 500 * 1e+8))
 
 token_contract_abi = json.loads(eng_provider.enigma_token_abi)
 token_contract_address = eng_provider.token_contract_address

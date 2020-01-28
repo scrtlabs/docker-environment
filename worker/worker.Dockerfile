@@ -35,7 +35,7 @@ RUN apt-get update \
  && rm -rf /var/lib/apt/lists/*
 
 COPY --from=gitclone_p2p /enigma-p2p/package.json ./
-
+COPY --from=gitclone_p2p /git_commit ./git_commit
 # RUN npm -g config set user root
 
 RUN npm install
@@ -98,7 +98,10 @@ RUN pip3 install \
       -r cli_requirements.txt
 
 COPY --from=core-build /root/enigma-core/bin/ /root/core/bin/
+COPY --from=core-build /root/enigma-core/git_commit /root/core/git_commit
+
 COPY --from=p2p_build /app ./p2p/
+COPY --from=p2p_build /app/git_commit ./p2p/git_commit
 
 EXPOSE 8080
 
@@ -111,6 +114,7 @@ COPY scripts ./p2p/scripts
 RUN chmod +x ./p2p/scripts/p2p/start.py && chmod +x ./core/core_startup.py
 RUN chmod +x ./p2p/scripts/cli/cli.py
 COPY devops/supervisord.conf /etc/supervisor/supervisord.conf
+COPY devops/coredebug /etc/logrotate.d/coredebug
 
 ##### FOR NOW TILL I FIND A WAY TO SET THESE INSIDE PYTHON :'(
 ENV LD_LIBRARY_PATH=/opt/intel/libsgx-enclave-common/aesm:/opt/sgxsdk/sdk_libs:/opt/sgxsdk/sdk_libs

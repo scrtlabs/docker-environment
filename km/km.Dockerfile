@@ -43,6 +43,7 @@ RUN chmod +x ./scripts/km_startup.py
 COPY config ./config
 
 COPY devops/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+COPY devops/coredebug /etc/logrotate.d/coredebug
 
 EXPOSE 3040
 
