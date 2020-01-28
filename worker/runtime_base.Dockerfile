@@ -8,6 +8,8 @@ ARG OS_REVESION=bionic1
 
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
+    #### Base utilities ####
+    logrotate
     #### Core dependencies ####
     librocksdb-dev \
     libzmq5 \

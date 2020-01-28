@@ -1,0 +1,32 @@
+# log rotate config file for core debug
+
+/root/.enigma/debug.log {
+
+		# rotate log file daily
+        daily
+
+        # truncates the old log file in place after creating a copy
+        # instead of moving the old file and creating a new one.
+        copytruncate
+
+        # set permissions, owner and group of new files
+        create 0640 root root
+
+        # Don’t raise an error if the log is missing
+        missingok
+
+        # uses the date as extension for old versions of the log files
+        dateext
+
+        # Rotates a given log ten times before deleting it,
+        rotate 10
+
+        # Only rotates file if size is over 100M
+        size=100M
+
+        # Don't rotate the log file when it is empty
+        notifempty
+
+        # compress old files after rotating
+        compress
+}

@@ -114,6 +114,7 @@ COPY scripts ./p2p/scripts
 RUN chmod +x ./p2p/scripts/p2p/start.py && chmod +x ./core/core_startup.py
 RUN chmod +x ./p2p/scripts/cli/cli.py
 COPY devops/supervisord.conf /etc/supervisor/supervisord.conf
+COPY devops/coredebug /etc/logrotate.d/coredebug
 
 ##### FOR NOW TILL I FIND A WAY TO SET THESE INSIDE PYTHON :'(
 ENV LD_LIBRARY_PATH=/opt/intel/libsgx-enclave-common/aesm:/opt/sgxsdk/sdk_libs:/opt/sgxsdk/sdk_libs
