@@ -17,7 +17,7 @@ class Environment:  # pylint: disable=too-many-instance-attributes
 
     def __init__(self, config: UserDict):
         self.is_bootstrap = bool(config.get('BOOTSTRAP', ''))
-        self.env = config['ENIGMA_ENV']
+        self.env: str = config['ENIGMA_ENV']
         self.config = config
 
         self.log_level = config.get('LOG_LEVEL', 'info')
@@ -35,10 +35,10 @@ class Environment:  # pylint: disable=too-many-instance-attributes
         return self.env in self.testing_env
 
     def testnet(self):
-        return self.env == "TESTNET"
+        return self.env.startswith("TESTNET")
 
     def mainnet(self):
-        return self.env == "MAINNET"
+        return self.env.startswith("MAINNET")
 
     def load_staking_from_config(self):
         return self.is_bootstrap and not self.testing()
@@ -62,8 +62,10 @@ class Environment:  # pylint: disable=too-many-instance-attributes
 
     def load_staking_address(self):
         if self.load_staking_from_cli():
-            logger.info('Waiting for staking address... Set it up using the CLI')
-            staking = EthereumKey(address=utils.wait_for_staking_address(self.config))
+            logger.info(
+                'Waiting for staking address... Set it up using the CLI')
+            staking = EthereumKey(
+                address=utils.wait_for_staking_address(self.config))
         elif self.load_staking_from_config():
             staking = self.load_staking_key_from_config()
         #  will not try a faucet if we're in mainnet or testing environment

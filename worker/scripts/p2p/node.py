@@ -68,7 +68,7 @@ def p2p_parse_url(env: str, ethereum_node: str, config: UserDict) -> str:
     if not port:
         raise ValueError('No port specified in ethereum node')
     # in ganache WS and HTTP are in the same port. In our testnet it isn't (8546 and 8545 respectively)
-    if env in ['TESTNET', 'MAINNET']:
+    if env.startswith(('TESTNET', 'MAINNET')):
         ether_gateway = config.get('ETHEREUM_NODE_ADDRESS_WEBSOCKET', f'ws://{hostname}:{port + 1}')
     else:
         ether_gateway = config.get('ETHEREUM_NODE_ADDRESS_WEBSOCKET', f'ws://{hostname}:{port}')
