@@ -24,8 +24,8 @@ logger = get_logger('key_management.startup')
 
 
 required = ['ENIGMA_ENV',
-            'ETH_NODE_ADDRESS', 'CONTRACTS_FOLDER', 'DEFAULT_CONFIG_PATH', 'FAUCET_URL',  # defaults in local config file
-            'TEMP_CONFIG_PATH', "MINIMUM_ETHER_BALANCE", "MINIMUM_ENG_BALANCE"]
+            'ETH_NODE_ADDRESS', 'CONTRACTS_FOLDER', 'DEFAULT_CONFIG_PATH',  # defaults in local config file
+            'TEMP_CONFIG_PATH', "MINIMUM_ETHER_BALANCE"]
 
 env = os.getenv('ENIGMA_ENV', 'COMPOSE')
 SGX_MODE = os.getenv('SGX_MODE', 'HW')
