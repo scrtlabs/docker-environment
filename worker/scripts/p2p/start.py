@@ -116,7 +116,7 @@ def main():  # pylint: disable=too-many-statements
     staking = worker_env.load_staking_address()
     logger.info(f'Got staking address {staking.address}')
 
-    if worker_env.testing_env:
+    if worker_env.testing():
         worker_env.set_status('Compose local setup...')
         request_coins_from_faucet(config, operating.address, staking.address)
 
