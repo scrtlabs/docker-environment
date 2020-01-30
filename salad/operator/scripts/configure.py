@@ -54,8 +54,9 @@ def main():
                 'SALAD_SMART_CONTRACT_ADDRESS': 'SALAD_SMART_CONTRACT_ADDRESS',
                 'SALAD_SECRET_CONTRACT_ADDRESS': 'SALAD_SECRET_CONTRACT_ADDRESS',
                 'NETWORK_ID': 'NETWORK_ID',
+                'FAUCET_URL': 'FAUCET_URL'
         }.items():
-            envs[env_var] = config[config_var]
+            envs[env_var] = config.get(config_var)
 
         envs['ENIGMA_CONTRACT_ADDRESS'] = enigma_contract_address
         envs['ENIGMA_TOKEN_CONTRACT_ADDRESS'] = enigma_token_contract_address
