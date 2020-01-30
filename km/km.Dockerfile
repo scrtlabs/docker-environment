@@ -42,9 +42,9 @@ RUN chmod +x ./scripts/km_startup.py
 
 COPY config ./config
 
-COPY devops/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+COPY devops/supervisord.conf /etc/supervisor/supervisord.conf
 COPY devops/coredebug /etc/logrotate.d/coredebug
 
 EXPOSE 3040
 
-ENTRYPOINT . /opt/sgxsdk/environment && supervisord -c /etc/supervisor/conf.d/supervisord.conf
+ENTRYPOINT . /opt/sgxsdk/environment && supervisord -c /etc/supervisor/supervisord.conf
