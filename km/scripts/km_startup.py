@@ -135,14 +135,18 @@ if __name__ == '__main__':  # noqa: C901
 
     #  will not try a faucet if we're in mainnet or testnet
     if env in ['COMPOSE', 'K8S']:
-        try:
-            get_initial_coins(eth_address, 'ETH', config)
-        except RuntimeError as e:
-            logger.critical(f'Failed to get enough ETH or ENG to start - {e}')
-            sys.exit(-2)
-        except ConnectionError as e:
-            logger.critical(f'Failed to connect to remote address: {e}')
-            sys.exit(-1)
+        while True:
+            try:
+                get_initial_coins(eth_address, 'ETH', config)
+                break
+            except RuntimeError as e:
+                logger.critical(f'Failed to get enough ETH or ENG to start - {e}')
+                sys.exit(-2)
+            except ConnectionError as e:
+                logger.critical(f'Failed to connect to remote address: {e}')
+                sleep_time = 30
+                logger.info(f'sleeping for {sleep_time} seconds')
+                time.sleep(sleep_time)
 
     logger.info(f'Getting enigma-contract...')
     enigma_address = provider.enigma_contract_address
