@@ -143,10 +143,8 @@ if __name__ == '__main__':  # noqa: C901
                 logger.critical(f'Failed to get enough ETH or ENG to start - {e}')
                 sys.exit(-2)
             except ConnectionError as e:
-                logger.critical(f'Failed to connect to remote address: {e}')
-                sleep_time = 30
-                logger.info(f'sleeping for {sleep_time} seconds')
-                time.sleep(sleep_time)
+                logger.error(f'Failed to connect to faucet at remote address: {e}')
+                time.sleep(30)
 
     logger.info(f'Getting enigma-contract...')
     enigma_address = provider.enigma_contract_address
