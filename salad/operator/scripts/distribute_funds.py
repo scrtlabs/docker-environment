@@ -18,9 +18,9 @@ def main():
     addresses = sys.argv[1:]
     faucet_url = config['FAUCET_URL']
     for address in addresses:
-        print(f'distributing ether to {address}')
+        logger.info(f'distributing ether to {address}')
         request_coins(faucet_url, address, 'ether')
-        print(f'distributing eng to {address}')
+        logger.info(f'distributing eng to {address}')
         request_coins(faucet_url, address, 'eng')
 
 
