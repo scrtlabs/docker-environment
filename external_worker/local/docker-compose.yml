@@ -7,7 +7,7 @@ services:
       - ENIGMA_ENV=TESTNET
       - SGX_MODE=HW
       - ETH_NODE_ADDRESS=http://parity.enigma.co:8545
-      - KEY_MANAGEMENT_ADDRESS=http://km-testnet.enigma.co:3040
+      - KEY_MANAGEMENT_ADDRESS=http://km.testnet.services.enigma.co:3040
       - MIN_CONFIRMATIONS=3
       # - FORCE_NEW_ETH_ADDR=true
     ports:

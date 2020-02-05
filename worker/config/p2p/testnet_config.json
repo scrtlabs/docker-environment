@@ -5,7 +5,7 @@
     "CORE_ADDRESS": "localhost",
     "CORE_PORT": "5552",
     "CONTRACTS_FOLDER": "/root/p2p/contracts/",
-    "KEY_MANAGEMENT_ADDRESS": "http://km-testnet.enigma.co:3040",
+    "KEY_MANAGEMENT_ADDRESS": "http://km.testnet.services.enigma.co:3040",
     "KEY_MANAGEMENT_DISCOVERY": "http://km-service:8081",
     "FAUCET_URL": "",
     "MINIMUM_ETHER_BALANCE": "0.1",
