@@ -18,7 +18,7 @@ RUN : \
     && cd /root/enigma-contract/ \
     && yarn \
     && yarn add truffle@5.1.2 \
-    && npx truffle compile \
+    && npx truffle compile
 
 # Build the enigma-js library
 RUN : \
@@ -32,7 +32,7 @@ RUN yarn workspaces run add 'file:/root/enigma-contract/enigma-js/'
 # Install required dependencies + yarn and then clean the node_modules directory
 RUN : \
     && yarn install --production \
-    && yarn add truffle@5.1.2 --ignore-workspace-root-check \
+    && yarn add truffle@5.1.2 mocha@6.2.2 --ignore-workspace-root-check \
     && npm install -g modclean \
     && modclean -n default:safe -r
 
