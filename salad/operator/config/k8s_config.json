@@ -7,6 +7,7 @@
  "ENG_NODE_PORT": "3346",
  "MONGO_URL": "mongodb://mongo:27017",
  "DB_NAME": "salad",
+ "FAUCET_URL": "http://contract-service:8001",
  "OPERATOR_ETH_PRIVATE_KEY": null,
  "SECRET_CONTRACT_BUILD_FOLDER": "..",
  "SALAD_SMART_CONTRACT_ADDRESS": "",
