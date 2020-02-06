@@ -10,9 +10,27 @@ COPY --from=gitclone_salad /root/salad/client/package.json /root/salad/client/pa
 COPY --from=gitclone_salad /root/salad/operator/package.json /root/salad/operator/package.json
 WORKDIR /root/salad
 
+# Build a custom enigma-js:
+COPY --from=gitclone_contract /enigma-contract/ /root/enigma-contract/
+
+# Build the smart contracts
+RUN : \
+    && cd /root/enigma-contract/ \
+    && yarn \
+    && yarn add truffle@5.1.2 \
+    && npx truffle compile \
+
+# Build the enigma-js library
+RUN : \
+    && cd /root/enigma-contract/enigma-js \
+    && yarn \
+    && npx webpack --env build
+
+# Install the local enigma-js library
+RUN yarn workspaces run add 'file:/root/enigma-contract/enigma-js/'
+
 # Install required dependencies + yarn and then clean the node_modules directory
 RUN : \
-    && rm -rf operator/node_modules client/node_modules \
     && yarn install --production \
     && yarn add truffle@5.1.2 --ignore-workspace-root-check \
     && npm install -g modclean \
